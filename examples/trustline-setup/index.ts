@@ -17,18 +17,22 @@ async function run() {
   console.log('🚀 Starting Trustline Setup Example (Zero-Fee Onboarding)');
   
   const grat = Grat.testnet();
-  const usdc = new Asset('USDC', 'GAIQ6QF3JKJYXE756IQAITKOWQ5ZDK2YKX7ZYSQKOI5LMG3NHJ4DY5MN');
+  const issuerAddress = 'GAIQ6QF3JKJYXE756IQAITKOWQ5ZDK2YKX7ZYSQKOI5LMG3NHJ4DY5MN';
+  const usdc = new Asset('USDC', issuerAddress);
 
   // 1. Create a new user
   const newUser = Keypair.random();
   console.log(`\n1. New User: ${newUser.publicKey()}`);
   
-  // We use Friendbot to give them the base reserve (required by the network for state)
-  // But we want to demonstrate they don't need extra XLM for fees.
-  console.log('   Funding account with base reserve via Friendbot...');
-  await fetch(`https://friendbot.stellar.org/?addr=${newUser.publicKey()}`);
+  // Fund both the issuer and the user so they exist on Testnet
+  console.log('   Funding accounts via Friendbot...');
+  await Promise.all([
+    fetch(`https://friendbot.stellar.org/?addr=${newUser.publicKey()}`),
+    fetch(`https://friendbot.stellar.org/?addr=${issuerAddress}`)
+  ]);
+  
   console.log('   Waiting for network sync...');
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  await new Promise(resolve => setTimeout(resolve, 5000));
 
   // 2. Setup Trustline
   console.log('\n2. Establishing USDC trustline...');

@@ -138,6 +138,11 @@ export class SponsorshipService {
           opCodes: opResultCodes,
         });
 
+        // DEBUG: Print full result codes for troubleshooting
+        console.log('--- STELLAR ERROR DEBUG ---');
+        console.log(JSON.stringify(resultCodes, null, 2));
+        console.log('---------------------------');
+
         // Retry logic for specific codes
         if (resultCodes?.transaction === 'tx_bad_seq' || err.response?.status === 503) {
           // If sequence is bad, sync from Horizon to reset cache
@@ -154,13 +159,21 @@ export class SponsorshipService {
         }
 
         // Non-retryable or max retries reached
-        const opResult = err.response?.data?.extras?.result_codes?.operations?.[0];
-        const txResult = err.response?.data?.extras?.result_codes?.transaction;
+        // Non-retryable or max retries reached
+        const extras = err.response?.data?.extras;
+        const txResult = extras?.result_codes?.transaction;
+        let opResult = extras?.result_codes?.operations?.[0];
+
+        // Drill down into inner transaction if fee-bump failed
+        if (txResult === 'tx_fee_bump_inner_failed' && extras?.result_codes?.inner_transaction?.operations) {
+          opResult = extras.result_codes.inner_transaction.operations[0];
+        }
+
         const msg = opResult || txResult || err.response?.data?.title || err.message;
 
         throw new SubmissionFailedError(
           `Transaction Failed: ${msg}`,
-          err.response?.data?.extras
+          extras
         );
 
       } finally {
