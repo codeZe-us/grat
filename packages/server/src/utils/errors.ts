@@ -1,10 +1,10 @@
 export class RelayError extends Error {
   public readonly code: string;
   public readonly statusCode: number;
-  public readonly details?: any;
+  public readonly details?: unknown;
   public requestId?: string;
 
-  constructor(message: string, code: string, statusCode: number, details?: any) {
+  constructor(message: string, code: string, statusCode: number, details?: unknown) {
     super(message);
     this.name = this.constructor.name;
     this.code = code;
@@ -26,7 +26,7 @@ export class RelayError extends Error {
 }
 
 export class ValidationError extends RelayError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 'VALIDATION_ERROR', 400, details);
   }
 }
@@ -44,7 +44,7 @@ export class InsufficientCreditsError extends RelayError {
 }
 
 export class PolicyDeniedError extends RelayError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 'POLICY_DENIED', 403, details);
   }
 }
@@ -71,19 +71,19 @@ export class ChannelExhaustedError extends RelayError {
 }
 
 export class SimulationFailedError extends RelayError {
-  constructor(message: string, diagnosticEvents: any[] = []) {
+  constructor(message: string, diagnosticEvents: unknown[] = []) {
     super(message, 'SIMULATION_FAILED', 422, diagnosticEvents);
   }
 }
 
 export class SubmissionFailedError extends RelayError {
-  constructor(message: string, horizonResultCodes: any = {}) {
+  constructor(message: string, horizonResultCodes: unknown = {}) {
     super(message, 'SUBMISSION_FAILED', 502, horizonResultCodes);
   }
 }
 
 export class NetworkError extends RelayError {
-  constructor(message: string = 'Network communication error', details?: any) {
+  constructor(message: string = 'Network communication error', details?: unknown) {
     super(message, 'NETWORK_ERROR', 503, details);
   }
 }

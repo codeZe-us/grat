@@ -10,11 +10,11 @@ RUN apk add --no-cache curl
 RUN addgroup -S nodegroup && adduser -S nodeuser -G nodegroup
 
 # Copy package files and install production dependencies
-COPY packages/server/package*.json ./
+COPY package*.json ./
 RUN npm install --omit=dev
 
 # Copy pre-built files from the host context
-COPY packages/server/dist ./dist
+COPY dist ./dist
 
 USER nodeuser
 

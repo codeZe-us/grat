@@ -1,6 +1,7 @@
 {
   "name": "Grat",
   "openapi": "docs/openapi.json",
+  "favicon": "docs/favicon.png",
   "colors": {
     "primary": "#4F46E5",
     "light": "#818CF8",

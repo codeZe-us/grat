@@ -4,10 +4,10 @@
 export class GratError extends Error {
   public readonly code: string;
   public readonly statusCode: number;
-  public readonly details?: any;
+  public readonly details?: unknown;
   public readonly requestId?: string;
 
-  constructor(message: string, code: string, statusCode: number, details?: any, requestId?: string) {
+  constructor(message: string, code: string, statusCode: number, details?: unknown, requestId?: string) {
     super(message);
     this.name = this.constructor.name;
     this.code = code;
@@ -38,9 +38,9 @@ export class InsufficientCreditsError extends GratError {}
  */
 export class ChannelExhaustedError extends GratError {
   public readonly retryAfter: number;
-  constructor(message: string, statusCode: number, details?: any, requestId?: string) {
+  constructor(message: string, statusCode: number, details?: unknown, requestId?: string) {
     super(message, 'CHANNELS_EXHAUSTED', statusCode, details, requestId);
-    this.retryAfter = details?.retryAfter || 30;
+    this.retryAfter = (details as { retryAfter?: number })?.retryAfter || 30;
   }
 }
 
@@ -48,10 +48,10 @@ export class ChannelExhaustedError extends GratError {
  * Thrown when Soroban simulation fails.
  */
 export class SimulationFailedError extends GratError {
-  public readonly events: any[];
-  constructor(message: string, statusCode: number, details?: any, requestId?: string) {
+  public readonly events: unknown[];
+  constructor(message: string, statusCode: number, details?: unknown, requestId?: string) {
     super(message, 'SIMULATION_FAILED', statusCode, details, requestId);
-    this.events = details || [];
+    this.events = (details as unknown[]) || [];
   }
 }
 
@@ -59,8 +59,8 @@ export class SimulationFailedError extends GratError {
  * Thrown when Horizon rejects the transaction submission.
  */
 export class SubmissionFailedError extends GratError {
-  public readonly resultCodes: any;
-  constructor(message: string, statusCode: number, details?: any, requestId?: string) {
+  public readonly resultCodes: unknown;
+  constructor(message: string, statusCode: number, details?: unknown, requestId?: string) {
     super(message, 'SUBMISSION_FAILED', statusCode, details, requestId);
     this.resultCodes = details;
   }
@@ -71,9 +71,9 @@ export class SubmissionFailedError extends GratError {
  */
 export class RateLimitError extends GratError {
   public readonly retryAfter: number;
-  constructor(message: string, statusCode: number, details?: any, requestId?: string) {
+  constructor(message: string, statusCode: number, details?: unknown, requestId?: string) {
     super(message, 'RATE_LIMIT_EXCEEDED', statusCode, details, requestId);
-    this.retryAfter = details?.retryAfter || 1;
+    this.retryAfter = (details as { retryAfter?: number })?.retryAfter || 1;
   }
 }
 
@@ -86,9 +86,9 @@ export class NetworkError extends GratError {}
  * Helper to map server error responses to typed SDK errors.
  */
 export async function handleResponseError(response: Response, requestId?: string) {
-  let body: any;
+  let body: { error?: { message?: string; code?: string; details?: unknown; requestId?: string } };
   try {
-    body = await response.json();
+    body = (await response.json()) as any;
   } catch (e) {
     throw new NetworkError('Failed to parse error response from relay', 'PARSE_ERROR', response.status, null, requestId);
   }

@@ -187,14 +187,16 @@ export class Grat {
       }
 
       return (await response.json()) as T;
-    } catch (err: any) {
+    } catch (err: unknown) {
       clearTimeout(timeoutId);
       
-      if (err.name === 'AbortError') {
+      const error = err as Error;
+      if (error.name === 'AbortError') {
         throw new GratError('Request timeout', 'TIMEOUT', 408);
       }
 
-      if (err instanceof GratError) throw err;
+      if (error instanceof GratError) throw error;
+      if (error instanceof NetworkError) throw error;
 
       // Handle network errors with retry
       if (retryCount < this.config.maxRetries) {
@@ -203,7 +205,7 @@ export class Grat {
         return this.request<T>(path, options, retryCount + 1);
       }
 
-      throw new NetworkError(err.message || 'Network error', 'NETWORK_ERROR', 503);
+      throw new NetworkError(error.message || 'Network error', 'NETWORK_ERROR', 503);
     }
   }
 

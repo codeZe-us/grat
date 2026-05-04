@@ -21,7 +21,7 @@ app.use(requestId);
 app.use(
   pinoHttp({
     logger,
-    genReqId: (req) => ((req as any).id as string),
+    genReqId: (req) => (req as express.Request & { id: string }).id,
     customLogLevel: (res, err) => {
       if (err || (res.statusCode && res.statusCode >= 500)) return 'error';
       if (res.statusCode && res.statusCode >= 400) return 'warn';

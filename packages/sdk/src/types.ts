@@ -48,9 +48,9 @@ export interface SimulationResult {
   /** Base64 XDR of the Soroban transaction data (modified if simulation succeeded). */
   transactionData: string;
   /** Authorization requirements discovered during simulation. */
-  auth?: any[];
+  auth?: unknown[];
   /** Diagnostic events emitted during simulation. */
-  events?: any[];
+  events?: unknown[];
 }
 
 /**

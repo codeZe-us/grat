@@ -11,7 +11,6 @@ import { channelManager } from '../channels/ChannelManager';
 import { sequenceManager } from '../channels/SequenceManager';
 import { redis } from '../../utils/redis';
 import {
-  RelayError,
   ValidationError,
   ChannelExhaustedError,
   SimulationFailedError,
@@ -40,8 +39,8 @@ export interface SimulationResult {
   resourceFee: string;
   latestLedger: number;
   transactionData: string;
-  auth: any[];
-  events: any[];
+  auth: unknown[];
+  events: unknown[];
 }
 
 export interface EstimateResponse {
@@ -73,8 +72,9 @@ export class SponsorshipService {
         throw new Error('Fee-bump transactions cannot be sponsored');
       }
       innerTx = txEnvelope;
-    } catch (err: any) {
-      throw new ValidationError('Invalid transaction XDR');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Invalid transaction XDR';
+      throw new ValidationError(message);
     }
 
     if (innerTx.signatures.length === 0) {
@@ -120,7 +120,8 @@ export class SponsorshipService {
         };
 
       } catch (err: any) {
-        const resultCodes = err.response?.data?.extras?.result_codes;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const resultCodes = (err as any).response?.data?.extras?.result_codes;
         const opResultCodes = resultCodes?.op_res_codes;
 
         logger.warn({
@@ -144,7 +145,8 @@ export class SponsorshipService {
           }
         }
 
-        const extras = err.response?.data?.extras;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const extras = (err as any).response?.data?.extras;
         const txResult = extras?.result_codes?.transaction;
         let opResult = extras?.result_codes?.operations?.[0];
 
@@ -152,7 +154,7 @@ export class SponsorshipService {
           opResult = extras.result_codes.inner_transaction.operations[0];
         }
 
-        const msg = opResult || txResult || err.response?.data?.title || err.message;
+        const msg = opResult || txResult || (err as any).response?.data?.title || (err as Error).message;
         throw new SubmissionFailedError(`Transaction Failed: ${msg}`, extras);
 
       } finally {
@@ -214,8 +216,9 @@ export class SponsorshipService {
       }
 
       throw new Error('Unexpected simulation result type');
-    } catch (err: any) {
-      const detail = err.response?.data?.extras?.result_codes?.operations?.[0] || err.response?.data?.detail || err.message;
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const detail = (err as any).response?.data?.extras?.result_codes?.operations?.[0] || (err as any).response?.data?.detail || (err as Error).message;
       logger.error({ err, detail }, 'Transaction simulation failed');
       throw new SubmissionFailedError(`Transaction Failed: ${detail}`);
     }
