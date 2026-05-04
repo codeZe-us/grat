@@ -40,7 +40,7 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     network: config.network,
     timestamp: new Date().toISOString(),
-    requestId: req.id,
+    requestId: req.id as string,
   });
 });
 
@@ -50,7 +50,7 @@ const notImplemented = (req: express.Request, res: express.Response) => {
     error: {
       code: 'NOT_IMPLEMENTED',
       message: 'This endpoint is not implemented yet',
-      requestId: req.id,
+      requestId: req.id as string,
     },
   });
 };

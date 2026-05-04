@@ -102,12 +102,8 @@ export class SponsorshipService {
         const feeStats = await this.horizon.feeStats();
         const baseFee = feeStats.fee_charged.p70 || '100';
 
-        // Get next sequence and prepare Account object
-        const nextSeq = await sequenceManager.getNext(channel.publicKey);
-        const account = new Account(channel.publicKey, (BigInt(nextSeq) - 1n).toString());
-
         const feeBump = TransactionBuilder.buildFeeBumpTransaction(
-          account,
+          channel.publicKey,
           baseFee,
           innerTx,
           networkPassphrase
