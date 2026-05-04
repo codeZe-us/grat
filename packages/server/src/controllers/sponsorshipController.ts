@@ -11,7 +11,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
         error: {
           code: 'MISSING_TRANSACTION',
           message: 'transaction is required in request body',
-          requestId: req.id,
+          requestId: req.id as string,
         },
       });
     }
@@ -22,7 +22,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
       if (cached) {
         return res.json({
           ...cached,
-          requestId: req.id,
+          requestId: req.id as string,
           cached: true,
         });
       }
@@ -30,7 +30,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
 
     const result = await sponsorshipService.sponsor(
       { transaction, network, idempotencyKey },
-      req.id
+      req.id as string
     );
 
     // Save Idempotency
@@ -40,7 +40,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
 
     res.json({
       ...result,
-      requestId: req.id,
+      requestId: req.id as string,
     });
   } catch (err) {
     next(err);

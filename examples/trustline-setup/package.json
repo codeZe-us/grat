@@ -1,0 +1,16 @@
+{
+  "name": "example-trustline-setup",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@grat/sdk": "workspace:*",
+    "@stellar/stellar-sdk": "^12.1.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
+}

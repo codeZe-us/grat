@@ -7,15 +7,20 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "dev": "pnpm -r dev",
+    "test:integration": "pnpm --filter @grat/server exec vitest tests/integration.test.ts --run",
+    "test:unit": "pnpm --filter @grat/sdk exec vitest tests/Grat.test.ts --run",
     "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "devDependencies": {
-    "typescript": "^5.4.5",
-    "prettier": "^3.2.5",
+    "@eslint/js": "^9.2.0",
+    "@types/supertest": "^7.2.0",
     "eslint": "^9.2.0",
     "globals": "^15.1.0",
-    "@eslint/js": "^9.2.0",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.5",
+    "supertest": "^7.2.2",
+    "typescript": "^5.4.5",
     "typescript-eslint": "^7.8.0",
-    "rimraf": "^5.0.5"
+    "vitest": "^4.1.5"
   }
 }
