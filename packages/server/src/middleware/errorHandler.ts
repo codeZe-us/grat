@@ -1,37 +1,47 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
-
-export interface AppError extends Error {
-  code?: string;
-  status?: number;
-  details?: any;
-}
+import { RelayError } from '../utils/errors';
 
 export const errorHandler = (
-  err: AppError,
+  err: Error,
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const status = err.status || 500;
-  const code = err.code || 'INTERNAL_SERVER_ERROR';
-  const message = err.message || 'An unexpected error occurred';
-  const requestId = req.id;
+  const requestId = (req as any).id;
 
+  if (err instanceof RelayError) {
+    err.requestId = requestId;
+    
+    // Log warning for 4xx, error for 5xx
+    const logLevel = err.statusCode >= 500 ? 'error' : 'warn';
+    logger[logLevel]({
+      msg: err.message,
+      code: err.code,
+      status: err.statusCode,
+      requestId,
+      details: err.details,
+    });
+
+    if (err.statusCode === 503 && (err as any).retryAfter) {
+      res.setHeader('Retry-After', (err as any).retryAfter.toString());
+    }
+
+    return res.status(err.statusCode).json(err.toJSON());
+  }
+
+  // Handle unknown errors
   logger.error({
-    msg: message,
-    code,
-    status,
-    requestId,
+    msg: 'Unhandled internal error',
+    error: err.message,
     stack: err.stack,
-    details: err.details,
+    requestId,
   });
 
-  res.status(status).json({
+  res.status(500).json({
     error: {
-      code,
-      message,
-      details: err.details,
+      code: 'INTERNAL_ERROR',
+      message: 'An unexpected internal error occurred',
       requestId,
     },
   });

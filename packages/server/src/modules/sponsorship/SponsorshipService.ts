@@ -11,6 +11,14 @@ import { config } from '../../config';
 import { logger } from '../../utils/logger';
 import { channelManager } from '../channels/ChannelManager';
 import { redis } from '../../utils/redis';
+import {
+  RelayError,
+  ValidationError,
+  ChannelExhaustedError,
+  SimulationFailedError,
+  SubmissionFailedError,
+  NetworkError,
+} from '../../utils/errors';
 
 export interface SponsorRequest {
   transaction: string;
@@ -69,18 +77,12 @@ export class SponsorshipService {
       }
       innerTx = txEnvelope;
     } catch (err: any) {
-      const error: any = new Error('Invalid transaction XDR');
-      error.status = 400;
-      error.code = 'INVALID_XDR';
-      throw error;
+      throw new ValidationError('Invalid transaction XDR');
     }
 
     // 2. Validate Signatures (at least one)
     if (innerTx.signatures.length === 0) {
-      const error: any = new Error('Transaction must be signed by the source account');
-      error.status = 400;
-      error.code = 'MISSING_SIGNATURES';
-      throw error;
+      throw new ValidationError('Transaction must be signed by the source account');
     }
 
     // 3. Retry Loop for submission
@@ -90,10 +92,7 @@ export class SponsorshipService {
     while (retries <= maxRetries) {
       let channel = await channelManager.acquire();
       if (!channel) {
-        const error: any = new Error('No available channel accounts. Please try again later.');
-        error.status = 503;
-        error.code = 'CHANNELS_EXHAUSTED';
-        throw error;
+        throw new ChannelExhaustedError();
       }
 
       try {
@@ -145,11 +144,10 @@ export class SponsorshipService {
         }
 
         // Non-retryable or max retries reached
-        const error: any = new Error(err.response?.data?.title || err.message);
-        error.status = err.response?.status || 500;
-        error.code = resultCodes?.transaction || 'SUBMISSION_FAILED';
-        error.details = err.response?.data?.extras;
-        throw error;
+        throw new SubmissionFailedError(
+          err.response?.data?.title || err.message,
+          err.response?.data?.extras
+        );
 
       } finally {
         await channelManager.release(channel.publicKey);
@@ -174,11 +172,7 @@ export class SponsorshipService {
       const result = await this.rpc.simulateTransaction(tx as Transaction);
 
       if (rpc.Api.isSimulationError(result)) {
-        const error: any = new Error('Simulation failed');
-        error.status = 400;
-        error.code = 'SIMULATION_FAILED';
-        error.details = result.events;
-        throw error;
+        throw new SimulationFailedError('Simulation failed', result.events);
       }
 
       if (rpc.Api.isSimulationSuccess(result)) {
@@ -197,11 +191,8 @@ export class SponsorshipService {
 
       throw new Error('Unexpected simulation result type');
     } catch (err: any) {
-      if (err.status) throw err;
-      const error: any = new Error(err.message || 'Error parsing transaction XDR');
-      error.status = 400;
-      error.code = 'INVALID_XDR';
-      throw error;
+      if (err instanceof RelayError) throw err;
+      throw new ValidationError(err.message || 'Error parsing transaction XDR');
     }
   }
 
@@ -211,10 +202,7 @@ export class SponsorshipService {
     try {
       tx = TransactionBuilder.fromXDR(xdr, networkPassphrase) as Transaction;
     } catch (err) {
-      const error: any = new Error('Invalid transaction XDR');
-      error.status = 400;
-      error.code = 'INVALID_XDR';
-      throw error;
+      throw new ValidationError('Invalid transaction XDR');
     }
 
     const feeStats = await this.horizon.feeStats();
