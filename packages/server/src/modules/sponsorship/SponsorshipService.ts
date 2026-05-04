@@ -73,7 +73,7 @@ export class SponsorshipService {
 
       try {
         // 4. Build Fee Bump
-        const feeStats = await this.horizon.fetchFeeStats();
+        const feeStats = await this.horizon.feeStats();
         const baseFee = feeStats.fee_charged.p70 || '100';
 
         const feeBump = TransactionBuilder.buildFeeBumpTransaction(

@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
@@ -8,7 +8,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { config } from './config';
 import { sponsorHandler } from './controllers/sponsorshipController';
 
-const app = express();
+const app: Express = express();
 
 // Middlewares
 app.use(helmet());
@@ -18,10 +18,10 @@ app.use(requestId);
 app.use(
   pinoHttp({
     logger,
-    genReqId: (req) => (req as any).id,
+    genReqId: (req) => ((req as any).id as string),
     customLogLevel: (res, err) => {
-      if (res.statusCode >= 500 || err) return 'error';
-      if (res.statusCode >= 400) return 'warn';
+      if (err || (res.statusCode && res.statusCode >= 500)) return 'error';
+      if (res.statusCode && res.statusCode >= 400) return 'warn';
       return 'info';
     },
   }),
