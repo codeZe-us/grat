@@ -31,9 +31,8 @@ async function runSmokeTest() {
 
     // 2. Redis & Channel Health (via status)
     const status = await grat.status();
-    if (status.channels) {
-      const fundedCount = status.channels.filter(c => parseFloat(c.balance || '0') > 0).length;
-      console.log(`${COLORS.green}✓ Redis connected & ${fundedCount}/${status.channels.length} channels funded${COLORS.reset}`);
+    if (status.pool) {
+      console.log(`${COLORS.green}✓ Redis connected & ${status.pool.funded}/${status.pool.total} channels funded (total: ${status.pool.totalXlm} XLM)${COLORS.reset}`);
       passCount++;
     }
 
@@ -98,7 +97,7 @@ async function runSmokeTest() {
 
     // 8. Test Estimate
     const est = await grat.estimate(simTx);
-    console.log(`${COLORS.green}✓ Fee estimate received: ${est.totalFee} stroops${COLORS.reset}`);
+    console.log(`${COLORS.green}✓ Fee estimate received: ${est.estimatedFee} stroops${COLORS.reset}`);
     passCount++;
 
     console.log(`\n${COLORS.cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLORS.reset}`);

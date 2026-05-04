@@ -101,7 +101,7 @@ describe('Grat SDK Unit Tests', () => {
     });
 
     it('throws ChannelExhaustedError on 503', async () => {
-      const grat = Grat.testnet();
+      const grat = new Grat({ relayUrl: 'http://localhost:3000', maxRetries: 0 });
       (fetch as any).mockResolvedValueOnce({
         ok: false,
         status: 503,
@@ -184,7 +184,7 @@ describe('Grat SDK Unit Tests', () => {
     });
 
     it('throws NetworkError when fetch fails', async () => {
-      const grat = Grat.testnet();
+      const grat = new Grat({ relayUrl: 'http://localhost:3000', maxRetries: 0 });
       (fetch as any).mockRejectedValueOnce(new Error('Failed to fetch'));
 
       await expect(grat.status()).rejects.toThrow(NetworkError);
