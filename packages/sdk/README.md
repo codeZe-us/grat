@@ -48,16 +48,17 @@ const result = await grat.sponsor(signedTx);
 
 ### Error Handling
 
-The SDK provides typed errors for precise handling of relay and network failures.
+The SDK provides typed errors for precise handling of relay and network failures. Detailed network errors (e.g., `op_low_reserve`) are available in the `message` or `details` property.
 
 ```typescript
-import { ChannelExhaustedError, RateLimitError } from '@grat-official-sdk/sdk';
+import { SubmissionFailedError, RateLimitError } from '@grat-official-sdk/sdk';
 
 try {
   await grat.sponsor(tx);
 } catch (error) {
-  if (error instanceof ChannelExhaustedError) {
-    // Wait for the relay to replenish or try another relay
+  if (error instanceof SubmissionFailedError) {
+    console.log(`Stellar Error: ${error.message}`); // e.g., "Transaction Failed: op_low_reserve"
+    console.log(error.details); // Full Horizon result codes
   } else if (error instanceof RateLimitError) {
     console.log(`Retry after ${error.retryAfter} seconds`);
   }

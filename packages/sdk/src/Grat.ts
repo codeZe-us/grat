@@ -9,7 +9,7 @@ import {
 import { GratError, handleResponseError, NetworkError } from './errors';
 
 // Package version for headers
-const SDK_VERSION = '0.1.0';
+const SDK_VERSION = '0.2.0';
 
 /**
  * Main client for interacting with the Grat Relay Server.

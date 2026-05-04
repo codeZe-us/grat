@@ -66,7 +66,6 @@ export class SponsorshipService {
   async sponsor(req: SponsorRequest, requestId: string): Promise<SponsorResponse> {
     const networkPassphrase = req.network === 'mainnet' ? Networks.PUBLIC : Networks.TESTNET;
     
-    // 1. Decode & Validate
     let innerTx: Transaction;
     try {
       const txEnvelope = TransactionBuilder.fromXDR(req.transaction, networkPassphrase);
@@ -78,12 +77,10 @@ export class SponsorshipService {
       throw new ValidationError('Invalid transaction XDR');
     }
 
-    // 2. Validate Signatures (at least one)
     if (innerTx.signatures.length === 0) {
       throw new ValidationError('Transaction must be signed by the source account');
     }
 
-    // 3. Retry Loop for submission
     let retries = 0;
     const maxRetries = 3;
 
@@ -94,7 +91,6 @@ export class SponsorshipService {
       }
 
       try {
-        // 4. Build Fee Bump
         const feeStats = await this.horizon.feeStats();
         const baseFee = feeStats.fee_charged.p70 || '100';
 
@@ -105,17 +101,14 @@ export class SponsorshipService {
           networkPassphrase
         );
 
-        // 5. Sign
         feeBump.sign(channel.keypair);
 
-        // 6. Submit
         const result = await this.horizon.submitTransaction(feeBump);
         
-        // Testnet readable logging
         if (config.network === 'testnet') {
           const ops = innerTx.operations.map(op => op.type).join(', ');
           const source = `${innerTx.source?.substring(0, 4)}...${innerTx.source?.substring(52)}`;
-          console.log(`[${new Date().toISOString()}] SPONSOR: Source=${source} Ops=[${ops}] Fee=${feeBump.fee} Hash=${result.hash} Channel=${channel.publicKey.substring(0, 4)}...`);
+          logger.info({ hash: result.hash, channel: channel.publicKey }, `SPONSOR SUCCESS: ${source} [${ops}]`);
         }
 
         return {
@@ -131,21 +124,14 @@ export class SponsorshipService {
         const opResultCodes = resultCodes?.op_res_codes;
 
         logger.warn({
-          msg: 'Submission failed',
+          msg: 'Submission failed, checking retry conditions',
           requestId,
           retries,
           code: resultCodes?.transaction,
           opCodes: opResultCodes,
         });
 
-        // DEBUG: Print full result codes for troubleshooting
-        console.log('--- STELLAR ERROR DEBUG ---');
-        console.log(JSON.stringify(resultCodes, null, 2));
-        console.log('---------------------------');
-
-        // Retry logic for specific codes
         if (resultCodes?.transaction === 'tx_bad_seq' || err.response?.status === 503) {
-          // If sequence is bad, sync from Horizon to reset cache
           if (resultCodes?.transaction === 'tx_bad_seq') {
             await sequenceManager.sync(channel.publicKey);
           }
@@ -154,27 +140,20 @@ export class SponsorshipService {
             retries++;
             const backoff = Math.pow(2, retries) * 1000;
             await new Promise(resolve => setTimeout(resolve, backoff));
-            continue; // Retry with new channel (locked channel will be released in finally)
+            continue;
           }
         }
 
-        // Non-retryable or max retries reached
-        // Non-retryable or max retries reached
         const extras = err.response?.data?.extras;
         const txResult = extras?.result_codes?.transaction;
         let opResult = extras?.result_codes?.operations?.[0];
 
-        // Drill down into inner transaction if fee-bump failed
         if (txResult === 'tx_fee_bump_inner_failed' && extras?.result_codes?.inner_transaction?.operations) {
           opResult = extras.result_codes.inner_transaction.operations[0];
         }
 
         const msg = opResult || txResult || err.response?.data?.title || err.message;
-
-        throw new SubmissionFailedError(
-          `Transaction Failed: ${msg}`,
-          extras
-        );
+        throw new SubmissionFailedError(`Transaction Failed: ${msg}`, extras);
 
       } finally {
         await channelManager.release(channel.publicKey);

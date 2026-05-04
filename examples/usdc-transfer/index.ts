@@ -5,10 +5,9 @@ async function run() {
   console.log('🚀 Starting USDC Transfer Example with Fee Sponsorship');
   
   const grat = Grat.testnet();
-  const issuer = Keypair.random(); // In a real scenario, this would be the USDC issuer
+  const issuer = Keypair.random();
   const usdc = new Asset('USDC', issuer.publicKey());
 
-  // 1. Create Alice and Bob
   const alice = Keypair.random();
   const bob = Keypair.random();
 
@@ -25,8 +24,7 @@ async function run() {
   console.log('   Waiting for network sync...');
   await new Promise(resolve => setTimeout(resolve, 5000));
 
-  // 2. Setup Alice's Trustline (SPONSORED)
-  console.log('\n2. Setting up USDC trustline for Alice (SPONSORED)...');
+  console.log('\n--- TRUSTLINE SETUP ---');
   const aliceInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${alice.publicKey()}`)).json();
   
   const trustlineTx = new TransactionBuilder(
@@ -43,9 +41,7 @@ async function run() {
   const trustlineResult = await grat.sponsor(trustlineTx);
   console.log(`   ✅ Trustline established! Hash: ${trustlineResult.hash}`);
 
-  // 3. Setup Bob's Trustline (Alice doesn't pay for this either, but we'll just do it manually for Bob or sponsor it too)
-  // For simplicity, let's just sponsor Bob's too.
-  console.log('\n3. Setting up USDC trustline for Bob (SPONSORED)...');
+  console.log('\n--- BOB TRUSTLINE SETUP ---');
   const bobInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${bob.publicKey()}`)).json();
   const bobTrustlineTx = new TransactionBuilder(
     new Account(bob.publicKey(), bobInfo.sequence),
@@ -76,9 +72,7 @@ async function run() {
   await grat.sponsor(mintTx);
   console.log('   ✅ Alice received 100 USDC.');
 
-  // 4. Send USDC from Alice to Bob (SPONSORED)
-  console.log('\n4. Alice sending 50 USDC to Bob (SPONSORED)...');
-  // Need to get new sequence for Alice
+  console.log('\n--- USDC TRANSFER ---');
   const aliceInfo2 = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${alice.publicKey()}`)).json();
   
   const paymentTx = new TransactionBuilder(
