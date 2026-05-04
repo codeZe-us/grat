@@ -1,5 +1,5 @@
 import { Keypair, TransactionBuilder, Networks, Account, xdr, Contract } from '@stellar/stellar-sdk';
-import { Grat } from '@grat/sdk';
+import { Grat } from '@grat-official-sdk/sdk';
 
 async function run() {
   console.log('🚀 Starting Soroban Contract Call Example with Fee Sponsorship');

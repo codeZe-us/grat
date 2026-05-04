@@ -6,7 +6,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@grat/sdk": "workspace:*",
+    "@grat-official-sdk/sdk": "workspace:*",
     "@stellar/stellar-sdk": "^12.1.0"
   },
   "devDependencies": {

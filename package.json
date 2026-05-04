@@ -8,7 +8,7 @@
     "test": "pnpm -r test",
     "dev": "pnpm -r dev",
     "test:integration": "pnpm --filter @grat/server exec vitest tests/integration.test.ts --run",
-    "test:unit": "pnpm --filter @grat/sdk exec vitest tests/Grat.test.ts --run",
+    "test:unit": "pnpm --filter @grat-official-sdk/sdk exec vitest tests/Grat.test.ts --run",
     "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "devDependencies": {

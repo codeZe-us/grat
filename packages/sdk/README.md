@@ -5,9 +5,9 @@ The official client for interacting with the **Grat Relay Server** to enable zer
 ## Installation
 
 ```bash
-npm install @grat/sdk
+npm install @grat-official-sdk/sdk
 # or
-pnpm add @grat/sdk
+pnpm add @grat-official-sdk/sdk
 ```
 
 ## Quick Start
@@ -15,7 +15,7 @@ pnpm add @grat/sdk
 ### 1. Initialize the Client
 
 ```typescript
-import { Grat } from '@grat/sdk';
+import { Grat } from '@grat-official-sdk/sdk';
 
 // Connect to your local relay or the public testnet relay
 const grat = Grat.testnet();
@@ -48,7 +48,7 @@ const result = await grat.sponsor(signedTx);
 The SDK provides typed errors for precise handling of relay and network failures.
 
 ```typescript
-import { ChannelExhaustedError, RateLimitError } from '@grat/sdk';
+import { ChannelExhaustedError, RateLimitError } from '@grat-official-sdk/sdk';
 
 try {
   await grat.sponsor(tx);

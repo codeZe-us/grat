@@ -1,4 +1,4 @@
-# Grat: High-Performance Stellar Fee-Sponsorship Relay
+# Grat: Stellar Fee-Sponsorship Relay
 
 **Eliminate the "XLM for Gas" problem and onboard users to Stellar with zero friction.**
 
@@ -27,13 +27,13 @@ docker-compose up -d
 ### 2. Install the SDK
 
 ```bash
-npm install @grat/sdk
+npm install @grat-official-sdk/sdk
 ```
 
 ### 3. Sponsor a Transaction
 
 ```typescript
-import { Grat } from '@grat/sdk';
+import { Grat } from '@grat-official-sdk/sdk';
 
 const grat = Grat.testnet(); // Defaults to http://localhost:3000
 const result = await grat.sponsor(signedUserTransaction);

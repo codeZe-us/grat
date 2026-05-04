@@ -1,5 +1,5 @@
 import { Keypair, Asset, Operation, TransactionBuilder, Networks, Account } from '@stellar/stellar-sdk';
-import { Grat } from '@grat/sdk';
+import { Grat } from '@grat-official-sdk/sdk';
 
 async function run() {
   console.log('🚀 Starting USDC Transfer Example with Fee Sponsorship');
