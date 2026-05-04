@@ -3,6 +3,7 @@
 **Eliminate the "XLM for Gas" problem and onboard users to Stellar with zero friction.**
 
 [![npm version](https://img.shields.io/npm/v/@grat-official-sdk/sdk?label=%40grat-official-sdk%2Fsdk&color=blue)](https://www.npmjs.com/package/@grat-official-sdk/sdk)
+[![Documentation](https://img.shields.io/badge/docs-Mintlify-indigo)](https://grat.mintlify.app/docs/introduction)
 
 ## What is Grat?
 
