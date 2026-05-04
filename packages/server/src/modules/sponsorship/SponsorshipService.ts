@@ -189,7 +189,7 @@ export class SponsorshipService {
           },
           resourceFee: result.minResourceFee,
           latestLedger: result.latestLedger,
-          transactionData: result.transactionData.toXDR().toString('base64'),
+          transactionData: result.transactionData.build().toXDR().toString('base64'),
           auth: result.result?.auth || [],
           events: result.events || [],
         };
