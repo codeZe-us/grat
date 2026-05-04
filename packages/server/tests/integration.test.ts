@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { Keypair, TransactionBuilder, Networks, Asset, Operation } from '@stellar/stellar-sdk';
+import { Keypair, TransactionBuilder, Networks, Asset, Operation, Account } from '@stellar/stellar-sdk';
 import { app } from '../src/app';
 import { redis } from '../src/utils/redis';
 import { channelManager } from '../src/modules/channels/ChannelManager';
 
 describe('Grat Relay Integration Tests', () => {
   let userKeypair: Keypair;
-  const RELAY_URL = ''; // supertest takes the app directly
 
   beforeAll(async () => {
     // Ensure we are on testnet for tests
@@ -41,11 +40,9 @@ describe('Grat Relay Integration Tests', () => {
   describe('POST /v1/sponsor', () => {
     it('sponsors a classic payment transaction', async () => {
       // 1. Build a simple payment
+      const accountInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${userKeypair.publicKey()}`)).json();
       const tx = new TransactionBuilder(
-        {
-          id: userKeypair.publicKey(),
-          sequence: (await (await fetch(`https://horizon-testnet.stellar.org/accounts/${userKeypair.publicKey()}`)).json()).sequence
-        },
+        new Account(userKeypair.publicKey(), accountInfo.sequence),
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
         .addOperation(
@@ -74,11 +71,9 @@ describe('Grat Relay Integration Tests', () => {
     }, 60000);
 
     it('returns identical response for the same idempotency key', async () => {
+      const accountInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${userKeypair.publicKey()}`)).json();
       const tx = new TransactionBuilder(
-        {
-          id: userKeypair.publicKey(),
-          sequence: (await (await fetch(`https://horizon-testnet.stellar.org/accounts/${userKeypair.publicKey()}`)).json()).sequence
-        },
+        new Account(userKeypair.publicKey(), accountInfo.sequence),
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
         .addOperation(Operation.payment({ destination: Keypair.random().publicKey(), asset: Asset.native(), amount: '0.1' }))
@@ -105,7 +100,7 @@ describe('Grat Relay Integration Tests', () => {
 
     it('returns 400 for unsigned transaction', async () => {
       const tx = new TransactionBuilder(
-        { id: userKeypair.publicKey(), sequence: '1' },
+        new Account(userKeypair.publicKey(), '1'),
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
         .addOperation(Operation.payment({ destination: Keypair.random().publicKey(), asset: Asset.native(), amount: '1' }))
@@ -124,7 +119,7 @@ describe('Grat Relay Integration Tests', () => {
   describe('POST /v1/estimate', () => {
     it('returns fee estimate for classic transaction', async () => {
       const tx = new TransactionBuilder(
-        { id: userKeypair.publicKey(), sequence: '1' },
+        new Account(userKeypair.publicKey(), '1'),
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
         .addOperation(Operation.payment({ destination: Keypair.random().publicKey(), asset: Asset.native(), amount: '1' }))
@@ -143,14 +138,7 @@ describe('Grat Relay Integration Tests', () => {
 
   describe('Rate Limiting', () => {
     it('returns 429 when minute limit is exceeded', async () => {
-      // We need to send > 60 requests. Since this is an integration test, 
-      // we might want to lower the limit for tests, but for now we'll just spam.
-      // Actually, let's just test that it works if we send a few.
-      // To properly test this without hitting real network 60 times, we'd need to mock config.
-      
-      // For this test, I'll just check if it returns 200/400 for now, 
-      // and assume rate limiting is tested by unit tests or manual verification.
-      // Spamming 60 requests against Horizon in a test is bad.
+      // Rate limiting test omitted to avoid hitting Horizon limits
     });
   });
 });
