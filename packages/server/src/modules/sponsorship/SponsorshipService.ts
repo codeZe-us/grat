@@ -178,8 +178,26 @@ export class SponsorshipService {
 
   async simulate(xdr: string): Promise<SimulationResult> {
     try {
-      const tx = TransactionBuilder.fromXDR(xdr, Networks.TESTNET); // passphrases will be ignored for simulation
-      const result = await this.rpc.simulateTransaction(tx as Transaction);
+      const tx = TransactionBuilder.fromXDR(xdr, Networks.TESTNET) as Transaction;
+      
+      const isSoroban = tx.operations.some(op => 
+        op.type === 'invokeHostFunction' || 
+        op.type === 'extendFootprintTtl' || 
+        op.type === 'restoreFootprint'
+      );
+
+      if (!isSoroban) {
+        return {
+          cost: { cpuInstructions: '0', memoryBytes: '0' },
+          resourceFee: '0',
+          latestLedger: 0,
+          transactionData: xdr,
+          auth: [],
+          events: [],
+        };
+      }
+
+      const result = await this.rpc.simulateTransaction(tx);
 
       if (rpc.Api.isSimulationError(result)) {
         throw new SimulationFailedError('Simulation failed', result.events);

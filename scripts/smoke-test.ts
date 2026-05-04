@@ -53,10 +53,9 @@ async function runSmokeTest() {
       fee: '100',
       networkPassphrase: Networks.TESTNET
     })
-    .addOperation(Operation.payment({
-      destination: 'GAYOLLLUIZE4DZMBB2ZBKGBRCOAVIB6CGE37G7I3ZYT6SADF66GZ6XHS', // Random testnet addr
-      asset: Asset.native(),
-      amount: '1'
+    .addOperation(Operation.createAccount({
+      destination: Keypair.random().publicKey(),
+      startingBalance: '1'
     }))
     .setTimeout(30)
     .build();
@@ -83,10 +82,9 @@ async function runSmokeTest() {
       fee: '100',
       networkPassphrase: Networks.TESTNET
     })
-    .addOperation(Operation.payment({
-      destination: 'GAYOLLLUIZE4DZMBB2ZBKGBRCOAVIB6CGE37G7I3ZYT6SADF66GZ6XHS',
-      asset: Asset.native(),
-      amount: '0.1'
+    .addOperation(Operation.createAccount({
+      destination: Keypair.random().publicKey(),
+      startingBalance: '0.1'
     }))
     .setTimeout(30)
     .build();

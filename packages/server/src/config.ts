@@ -1,8 +1,10 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load .env from root if it exists
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+// Load .env from package root or project root
+dotenv.config(); // Load from packages/server/.env if exists
+dotenv.config({ path: path.join(process.cwd(), '.env') }); // Load from root if running from root
+dotenv.config({ path: path.join(process.cwd(), '../../.env') }); // Load from root if running from package
 
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
