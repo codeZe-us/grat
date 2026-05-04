@@ -16,15 +16,54 @@ const SDK_VERSION = '0.1.0';
  */
 export class Grat {
   private config: Required<GratConfig>;
+  private static testnetLogged = false;
+
+  /**
+   * Shorthand to create a testnet-configured client.
+   * @param relayUrl Optional relay URL (defaults to http://localhost:3000).
+   */
+  static testnet(relayUrl?: string): Grat {
+    return new Grat({ relayUrl: relayUrl || 'http://localhost:3000', network: 'testnet' });
+  }
+
+  /**
+   * Shorthand to create a mainnet-configured client.
+   * @param apiKey Required API key for mainnet.
+   * @param relayUrl Required relay URL for mainnet.
+   */
+  static mainnet(apiKey: string, relayUrl: string): Grat {
+    return new Grat({ apiKey, relayUrl, network: 'mainnet' });
+  }
 
   /**
    * Initialize a new Grat client.
    * @param config Configuration options for the relay client.
    */
   constructor(config: GratConfig) {
+    const network = config.network || 'testnet';
+    const relayUrl = config.relayUrl || (network === 'testnet' ? 'http://localhost:3000' : '');
+
+    // Validation
+    if (network === 'mainnet') {
+      if (!config.apiKey) {
+        throw new Error('API key is required for mainnet. Get one at https://grat.network');
+      }
+      if (!config.relayUrl) {
+        throw new Error('Relay URL is required for mainnet.');
+      }
+    }
+
+    if (relayUrl) {
+      try {
+        new URL(relayUrl);
+      } catch (e) {
+        throw new Error(`Invalid relay URL: ${relayUrl}`);
+      }
+    }
+
     this.config = {
-      relayUrl: config.relayUrl.replace(/\/$/, ''),
-      network: config.network || 'testnet',
+      relayUrl: relayUrl.replace(/\/$/, ''),
+      network,
       apiKey: config.apiKey || '',
       maxRetries: config.maxRetries ?? 3,
       timeout: config.timeout ?? 30000,
@@ -104,6 +143,11 @@ export class Grat {
     options: RequestInit,
     retryCount = 0
   ): Promise<T> {
+    if (this.config.network === 'testnet' && !Grat.testnetLogged) {
+      console.log('Grat SDK running in testnet mode');
+      Grat.testnetLogged = true;
+    }
+
     const url = `${this.config.relayUrl}${path}`;
     const headers = {
       'Content-Type': 'application/json',
