@@ -1,5 +1,5 @@
 node_modules
-dist
+# dist (Allow dist to be copied in CI)
 .git
 .env
 npm-debug.log
