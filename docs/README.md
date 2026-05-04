@@ -9,7 +9,7 @@ This directory contains the Mintlify-powered documentation for Grat.
    npm i -g mintlify
    ```
 
-2. Run the development server:
+2. Run the development server from the **root** of the project:
    ```bash
    mintlify dev
    ```

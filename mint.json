@@ -1,10 +1,6 @@
 {
   "name": "Grat",
-  "logo": {
-    "light": "/logo/light.png",
-    "dark": "/logo/dark.png"
-  },
-  "favicon": "/favicon.png",
+  "openapi": "docs/openapi.json",
   "colors": {
     "primary": "#4F46E5",
     "light": "#818CF8",
@@ -56,63 +52,63 @@
     {
       "group": "Getting Started",
       "pages": [
-        "introduction",
-        "quickstart",
-        "how-it-works"
+        "docs/introduction",
+        "docs/quickstart",
+        "docs/how-it-works"
       ]
     },
     {
       "group": "Core Concepts",
       "pages": [
-        "core-concepts/fee-bump-transactions",
-        "core-concepts/channel-accounts",
-        "core-concepts/credits",
-        "core-concepts/policies"
+        "docs/core-concepts/fee-bump-transactions",
+        "docs/core-concepts/channel-accounts",
+        "docs/core-concepts/credits",
+        "docs/core-concepts/policies"
       ]
     },
     {
       "group": "Guides",
       "pages": [
-        "guides/sponsor-usdc-payments",
-        "guides/sponsor-soroban-contracts",
-        "guides/self-hosting",
-        "guides/migrate-from-launchtube"
+        "docs/guides/sponsor-usdc-payments",
+        "docs/guides/sponsor-soroban-contracts",
+        "docs/guides/self-hosting",
+        "docs/guides/migrate-from-launchtube"
       ]
     },
     {
       "group": "API Reference",
       "pages": [
-        "api-reference/authentication",
-        "api-reference/sponsor",
-        "api-reference/simulate",
-        "api-reference/estimate",
-        "api-reference/health"
+        "docs/api-reference/authentication",
+        "docs/api-reference/sponsor",
+        "docs/api-reference/simulate",
+        "docs/api-reference/estimate",
+        "docs/api-reference/health"
       ]
     },
     {
       "group": "SDKs",
       "pages": [
-        "sdks/typescript",
-        "sdks/react",
-        "sdks/python",
-        "sdks/rust",
-        "sdks/go"
+        "docs/sdks/typescript",
+        "docs/sdks/react",
+        "docs/sdks/python",
+        "docs/sdks/rust",
+        "docs/sdks/go"
       ]
     },
     {
       "group": "CLI",
       "pages": [
-        "cli/installation",
-        "cli/commands"
+        "docs/cli/installation",
+        "docs/cli/commands"
       ]
     },
     {
       "group": "Self-Hosting",
       "pages": [
-        "self-hosting/docker",
-        "self-hosting/kubernetes",
-        "self-hosting/configuration",
-        "self-hosting/monitoring"
+        "docs/self-hosting/docker",
+        "docs/self-hosting/kubernetes",
+        "docs/self-hosting/configuration",
+        "docs/self-hosting/monitoring"
       ]
     }
   ],
