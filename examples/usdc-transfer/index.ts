@@ -16,9 +16,14 @@ async function run() {
   console.log(`   Alice: ${alice.publicKey()}`);
   console.log(`   Bob:   ${bob.publicKey()}`);
 
-  await fetch(`https://friendbot.stellar.org/?addr=${alice.publicKey()}`);
-  await fetch(`https://friendbot.stellar.org/?addr=${bob.publicKey()}`);
+  await Promise.all([
+    fetch(`https://friendbot.stellar.org/?addr=${alice.publicKey()}`),
+    fetch(`https://friendbot.stellar.org/?addr=${bob.publicKey()}`),
+    fetch(`https://friendbot.stellar.org/?addr=${issuer.publicKey()}`)
+  ]);
   console.log('   ✅ Accounts funded with XLM for base reserve (via Friendbot)');
+  console.log('   Waiting for network sync...');
+  await new Promise(resolve => setTimeout(resolve, 5000));
 
   // 2. Setup Alice's Trustline (SPONSORED)
   console.log('\n2. Setting up USDC trustline for Alice (SPONSORED)...');
@@ -52,6 +57,24 @@ async function run() {
   bobTrustlineTx.sign(bob);
   await grat.sponsor(bobTrustlineTx);
   console.log('   ✅ Bob is ready to receive USDC.');
+  
+  // 3.5 Issuer sends USDC to Alice (SPONSORED)
+  console.log('\n3.5. Minting 100 USDC for Alice (SPONSORED)...');
+  const issuerInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${issuer.publicKey()}`)).json();
+  const mintTx = new TransactionBuilder(
+    new Account(issuer.publicKey(), issuerInfo.sequence),
+    { fee: '100', networkPassphrase: Networks.TESTNET }
+  )
+    .addOperation(Operation.payment({
+      destination: alice.publicKey(),
+      asset: usdc,
+      amount: '100'
+    }))
+    .setTimeout(30)
+    .build();
+  mintTx.sign(issuer);
+  await grat.sponsor(mintTx);
+  console.log('   ✅ Alice received 100 USDC.');
 
   // 4. Send USDC from Alice to Bob (SPONSORED)
   console.log('\n4. Alice sending 50 USDC to Bob (SPONSORED)...');
