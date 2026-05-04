@@ -1,16 +1,33 @@
 import { app } from './app';
 import { config } from './config';
 import { logger } from './utils/logger';
+import { channelManager } from './modules/channels/ChannelManager';
 
 const port = config.port;
 
-const server = app.listen(port, () => {
-  logger.info(`Server listening on port ${port} in ${config.network} mode`);
-});
+const start = async () => {
+  try {
+    await channelManager.initialize();
+    
+    const server = app.listen(port, () => {
+      logger.info(`Server listening on port ${port} in ${config.network} mode`);
+    });
 
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    logger.info('HTTP server closed');
-  });
-});
+    const shutdown = async (signal: string) => {
+      logger.info(`${signal} signal received: closing HTTP server`);
+      channelManager.stop();
+      server.close(() => {
+        logger.info('HTTP server closed');
+        process.exit(0);
+      });
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+  } catch (err) {
+    logger.error({ msg: 'Failed to start server', err });
+    process.exit(1);
+  }
+};
+
+start();
