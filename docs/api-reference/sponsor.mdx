@@ -1,0 +1,62 @@
+---
+title: Sponsor Transaction
+api: POST /v1/sponsor
+description: "Submit a signed transaction to be sponsored by the relay."
+---
+
+import testnetNote from '/snippets/testnet-note.mdx'
+import errorExample from '/snippets/error-handling-example.mdx'
+
+<testnetNote />
+
+This endpoint accepts a base64-encoded Stellar transaction envelope, wraps it in a fee-bump envelope signed by a relay channel account, and submits it to the network.
+
+### Request Body
+
+<ParamField body="transaction" type="string" required>
+  The Base64-encoded XDR of the signed inner transaction.
+</ParamField>
+
+<ParamField body="network" type="string" default="testnet">
+  The target network. Can be `testnet` or `mainnet`.
+</ParamField>
+
+### Response
+
+<ResponseField name="hash" type="string">
+  The transaction hash of the submitted fee-bump transaction.
+</ResponseField>
+
+<ResponseField name="ledger" type="number">
+  The ledger number in which the transaction was included.
+</ResponseField>
+
+<ResponseField name="feePaid" type="string">
+  The total fee (in stroops) paid by the relay for this transaction.
+</ResponseField>
+
+<ResponseField name="channelAccount" type="string">
+  The public key of the channel account used to pay the fee.
+</ResponseField>
+
+### Examples
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.grat.network/v1/sponsor \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: sr_live_..." \
+  -d '{
+    "transaction": "AAAAAgAAA...",
+    "network": "testnet"
+  }'
+```
+
+```typescript SDK
+const result = await grat.sponsor(signedTx);
+```
+</CodeGroup>
+
+### Error Handling
+
+<errorExample />

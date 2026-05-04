@@ -1,0 +1,46 @@
+---
+title: React SDK
+description: "React hooks for integrating Grat into your frontend."
+---
+
+The React SDK provides a context provider and hooks to make transaction sponsorship easy in your web apps.
+
+## Installation
+```bash
+npm install @grat-official-sdk/react
+```
+
+## Setup
+Wrap your application in the `GratProvider`.
+
+```tsx
+import { GratProvider } from '@grat-official-sdk/react';
+
+function App() {
+  return (
+    <GratProvider config={{ network: 'testnet' }}>
+      <MyComponent />
+    </GratProvider>
+  );
+}
+```
+
+## Hooks
+
+### `useSponsor()`
+The primary hook for submitting transactions.
+
+```tsx
+const { sponsor, isLoading, error } = useSponsor();
+
+const handlePay = async () => {
+  const result = await sponsor(signedTx);
+  alert(`Paid! Hash: ${result.hash}`);
+};
+```
+
+### `useRelayStatus()`
+Checks if the relay is healthy and returns network info.
+
+### `useCreditBalance()` (Phase 2)
+Returns the remaining credit balance for the configured API key.

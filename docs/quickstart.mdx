@@ -1,0 +1,61 @@
+---
+title: Quickstart
+description: "Get started with Grat in under 5 minutes."
+---
+
+import installSdk from '/snippets/install-sdk.mdx'
+
+## 1. Start the Relay
+
+The easiest way to start Grat is using Docker. This will spin up the Relay Server, a Redis instance for sequence management, and a pool of testnet channel accounts.
+
+```bash
+git clone https://github.com/codeze-us/grat.git
+cd grat
+cp .env.example .env
+# Add your STELLAR_FUNDING_SECRET to .env
+docker-compose up -d
+```
+
+## 2. Install the SDK
+
+Add the Grat SDK to your project:
+
+<installSdk />
+
+## 3. Sponsor your first transaction
+
+Use the following snippet to sponsor a simple payment on the testnet.
+
+```typescript
+import { Keypair, Asset, Operation, TransactionBuilder, Networks } from '@stellar/stellar-sdk';
+import { Grat } from '@grat-official-sdk/sdk';
+
+async function main() {
+  const grat = Grat.testnet(); // Connects to http://localhost:3000
+  const user = Keypair.random();
+
+  // 1. Build a transaction (signed by the user)
+  const tx = new TransactionBuilder(await grat.getSourceAccount(user), {
+    fee: '100',
+    networkPassphrase: Networks.TESTNET
+  })
+  .addOperation(Operation.payment({
+    destination: 'GD...ADDRESS',
+    asset: Asset.native(),
+    amount: '1'
+  }))
+  .setTimeout(30)
+  .build();
+
+  tx.sign(user);
+
+  // 2. Sponsor it!
+  const result = await grat.sponsor(tx);
+  console.log(`✅ Success! Hash: ${result.hash}`);
+}
+```
+
+<Tip>
+  Check out our [Example Projects](https://github.com/codeze-us/grat/tree/main/examples) for full working blueprints of USDC transfers and Soroban contract calls.
+</Tip>

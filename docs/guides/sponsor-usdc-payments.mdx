@@ -1,0 +1,61 @@
+---
+title: Sponsor USDC Payments
+description: "How to onboard users to USDC with zero XLM fees."
+---
+
+This guide demonstrates the complete lifecycle of a sponsored USDC payment: creating a trustline and sending a payment without the user needing XLM.
+
+## Prerequisites
+- A running Grat Relay
+- The `@grat-official-sdk/sdk` and `@stellar/stellar-sdk` installed
+
+## Steps
+
+<Steps>
+  <Step title="Initialize Assets">
+    Define the USDC asset you want to sponsor.
+    ```typescript
+    const usdc = new Asset('USDC', 'ISSUER_ADDRESS');
+    const grat = Grat.testnet();
+    ```
+  </Step>
+
+  <Step title="Establish Trustline">
+    The user needs a trustline for USDC. Usually, this costs a fee, but Grat will pay it.
+    ```typescript
+    const tx = new TransactionBuilder(await grat.getSourceAccount(user), {
+      fee: '100',
+      networkPassphrase: Networks.TESTNET
+    })
+    .addOperation(Operation.changeTrust({ asset: usdc }))
+    .setTimeout(30)
+    .build();
+
+    tx.sign(user);
+    await grat.sponsor(tx);
+    ```
+  </Step>
+
+  <Step title="Send Payment">
+    Now Alice can send USDC to Bob. Again, the fee is sponsored.
+    ```typescript
+    const paymentTx = new TransactionBuilder(await grat.getSourceAccount(user), {
+      fee: '100',
+      networkPassphrase: Networks.TESTNET
+    })
+    .addOperation(Operation.payment({
+      destination: 'BOB_ADDRESS',
+      asset: usdc,
+      amount: '50'
+    }))
+    .setTimeout(30)
+    .build();
+
+    paymentTx.sign(user);
+    const result = await grat.sponsor(paymentTx);
+    ```
+</Steps>
+
+<Info>
+  By following this pattern, your users never need to hold XLM in their wallets. They can exist entirely in the USDC ecosystem.
+</Info>

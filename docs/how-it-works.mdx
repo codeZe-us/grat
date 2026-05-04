@@ -1,0 +1,29 @@
+---
+title: How it Works
+description: "Understanding the architecture behind gas abstraction on Stellar."
+---
+
+Grat handles the complexity of fee sponsorship so you don't have to. It is built on three core pillars: **Fee-Bump Transactions**, **Channel Pools**, and **Atomic Sequence Tracking**.
+
+## Fee-Bump Transactions (CAP-0015)
+
+At the heart of Grat is a native Stellar feature called **Fee-Bump Transactions**. 
+
+A standard transaction has one signer who pays the fee. A Fee-Bump transaction wraps that transaction in an outer envelope. The outer signer (the Grat Relay) pays the transaction fee, while the inner transaction retains its original sequence number and source account signatures.
+
+## Channel Pools
+
+Submitting many transactions in parallel from a single account on Stellar is difficult because of strict sequence number increments. 
+
+Grat solves this by maintaining a **pool of Channel Accounts**. When a request comes in, the relay:
+1. Picks an available account from the pool.
+2. Uses that account as the fee-payer for the Fee-Bump.
+3. Automatically increments and manages the sequence numbers for that specific channel.
+
+## Atomic Sequence Tracking
+
+To prevent "sequence number already used" errors in a distributed environment, Grat uses **Redis** to track the state of every channel account. Even if you run 10 instances of the Grat Relay, they will coordinate via Redis to ensure no two transactions ever use the same sequence number from the same channel at the same time.
+
+<Frame>
+  <img src="/images/architecture-diagram.png" alt="Grat Architecture Diagram" />
+</Frame>

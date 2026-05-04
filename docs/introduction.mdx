@@ -1,0 +1,50 @@
+---
+title: Introduction
+description: "Eliminate the 'XLM for Gas' problem and onboard users to Stellar with zero friction."
+---
+
+import testnetNote from '/snippets/testnet-note.mdx'
+
+<testnetNote />
+
+Grat is a high-performance relay server and SDK that implements **Gas Abstraction** for the Stellar blockchain. It allows developers to sponsor transaction fees for their users, enabling a seamless UX where users never need to hold or acquire XLM.
+
+<CardGroup cols={2}>
+  <Card title="Zero-XLM UX" icon="gas-pump">
+    Users can interact with stablecoins (USDC) and smart contracts without touching XLM.
+  </Card>
+  <Card title="Drop-in SDK" icon="bolt">
+    Replace `horizon.submitTransaction` with `grat.sponsor` in just two lines of code.
+  </Card>
+  <Card title="Full Control" icon="shield-check">
+    Define granular policies to control exactly which transactions you want to sponsor.
+  </Card>
+  <Card title="Open Source" icon="github">
+    Self-host the relay on your own infrastructure for maximum privacy and control.
+  </Card>
+</CardGroup>
+
+## How it works
+
+<Steps>
+  <Step title="Sign">
+    The user signs a standard transaction (the "inner" transaction) as they normally would.
+  </Step>
+  <Step title="Relay">
+    The SDK sends the signed XDR to the Grat Relay instead of Horizon.
+  </Step>
+  <Step title="Sponsor">
+    The Relay wraps the transaction in a **Fee-Bump envelope**, pays the network fee from a channel pool, and submits it to Stellar.
+  </Step>
+</Steps>
+
+## Quick Links
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running with the relay and SDK in under 5 minutes.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/sponsor">
+    Explore the REST API for transaction sponsorship and simulation.
+  </Card>
+</CardGroup>

@@ -1,0 +1,69 @@
+---
+title: TypeScript SDK
+description: "The official JavaScript/TypeScript client for the Grat Relay."
+---
+
+import installSdk from '/snippets/install-sdk.mdx'
+import errorExample from '/snippets/error-handling-example.mdx'
+
+## Installation
+
+<installSdk />
+
+## Initialization
+
+You can initialize the client using the constructor or the static shortcuts.
+
+<CodeGroup>
+```typescript Testnet
+import { Grat } from '@grat-official-sdk/sdk';
+
+const grat = Grat.testnet(); 
+// or custom URL
+// const grat = Grat.testnet('https://my-relay.com');
+```
+
+```typescript Mainnet
+import { Grat } from '@grat-official-sdk/sdk';
+
+const grat = Grat.mainnet('sr_live_...', 'https://api.grat.network');
+```
+</CodeGroup>
+
+## Methods
+
+### `sponsor(transaction)`
+
+Wraps a signed transaction in a fee-bump envelope and submits it.
+
+| Param | Type | Description |
+| :--- | :--- | :--- |
+| `transaction` | `Transaction \| FeeBumpTransaction` | A signed Stellar transaction object. |
+
+**Returns**: `Promise<SponsorResult>`
+
+### `simulate(transaction)`
+
+Simulates a Soroban transaction to get resource estimates.
+
+| Param | Type | Description |
+| :--- | :--- | :--- |
+| `transaction` | `Transaction` | An unsigned or signed Stellar transaction. |
+
+**Returns**: `Promise<SimulationResult>`
+
+### `estimate(transaction)`
+
+Predicts the total fee cost for a transaction without submitting it.
+
+**Returns**: `Promise<EstimateResult>`
+
+### `status()`
+
+Checks the health of the relay server.
+
+**Returns**: `Promise<HealthStatus>`
+
+## Error Handling
+
+<errorExample />

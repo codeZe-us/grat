@@ -1,0 +1,145 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Grat API",
+    "version": "0.2.0",
+    "description": "The Grat Relay API allows for gas abstraction on the Stellar blockchain by sponsoring transaction fees via fee-bump envelopes."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development"
+    },
+    {
+      "url": "https://api.grat.network",
+      "description": "Production Relay"
+    }
+  ],
+  "paths": {
+    "/v1/sponsor": {
+      "post": {
+        "summary": "Sponsor a transaction",
+        "description": "Accepts a signed Stellar transaction, wraps it in a fee-bump envelope, and submits it to the network.",
+        "tags": ["Transactions"],
+        "security": [{ "ApiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "transaction": {
+                    "type": "string",
+                    "description": "Base64-encoded XDR of the signed inner transaction."
+                  },
+                  "network": {
+                    "type": "string",
+                    "enum": ["testnet", "mainnet"],
+                    "default": "testnet"
+                  }
+                },
+                "required": ["transaction"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction sponsored successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "hash": { "type": "string" },
+                    "ledger": { "type": "integer" },
+                    "feePaid": { "type": "string" },
+                    "network": { "type": "string" },
+                    "channelAccount": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/simulate": {
+      "post": {
+        "summary": "Simulate transaction",
+        "description": "Forwards a transaction to the Soroban RPC for resource estimation without submitting to the network.",
+        "tags": ["Transactions"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "transaction": { "type": "string" }
+                },
+                "required": ["transaction"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Simulation results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cost": {
+                      "type": "object",
+                      "properties": {
+                        "cpuInstructions": { "type": "string" },
+                        "memoryBytes": { "type": "string" }
+                      }
+                    },
+                    "resourceFee": { "type": "string" },
+                    "events": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Check health",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "Relay status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "network": { "type": "string" },
+                    "uptime": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  }
+}

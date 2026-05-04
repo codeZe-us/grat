@@ -1,0 +1,29 @@
+---
+title: CLI Commands
+description: "Manage your relay, channels, and policies from the terminal."
+---
+
+The Grat CLI is the easiest way to interact with your relay server and manage your infrastructure.
+
+<AccordionGroup>
+  <Accordion title="Setup">
+    - `grat init`: Walk through the initial configuration.
+    - `grat config set`: Update specific configuration values.
+  </Accordion>
+  <Accordion title="Fee Channels">
+    - `grat channels list`: Show the health and balance of all channels.
+    - `grat channels fund`: Send XLM from a source account to all channels.
+    - `grat channels health`: Verify network status for every channel.
+  </Accordion>
+  <Accordion title="Policies">
+    - `grat policy list`: View active sponsorship rules.
+    - `grat policy test <XDR>`: Test an XDR against your rules without submitting.
+  </Accordion>
+  <Accordion title="Monitoring">
+    - `grat status`: General relay and network health.
+    - `grat logs --follow`: Stream real-time relay logs to your terminal.
+  </Accordion>
+</AccordionGroup>
+
+> [!TIP]
+> Run `grat --help` to see all available commands and flags.

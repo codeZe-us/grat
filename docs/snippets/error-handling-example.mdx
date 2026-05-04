@@ -1,0 +1,16 @@
+```typescript
+import { SubmissionFailedError, RateLimitError } from '@grat-official-sdk/sdk';
+
+try {
+  const result = await grat.sponsor(tx);
+} catch (error) {
+  if (error instanceof SubmissionFailedError) {
+    // Transaction rejected by Stellar network
+    console.error("Stellar Error:", error.message);
+    console.debug("Result Codes:", error.details);
+  } else if (error instanceof RateLimitError) {
+    // Relay rate limit exceeded
+    console.log(`Retrying in ${error.retryAfter} seconds...`);
+  }
+}
+```

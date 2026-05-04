@@ -1,0 +1,19 @@
+---
+title: Channel Accounts
+description: "How Grat achieves high-concurrency transaction submission."
+---
+
+On the Stellar network, every transaction must have a sequence number exactly one greater than the previous one. This creates a bottleneck: you cannot submit multiple transactions from the same account in parallel without risking "sequence already used" errors.
+
+### The Solution: Managed Account Pools
+Grat solves this by maintaining a pool of **Channel Accounts**.
+
+- **Parallelism**: Each channel account has its own independent sequence number. If you have 50 channels, you can submit 50 transactions simultaneously.
+- **Dynamic Selection**: The Relay automatically selects an available, funded channel for every sponsorship request.
+- **Self-Healing**: If a channel hits a sequence error, the Relay automatically re-synchronizes that specific account with the network.
+
+### Security
+Channel accounts are derived from a single BIP-39 seed phrase (`CHANNEL_SEED_PHRASE`). 
+
+> [!CAUTION]
+> Your seed phrase is the key to your entire fee pool. If it is compromised, an attacker can drain all the XLM used for sponsorship. Always store it in a secure environment variable or vault.

@@ -1,0 +1,62 @@
+---
+title: Self-Hosting
+description: "Run Grat on your own infrastructure."
+---
+
+Grat is designed to be fully self-hostable. Hosting your own relay gives you full control over your keys, privacy, and sponsorship policies.
+
+## Docker Setup (Recommended)
+
+The easiest way to run Grat in production is using our official Docker image.
+
+<Steps>
+  <Step title="Configuration">
+    Create a `.env` file with your configuration:
+    ```env
+    STELLAR_FUNDING_SECRET=SD...
+    CHANNEL_COUNT=10
+    REDIS_URL=redis://localhost:6379
+    NETWORK=mainnet
+    ```
+  </Step>
+
+  <Step title="Deployment">
+    Run the container:
+    ```bash
+    docker run -p 3000:3000 --env-file .env ghcr.io/codeze-us/grat-relay:latest
+    ```
+  </Step>
+
+  <Step title="Verification">
+    Check the health endpoint:
+    ```bash
+    curl http://localhost:3000/health
+    ```
+  </Step>
+</Steps>
+
+## Environment Variables
+
+| Variable | Description | Required |
+| :--- | :--- | :--- |
+| `STELLAR_FUNDING_SECRET` | The master secret used to fund the channel pool. | Yes |
+| `CHANNEL_SEED_PHRASE` | 12/24 words to derive channel keys. | Yes |
+| `REDIS_URL` | Redis connection string for locking. | Yes |
+| `NETWORK` | `testnet` or `mainnet`. | No (Default: testnet) |
+| `PORT` | The port the server listens on. | No (Default: 3000) |
+
+## Cloud Deployment
+
+<AccordionGroup>
+  <Accordion title="Deploy to Railway">
+    1. Fork the Grat repository.
+    2. Create a new project in Railway.
+    3. Add a Redis service.
+    4. Connect the repository and add your `.env` variables.
+  </Accordion>
+  <Accordion title="Deploy to Render">
+    1. Create a "Web Service".
+    2. Choose the "Docker" runtime.
+    3. Add the required environment variables in the "Environment" tab.
+  </Accordion>
+</AccordionGroup>

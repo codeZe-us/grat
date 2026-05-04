@@ -1,0 +1,28 @@
+---
+title: Policies
+description: "Control exactly what your relay sponsors."
+---
+
+Policies are rules that define whether a transaction should be sponsored by your relay. They prevent your fee pool from being abused by unauthorized transactions.
+
+### Rule Types
+You can configure policies to filter by:
+- **Operation Type**: Only sponsor `payment` or `invokeHostFunction`.
+- **Assets**: Only sponsor transactions involving specific assets (e.g., your own USDC issuer).
+- **Contracts**: Only sponsor calls to your verified Soroban smart contracts.
+- **Accounts**: Only sponsor transactions from a list of allowlisted user accounts.
+
+### Example Policy
+```json
+{
+  "name": "USDC Onboarding",
+  "conditions": {
+    "operation": "changeTrust",
+    "asset": "USDC:G...ISSUER"
+  },
+  "action": "sponsor"
+}
+```
+
+> [!TIP]
+> Use the Grat CLI to test your policies against sample XDRs before deploying them to production.

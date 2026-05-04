@@ -1,0 +1,39 @@
+---
+title: Sponsor Soroban Contracts
+description: "How to pay for smart contract resource fees with Grat."
+---
+
+Soroban transactions introduce **Resource Fees** (CPU/Memory). Grat can sponsor both the network inclusion fee AND the resource fees.
+
+## Workflow
+
+<Steps>
+  <Step title="Simulate first">
+    Soroban transactions **must** be simulated to determine their footprint. 
+    ```typescript
+    const tx = new TransactionBuilder(...)
+      .addOperation(contract.call('hello', ...))
+      .build();
+
+    const sim = await grat.simulate(tx);
+    ```
+  </Step>
+
+  <Step title="Sign">
+    The user signs the transaction as normal.
+    ```typescript
+    tx.sign(user);
+    ```
+  </Step>
+
+  <Step title="Sponsor">
+    Grat will automatically handle the resource fee based on the previous simulation results.
+    ```typescript
+    const result = await grat.sponsor(tx);
+    ```
+  </Step>
+</Steps>
+
+## Key Concepts
+- **Footprints**: Soroban needs to know which ledger entries you will read/write.
+- **Resource Limits**: The Relay will check your policies to ensure the requested CPU/Memory is within your allowed sponsorship limits.

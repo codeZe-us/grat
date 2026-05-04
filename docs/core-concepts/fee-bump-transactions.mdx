@@ -1,0 +1,30 @@
+---
+title: Fee-Bump Transactions
+description: "The protocol-level mechanism that makes gas abstraction possible."
+---
+
+Stellar introduced **Fee-Bump Transactions** (CAP-0015) to allow one account to pay the transaction fee for another. This is the foundational technology that powers Grat.
+
+### Structure
+A Fee-Bump transaction consists of two parts:
+1. **Inner Transaction**: The original transaction signed by the user. This contains the operations (like `payment` or `invokeHostFunction`).
+2. **Outer Envelope**: A wrapper signed by the **Fee Source** (the Grat Relay). This envelope specifies the `fee` and the `feeSource` account.
+
+### Why use them?
+- **Zero Friction**: The inner source account (your user) does not need to hold any XLM to pay for the transaction.
+- **Security**: The Relay cannot modify the operations inside the inner transaction because any change would invalidate the user's original signature.
+- **Atomicity**: The transaction either succeeds entirely (including the fee payment) or fails entirely.
+
+```typescript
+// Conceptual structure (XDR)
+FeeBumpTransaction {
+  feeSource: "G-RELAY...",
+  fee: 100,
+  innerTx: {
+    sourceAccount: "G-USER...",
+    operations: [ ... ],
+    signatures: [ "USER_SIG" ]
+  },
+  signatures: [ "RELAY_SIG" ]
+}
+```

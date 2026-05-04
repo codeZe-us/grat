@@ -1,0 +1,51 @@
+---
+title: Migrate from Launchtube
+description: "How to move your gas abstraction from Launchtube to Grat."
+---
+
+Launchtube has been a pioneer in Stellar sponsorship, but with the advent of Soroban and the need for higher concurrency, **Grat** offers a modern, high-performance alternative.
+
+## Why Migrate?
+- **Soroban Native**: Full support for smart contract simulations and resource fees.
+- **High Concurrency**: Advanced Redis-backed channel management prevents sequence collisions.
+- **Deep Diagnostics**: Never guess why a sponsored transaction failed again.
+
+## Migration Guide
+
+### 1. The SDK Switch
+Migrating your code is a drop-in replacement.
+
+<CodeGroup>
+```typescript Launchtube (Old)
+import { Launchtube } from 'launchtube-sdk';
+const lt = new Launchtube(url);
+const result = await lt.submit(tx);
+```
+
+```typescript Grat (New)
+import { Grat } from '@grat-official-sdk/sdk';
+const grat = Grat.testnet(url);
+const result = await grat.sponsor(tx);
+```
+</CodeGroup>
+
+### 2. Feature Comparison
+
+| Feature | Launchtube | Grat |
+| :--- | :--- | :--- |
+| **Stellar Classic** | ✅ | ✅ |
+| **Soroban Support** | ❌ | ✅ |
+| **Channel Management** | Static | Dynamic/Pool |
+| **Distributed Locking** | ❌ | ✅ (Redis) |
+| **Deep Error Drilling** | ❌ | ✅ |
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Do I need to change my transaction building code?">
+    No. Grat works with standard Stellar SDK `Transaction` objects. You only change the submission line.
+  </Accordion>
+  <Accordion title="Can I keep my existing channel accounts?">
+    Yes, but we recommend letting Grat manage its own pool via a BIP-39 seed phrase for optimal concurrency.
+  </Accordion>
+</AccordionGroup>
