@@ -138,7 +138,7 @@ export class Grat {
         return this.request<T>(path, options, retryCount + 1);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as any;
 
       if (!response.ok) {
         throw new GratError(
