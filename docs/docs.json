@@ -1,5 +1,6 @@
 {
   "name": "Grat",
+  "theme": "mint",
   "openapi": "openapi.json",
   "favicon": "favicon.png",
   "colors": {
