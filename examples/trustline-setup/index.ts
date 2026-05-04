@@ -17,7 +17,7 @@ async function run() {
   console.log('🚀 Starting Trustline Setup Example (Zero-Fee Onboarding)');
   
   const grat = Grat.testnet();
-  const usdc = new Asset('USDC', 'GBBD67VGLYI6W7S5Z6X6S7C66W7C67VGLYI6W7S5Z6X6S7C66W7C67VGLY');
+  const usdc = new Asset('USDC', 'GAIQ6QF3JKJYXE756IQAITKOWQ5ZDK2YKX7ZYSQKOI5LMG3NHJ4DY5MN');
 
   // 1. Create a new user
   const newUser = Keypair.random();
@@ -27,6 +27,8 @@ async function run() {
   // But we want to demonstrate they don't need extra XLM for fees.
   console.log('   Funding account with base reserve via Friendbot...');
   await fetch(`https://friendbot.stellar.org/?addr=${newUser.publicKey()}`);
+  console.log('   Waiting for network sync...');
+  await new Promise(resolve => setTimeout(resolve, 3000));
 
   // 2. Setup Trustline
   console.log('\n2. Establishing USDC trustline...');

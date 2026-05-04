@@ -71,13 +71,13 @@ export class ChannelExhaustedError extends RelayError {
 }
 
 export class SimulationFailedError extends RelayError {
-  constructor(message: string, diagnosticEvents: any[]) {
+  constructor(message: string, diagnosticEvents: any[] = []) {
     super(message, 'SIMULATION_FAILED', 422, diagnosticEvents);
   }
 }
 
 export class SubmissionFailedError extends RelayError {
-  constructor(message: string, horizonResultCodes: any) {
+  constructor(message: string, horizonResultCodes: any = {}) {
     super(message, 'SUBMISSION_FAILED', 502, horizonResultCodes);
   }
 }

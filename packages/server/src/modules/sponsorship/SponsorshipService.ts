@@ -154,8 +154,12 @@ export class SponsorshipService {
         }
 
         // Non-retryable or max retries reached
+        const opResult = err.response?.data?.extras?.result_codes?.operations?.[0];
+        const txResult = err.response?.data?.extras?.result_codes?.transaction;
+        const msg = opResult || txResult || err.response?.data?.title || err.message;
+
         throw new SubmissionFailedError(
-          err.response?.data?.title || err.message,
+          `Transaction Failed: ${msg}`,
           err.response?.data?.extras
         );
 
@@ -219,8 +223,9 @@ export class SponsorshipService {
 
       throw new Error('Unexpected simulation result type');
     } catch (err: any) {
-      if (err instanceof RelayError) throw err;
-      throw new ValidationError(err.message || 'Error parsing transaction XDR');
+      const detail = err.response?.data?.extras?.result_codes?.operations?.[0] || err.response?.data?.detail || err.message;
+      logger.error({ err, detail }, 'Transaction simulation failed');
+      throw new SubmissionFailedError(`Transaction Failed: ${detail}`);
     }
   }
 
