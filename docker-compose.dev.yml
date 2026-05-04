@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  relay:
+    build:
+      context: ./packages/server
+      dockerfile: Dockerfile
+    command: npm run dev
+    volumes:
+      - ./packages/server/src:/app/src
+      - .env:/app/.env
+    ports:
+      - "3000:3000"
+
+  redis:
+    ports:
+      - "6379:6379"
