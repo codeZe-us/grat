@@ -9,7 +9,8 @@
     "dev": "pnpm -r dev",
     "test:integration": "pnpm --filter @grat/server exec vitest tests/integration.test.ts --run",
     "test:unit": "pnpm --filter @grat-official-sdk/sdk exec vitest tests/Grat.test.ts --run",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\""
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "smoke-test": "tsx scripts/smoke-test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
@@ -21,6 +22,9 @@
     "supertest": "^7.2.2",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.8.0",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.5",
+    "tsx": "^4.7.2",
+    "@stellar/stellar-sdk": "^12.1.0",
+    "@grat-official-sdk/sdk": "workspace:*"
   }
 }
