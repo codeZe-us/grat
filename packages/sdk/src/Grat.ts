@@ -5,8 +5,8 @@ import {
   SimulationResult,
   EstimateResult,
   HealthStatus,
-  GratError,
 } from './types';
+import { GratError, handleResponseError, NetworkError } from './errors';
 
 // Package version for headers
 const SDK_VERSION = '0.1.0';
@@ -138,19 +138,11 @@ export class Grat {
         return this.request<T>(path, options, retryCount + 1);
       }
 
-      const data = (await response.json()) as any;
-
       if (!response.ok) {
-        throw new GratError(
-          data.error?.message || 'Unknown relay error',
-          data.error?.code || 'RELAY_ERROR',
-          response.status,
-          data.error?.details,
-          data.error?.requestId
-        );
+        await handleResponseError(response);
       }
 
-      return data as T;
+      return (await response.json()) as T;
     } catch (err: any) {
       clearTimeout(timeoutId);
       
@@ -167,7 +159,7 @@ export class Grat {
         return this.request<T>(path, options, retryCount + 1);
       }
 
-      throw new GratError(err.message || 'Network error', 'NETWORK_ERROR', 503);
+      throw new NetworkError(err.message || 'Network error', 'NETWORK_ERROR', 503);
     }
   }
 

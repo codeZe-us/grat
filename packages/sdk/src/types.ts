@@ -82,33 +82,3 @@ export interface HealthStatus {
     totalXlm: string;
   };
 }
-
-/**
- * Error thrown when the relay server returns an error response.
- */
-export class GratError extends Error {
-  /** Error code (e.g., 'CHANNELS_EXHAUSTED'). */
-  public readonly code: string;
-  /** HTTP status code. */
-  public readonly statusCode: number;
-  /** Additional error details. */
-  public readonly details?: any;
-  /** Unique request ID for troubleshooting. */
-  public readonly requestId?: string;
-
-  constructor(
-    message: string,
-    code: string,
-    statusCode: number,
-    details?: any,
-    requestId?: string,
-  ) {
-    super(message);
-    this.name = 'GratError';
-    this.code = code;
-    this.statusCode = statusCode;
-    this.details = details;
-    this.requestId = requestId;
-    Object.setPrototypeOf(this, GratError.prototype);
-  }
-}
