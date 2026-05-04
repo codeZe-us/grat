@@ -1,7 +1,7 @@
 {
   "name": "Grat",
-  "openapi": "docs/openapi.json",
-  "favicon": "docs/favicon.png",
+  "openapi": "openapi.json",
+  "favicon": "favicon.png",
   "colors": {
     "primary": "#4F46E5",
     "light": "#818CF8",
@@ -53,63 +53,63 @@
     {
       "group": "Getting Started",
       "pages": [
-        "docs/introduction",
-        "docs/quickstart",
-        "docs/how-it-works"
+        "introduction",
+        "quickstart",
+        "how-it-works"
       ]
     },
     {
       "group": "Core Concepts",
       "pages": [
-        "docs/core-concepts/fee-bump-transactions",
-        "docs/core-concepts/channel-accounts",
-        "docs/core-concepts/credits",
-        "docs/core-concepts/policies"
+        "core-concepts/fee-bump-transactions",
+        "core-concepts/channel-accounts",
+        "core-concepts/credits",
+        "core-concepts/policies"
       ]
     },
     {
       "group": "Guides",
       "pages": [
-        "docs/guides/sponsor-usdc-payments",
-        "docs/guides/sponsor-soroban-contracts",
-        "docs/guides/self-hosting",
-        "docs/guides/migrate-from-launchtube"
+        "guides/sponsor-usdc-payments",
+        "guides/sponsor-soroban-contracts",
+        "guides/self-hosting",
+        "guides/migrate-from-launchtube"
       ]
     },
     {
       "group": "API Reference",
       "pages": [
-        "docs/api-reference/authentication",
-        "docs/api-reference/sponsor",
-        "docs/api-reference/simulate",
-        "docs/api-reference/estimate",
-        "docs/api-reference/health"
+        "api-reference/authentication",
+        "api-reference/sponsor",
+        "api-reference/simulate",
+        "api-reference/estimate",
+        "api-reference/health"
       ]
     },
     {
       "group": "SDKs",
       "pages": [
-        "docs/sdks/typescript",
-        "docs/sdks/react",
-        "docs/sdks/python",
-        "docs/sdks/rust",
-        "docs/sdks/go"
+        "sdks/typescript",
+        "sdks/react",
+        "sdks/python",
+        "sdks/rust",
+        "sdks/go"
       ]
     },
     {
       "group": "CLI",
       "pages": [
-        "docs/cli/installation",
-        "docs/cli/commands"
+        "cli/installation",
+        "cli/commands"
       ]
     },
     {
       "group": "Self-Hosting",
       "pages": [
-        "docs/self-hosting/docker",
-        "docs/self-hosting/kubernetes",
-        "docs/self-hosting/configuration",
-        "docs/self-hosting/monitoring"
+        "self-hosting/docker",
+        "self-hosting/kubernetes",
+        "self-hosting/configuration",
+        "self-hosting/monitoring"
       ]
     }
   ],
@@ -117,19 +117,5 @@
     "twitter": "https://twitter.com/gratnetwork",
     "github": "https://github.com/codeze-us/grat",
     "discord": "https://discord.gg/grat"
-  },
-  "redirects": [
-    {
-      "source": "/docs",
-      "destination": "/introduction"
-    },
-    {
-      "source": "/api",
-      "destination": "/api-reference/sponsor"
-    },
-    {
-      "source": "/sdk",
-      "destination": "/sdks/typescript"
-    }
-  ]
+  }
 }

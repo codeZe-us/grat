@@ -24,6 +24,4 @@ Grat solves this by maintaining a **pool of Channel Accounts**. When a request c
 
 To prevent "sequence number already used" errors in a distributed environment, Grat uses **Redis** to track the state of every channel account. Even if you run 10 instances of the Grat Relay, they will coordinate via Redis to ensure no two transactions ever use the same sequence number from the same channel at the same time.
 
-<Frame>
-  <img src="/images/architecture-diagram.png" alt="Grat Architecture Diagram" />
-</Frame>
+
