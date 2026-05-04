@@ -9,7 +9,7 @@ export const config = {
   network: process.env.NETWORK || 'testnet',
   horizonUrl: process.env.HORIZON_URL || 'https://horizon-testnet.stellar.org',
   sorobanRpcUrl: process.env.SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org',
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  redisUrl: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
   channelCount: parseInt(process.env.CHANNEL_COUNT || '10', 10),
   channelSeedPhrase: process.env.CHANNEL_SEED_PHRASE,
   stellarFundingSecret: process.env.STELLAR_FUNDING_SECRET,

@@ -57,10 +57,9 @@ describe('Grat Relay Integration Tests', () => {
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
         .addOperation(
-          Operation.payment({
+          Operation.createAccount({
             destination: Keypair.random().publicKey(),
-            asset: Asset.native(),
-            amount: '1',
+            startingBalance: '1',
           })
         )
         .setTimeout(30)
@@ -87,7 +86,7 @@ describe('Grat Relay Integration Tests', () => {
         new Account(userKeypair.publicKey(), accountInfo.sequence),
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
-        .addOperation(Operation.payment({ destination: Keypair.random().publicKey(), asset: Asset.native(), amount: '0.1' }))
+        .addOperation(Operation.createAccount({ destination: Keypair.random().publicKey(), startingBalance: '1' }))
         .setTimeout(30)
         .build();
       tx.sign(userKeypair);
