@@ -7,6 +7,7 @@ import { requestId } from './middleware/requestId';
 import { errorHandler } from './middleware/errorHandler';
 import { config } from './config';
 import { sponsorHandler } from './controllers/sponsorshipController';
+import { simulateHandler, estimateHandler } from './controllers/sorobanController';
 
 const app: Express = express();
 
@@ -50,8 +51,8 @@ const notImplemented = (req: express.Request, res: express.Response) => {
 };
 
 app.post('/v1/sponsor', sponsorHandler);
-app.post('/v1/simulate', notImplemented);
-app.post('/v1/estimate', notImplemented);
+app.post('/v1/simulate', simulateHandler);
+app.post('/v1/estimate', estimateHandler);
 
 // Error handler (must be last)
 app.use(errorHandler);

@@ -5,6 +5,7 @@ import {
   Transaction,
   FeeBumpTransaction,
   Keypair,
+  rpc,
 } from '@stellar/stellar-sdk';
 import { config } from '../../config';
 import { logger } from '../../utils/logger';
@@ -25,11 +26,35 @@ export interface SponsorResponse {
   channelAccount: string;
 }
 
+export interface SimulationResult {
+  cost: {
+    cpuInstructions: string;
+    memoryBytes: string;
+  };
+  resourceFee: string;
+  latestLedger: number;
+  transactionData: string;
+  auth: any[];
+  events: any[];
+}
+
+export interface EstimateResponse {
+  estimatedFee: string;
+  breakdown: {
+    baseFee: string;
+    resourceFee: string;
+  };
+  network: string;
+  note: string;
+}
+
 export class SponsorshipService {
   private horizon: Horizon.Server;
+  private rpc: rpc.Server;
 
   constructor() {
     this.horizon = new Horizon.Server(config.horizonUrl);
+    this.rpc = new rpc.Server(config.sorobanRpcUrl);
   }
 
   async sponsor(req: SponsorRequest, requestId: string): Promise<SponsorResponse> {
@@ -141,6 +166,88 @@ export class SponsorshipService {
 
   async setIdempotency(key: string, result: SponsorResponse) {
     await redis.set(`idempotency:${key}`, JSON.stringify(result), 'EX', 86400); // 24h
+  }
+
+  async simulate(xdr: string): Promise<SimulationResult> {
+    try {
+      const tx = TransactionBuilder.fromXDR(xdr, Networks.TESTNET); // passphrases will be ignored for simulation
+      const result = await this.rpc.simulateTransaction(tx as Transaction);
+
+      if (rpc.Api.isSimulationError(result)) {
+        const error: any = new Error('Simulation failed');
+        error.status = 400;
+        error.code = 'SIMULATION_FAILED';
+        error.details = result.events;
+        throw error;
+      }
+
+      if (rpc.Api.isSimulationSuccess(result)) {
+        return {
+          cost: {
+            cpuInstructions: result.cost.cpuInsns,
+            memoryBytes: result.cost.memBytes,
+          },
+          resourceFee: result.minResourceFee,
+          latestLedger: result.latestLedger,
+          transactionData: result.transactionData.toXDR().toString('base64'),
+          auth: result.result?.auth || [],
+          events: result.events || [],
+        };
+      }
+
+      throw new Error('Unexpected simulation result type');
+    } catch (err: any) {
+      if (err.status) throw err;
+      const error: any = new Error(err.message || 'Error parsing transaction XDR');
+      error.status = 400;
+      error.code = 'INVALID_XDR';
+      throw error;
+    }
+  }
+
+  async estimate(xdr: string): Promise<EstimateResponse> {
+    const networkPassphrase = config.network === 'mainnet' ? Networks.PUBLIC : Networks.TESTNET;
+    let tx: Transaction;
+    try {
+      tx = TransactionBuilder.fromXDR(xdr, networkPassphrase) as Transaction;
+    } catch (err) {
+      const error: any = new Error('Invalid transaction XDR');
+      error.status = 400;
+      error.code = 'INVALID_XDR';
+      throw error;
+    }
+
+    const feeStats = await this.horizon.feeStats();
+    const baseInclusionFee = (parseInt(feeStats.fee_charged.p70 || '100') * tx.operations.length).toString();
+
+    let resourceFee = '0';
+
+    // Detect if Soroban
+    const isSoroban = tx.operations.some(op => 
+      op.type === 'invokeHostFunction' || 
+      op.type === 'extendFootprintTtl' || 
+      op.type === 'restoreFootprint'
+    );
+
+    if (isSoroban) {
+      try {
+        const sim = await this.simulate(xdr);
+        resourceFee = sim.resourceFee;
+      } catch (err) {
+        // Fallback or rethrow? For estimation, we probably want to rethrow simulation errors
+        throw err;
+      }
+    }
+
+    return {
+      estimatedFee: (BigInt(baseInclusionFee) + BigInt(resourceFee)).toString(),
+      breakdown: {
+        baseFee: baseInclusionFee,
+        resourceFee: resourceFee,
+      },
+      network: config.network,
+      note: 'Actual fee may vary based on network conditions at submission time',
+    };
   }
 }
 
