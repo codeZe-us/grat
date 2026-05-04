@@ -119,7 +119,7 @@ pnpm test:integration  # Run Server integration tests against testnet
 
 ---
 
-## 🗺 Roadmap
+## Roadmap
 
 - [ ] **Mainnet Support**: Hardened authentication and billing.
 - [ ] **Transaction Policies**: Restrict sponsorship to specific contracts or assets.
