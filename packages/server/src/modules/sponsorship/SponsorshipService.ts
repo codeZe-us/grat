@@ -3,8 +3,6 @@ import {
   Networks,
   Horizon,
   Transaction,
-  FeeBumpTransaction,
-  Keypair,
   rpc,
 } from '@stellar/stellar-sdk';
 import { config } from '../../config';
@@ -18,9 +16,7 @@ import {
   ChannelExhaustedError,
   SimulationFailedError,
   SubmissionFailedError,
-  NetworkError,
 } from '../../utils/errors';
-import { Account } from '@stellar/stellar-sdk';
 
 export interface SponsorRequest {
   transaction: string;
@@ -92,7 +88,7 @@ export class SponsorshipService {
     const maxRetries = 3;
 
     while (retries <= maxRetries) {
-      let channel = await channelManager.acquire();
+      const channel = await channelManager.acquire();
       if (!channel) {
         throw new ChannelExhaustedError();
       }
@@ -232,13 +228,8 @@ export class SponsorshipService {
     );
 
     if (isSoroban) {
-      try {
-        const sim = await this.simulate(xdr);
-        resourceFee = sim.resourceFee;
-      } catch (err) {
-        // Fallback or rethrow? For estimation, we probably want to rethrow simulation errors
-        throw err;
-      }
+      const sim = await this.simulate(xdr);
+      resourceFee = sim.resourceFee;
     }
 
     return {

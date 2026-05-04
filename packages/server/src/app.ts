@@ -44,16 +44,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Route stubs
-const notImplemented = (req: express.Request, res: express.Response) => {
-  res.status(501).json({
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'This endpoint is not implemented yet',
-      requestId: req.id as string,
-    },
-  });
-};
 
 app.post('/v1/sponsor', sponsorHandler);
 app.post('/v1/simulate', simulateHandler);

@@ -1,6 +1,7 @@
 {
   "name": "grat",
   "private": true,
+  "type": "module",
   "description": "Grat monorepo",
   "scripts": {
     "build": "pnpm -r build",

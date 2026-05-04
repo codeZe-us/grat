@@ -13,6 +13,7 @@ describe('Grat Relay Integration Tests', () => {
   beforeAll(async () => {
     // Ensure we are on testnet for tests
     process.env.NETWORK = 'testnet';
+    process.env.REDIS_URL = 'redis://127.0.0.1:6379';
     
     // Provide a dummy seed phrase for tests if missing in the config object
     if (!config.channelSeedPhrase) {
@@ -25,13 +26,16 @@ describe('Grat Relay Integration Tests', () => {
     // Create and fund a test user
     userKeypair = Keypair.random();
     console.log('Funding test user:', userKeypair.publicKey());
-    await fetch(`https://friendbot.stellar.org/?addr=${userKeypair.publicKey()}`);
-  }, 60000); // Long timeout for Friendbot/Horizon
+    const fbRes = await fetch(`https://friendbot.stellar.org/?addr=${userKeypair.publicKey()}`);
+    if (!fbRes.ok) {
+      throw new Error(`Friendbot funding failed for test user: ${fbRes.status}`);
+    }
+  }, 90000); // Increased timeout for Friendbot/Horizon
 
   afterAll(async () => {
     await channelManager.stop();
     await redis.quit();
-  });
+  }, 20000);
 
   describe('GET /health', () => {
     it('returns 200 with status info', async () => {

@@ -49,8 +49,8 @@ export class ChannelManager {
       this.publicKeys.push(publicKey);
     }
 
-    await sequenceManager.syncAll(this.publicKeys);
     await this.verifyChannels();
+    await sequenceManager.syncAll(this.publicKeys);
     this.startCleanupInterval();
     
     const health = await this.getPoolHealth();
@@ -64,8 +64,6 @@ export class ChannelManager {
 
   private async verifyChannels() {
     const minBalance = config.network === 'mainnet' ? 10 : 2;
-    let totalXlm = 0;
-
     for (const publicKey of this.publicKeys) {
       const channel = this.channels.get(publicKey)!;
       try {
@@ -73,13 +71,12 @@ export class ChannelManager {
         const nativeBalance = account.balances.find(b => b.asset_type === 'native');
         const balance = nativeBalance ? nativeBalance.balance : '0';
         channel.balance = balance;
-        totalXlm += parseFloat(balance);
 
         if (parseFloat(balance) < minBalance) {
           logger.warn({ msg: 'Low channel balance', publicKey, balance, minBalance });
         }
       } catch (err: any) {
-        if (err.response?.status === 404) {
+        if (err.response?.status === 404 || err.name === 'NotFoundError') {
           if (config.network === 'testnet') {
             logger.info({ msg: 'Funding new testnet channel account via Friendbot', publicKey });
             try {
