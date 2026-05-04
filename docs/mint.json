@@ -1,12 +1,15 @@
 {
   "name": "Grat",
-  "theme": "mint",
   "openapi": "openapi.json",
   "favicon": "favicon.png",
   "colors": {
     "primary": "#4F46E5",
     "light": "#818CF8",
-    "dark": "#312E81"
+    "dark": "#312E81",
+    "anchors": {
+      "from": "#4F46E5",
+      "to": "#8B5CF6"
+    }
   },
   "topbarLinks": [
     {
