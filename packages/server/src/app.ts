@@ -6,6 +6,7 @@ import { logger } from './utils/logger';
 import { requestId } from './middleware/requestId';
 import { errorHandler } from './middleware/errorHandler';
 import { config } from './config';
+import { sponsorHandler } from './controllers/sponsorshipController';
 
 const app = express();
 
@@ -48,7 +49,7 @@ const notImplemented = (req: express.Request, res: express.Response) => {
   });
 };
 
-app.post('/v1/sponsor', notImplemented);
+app.post('/v1/sponsor', sponsorHandler);
 app.post('/v1/simulate', notImplemented);
 app.post('/v1/estimate', notImplemented);
 
