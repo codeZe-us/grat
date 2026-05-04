@@ -1,104 +1,67 @@
 {
-  "name": "Grat",
   "theme": "mint",
-  "openapi": "openapi.json",
+  "name": "Grat",
   "favicon": "favicon.png",
   "colors": {
     "primary": "#4F46E5",
     "light": "#818CF8",
     "dark": "#312E81"
   },
-  "topbarLinks": [
-    {
-      "name": "Dashboard",
-      "url": "https://grat.network/dashboard"
-    }
-  ],
-  "topbarCta": {
-    "type": "link",
-    "name": "Get API Key",
-    "url": "https://grat.network/signup"
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "pages": [
+          "introduction",
+          "quickstart",
+          "how-it-works"
+        ]
+      },
+      {
+        "group": "Core Concepts",
+        "pages": [
+          "core-concepts/fee-bump-transactions",
+          "core-concepts/channel-accounts",
+          "core-concepts/credits",
+          "core-concepts/policies"
+        ]
+      },
+      {
+        "group": "Guides",
+        "pages": [
+          "guides/sponsor-usdc-payments",
+          "guides/sponsor-soroban-contracts",
+          "guides/self-hosting",
+          "guides/migrate-from-launchtube"
+        ]
+      },
+      {
+        "group": "API Reference",
+        "pages": [
+          "api-reference/authentication",
+          "api-reference/sponsor",
+          "api-reference/simulate",
+          "api-reference/estimate"
+        ]
+      },
+      {
+        "group": "SDKs",
+        "pages": [
+          "sdks/typescript",
+          "sdks/react",
+          "sdks/python",
+          "sdks/rust",
+          "sdks/go"
+        ]
+      },
+      {
+        "group": "CLI",
+        "pages": [
+          "cli/commands"
+        ]
+      }
+    ]
   },
-  "tabs": [
-    {
-      "name": "API Reference",
-      "url": "api-reference"
-    },
-    {
-      "name": "SDKs",
-      "url": "sdks"
-    }
-  ],
-  "anchors": [
-    {
-      "name": "GitHub",
-      "icon": "github",
-      "url": "https://github.com/codeze-us/grat"
-    },
-    {
-      "name": "Community",
-      "icon": "discord",
-      "url": "https://discord.gg/grat"
-    },
-    {
-      "name": "Status",
-      "icon": "signal",
-      "url": "https://status.grat.network"
-    }
-  ],
-  "navigation": [
-    {
-      "group": "Getting Started",
-      "pages": [
-        "introduction",
-        "quickstart",
-        "how-it-works"
-      ]
-    },
-    {
-      "group": "Core Concepts",
-      "pages": [
-        "core-concepts/fee-bump-transactions",
-        "core-concepts/channel-accounts",
-        "core-concepts/credits",
-        "core-concepts/policies"
-      ]
-    },
-    {
-      "group": "Guides",
-      "pages": [
-        "guides/sponsor-usdc-payments",
-        "guides/sponsor-soroban-contracts",
-        "guides/self-hosting",
-        "guides/migrate-from-launchtube"
-      ]
-    },
-    {
-      "group": "API Reference",
-      "pages": [
-        "api-reference/authentication",
-        "api-reference/sponsor",
-        "api-reference/simulate",
-        "api-reference/estimate"
-      ]
-    },
-    {
-      "group": "SDKs",
-      "pages": [
-        "sdks/typescript",
-        "sdks/react",
-        "sdks/python",
-        "sdks/rust",
-        "sdks/go"
-      ]
-    },
-    {
-      "group": "CLI",
-      "pages": [
-        "cli/commands"
-      ]
-    }
-  ],
   "footerSocials": {
     "twitter": "https://twitter.com/gratnetwork",
     "github": "https://github.com/codeze-us/grat",
