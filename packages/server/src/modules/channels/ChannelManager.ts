@@ -131,7 +131,7 @@ export class ChannelManager {
       if (channel.status === 'available') {
         const lockKey = `channel:lock:${publicKey}`;
         // Set lock in Redis with 30s TTL
-        const acquired = await redis.set(lockKey, 'locked', 'NX', 'EX', 30);
+        const acquired = await redis.set(lockKey, 'locked', 'EX', 30, 'NX');
         
         if (acquired) {
           channel.status = 'locked';
