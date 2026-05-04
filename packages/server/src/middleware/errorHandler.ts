@@ -23,7 +23,7 @@ export const errorHandler = (
       details: err.details,
     });
 
-    if (err.statusCode === 503 && (err as any).retryAfter) {
+    if ((err as any).retryAfter) {
       res.setHeader('Retry-After', (err as any).retryAfter.toString());
     }
 

@@ -9,6 +9,8 @@ import { config } from './config';
 import { sponsorHandler } from './controllers/sponsorshipController';
 import { simulateHandler, estimateHandler } from './controllers/sorobanController';
 
+import { testnetRateLimiter } from './middleware/rateLimiter';
+
 const app: Express = express();
 
 // Middlewares
@@ -27,6 +29,9 @@ app.use(
     },
   }),
 );
+
+// Apply rate limiter for testnet faucet mode
+app.use(testnetRateLimiter);
 
 // Health check
 app.get('/health', (req, res) => {

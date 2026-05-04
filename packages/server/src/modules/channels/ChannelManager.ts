@@ -80,8 +80,26 @@ export class ChannelManager {
         }
       } catch (err: any) {
         if (err.response?.status === 404) {
-          channel.status = 'error';
-          logger.error({ msg: 'Channel account not found on network', publicKey });
+          if (config.network === 'testnet') {
+            logger.info({ msg: 'Funding new testnet channel account via Friendbot', publicKey });
+            try {
+              const fbResponse = await fetch(`https://friendbot.stellar.org/?addr=${publicKey}`);
+              if (fbResponse.ok) {
+                logger.info({ msg: 'Successfully funded channel account', publicKey });
+                channel.status = 'available';
+                channel.balance = '10000.00'; // Friendbot default
+              } else {
+                logger.error({ msg: 'Friendbot funding failed', publicKey, status: fbResponse.status });
+                channel.status = 'error';
+              }
+            } catch (fbErr: any) {
+              logger.error({ msg: 'Error calling Friendbot', publicKey, err: fbErr.message });
+              channel.status = 'error';
+            }
+          } else {
+            channel.status = 'error';
+            logger.error({ msg: 'Channel account not found on network', publicKey });
+          }
         } else {
           logger.error({ msg: 'Error verifying channel', publicKey, err: err.message });
         }

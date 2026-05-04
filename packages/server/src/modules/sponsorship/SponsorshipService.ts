@@ -119,6 +119,13 @@ export class SponsorshipService {
         // 6. Submit
         const result = await this.horizon.submitTransaction(feeBump);
         
+        // Testnet readable logging
+        if (config.network === 'testnet') {
+          const ops = innerTx.operations.map(op => op.type).join(', ');
+          const source = `${innerTx.source?.substring(0, 4)}...${innerTx.source?.substring(52)}`;
+          console.log(`[${new Date().toISOString()}] SPONSOR: Source=${source} Ops=[${ops}] Fee=${feeBump.fee} Hash=${result.hash} Channel=${channel.publicKey.substring(0, 4)}...`);
+        }
+
         return {
           hash: result.hash,
           ledger: result.ledger,
