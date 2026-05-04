@@ -4,6 +4,7 @@ import { derivePath } from 'ed25519-hd-key';
 import { config } from '../../config';
 import { logger } from '../../utils/logger';
 import { redis } from '../../utils/redis';
+import { sequenceManager } from './SequenceManager';
 
 export interface ChannelAccount {
   keypair: Keypair;
@@ -48,6 +49,7 @@ export class ChannelManager {
       this.publicKeys.push(publicKey);
     }
 
+    await sequenceManager.syncAll(this.publicKeys);
     await this.verifyChannels();
     this.startCleanupInterval();
     

@@ -10,6 +10,7 @@ import {
 import { config } from '../../config';
 import { logger } from '../../utils/logger';
 import { channelManager } from '../channels/ChannelManager';
+import { sequenceManager } from '../channels/SequenceManager';
 import { redis } from '../../utils/redis';
 import {
   RelayError,
@@ -19,6 +20,7 @@ import {
   SubmissionFailedError,
   NetworkError,
 } from '../../utils/errors';
+import { Account } from '@stellar/stellar-sdk';
 
 export interface SponsorRequest {
   transaction: string;
@@ -100,8 +102,12 @@ export class SponsorshipService {
         const feeStats = await this.horizon.feeStats();
         const baseFee = feeStats.fee_charged.p70 || '100';
 
+        // Get next sequence and prepare Account object
+        const nextSeq = await sequenceManager.getNext(channel.publicKey);
+        const account = new Account(channel.publicKey, (BigInt(nextSeq) - 1n).toString());
+
         const feeBump = TransactionBuilder.buildFeeBumpTransaction(
-          channel.keypair,
+          account,
           baseFee,
           innerTx,
           networkPassphrase
@@ -135,6 +141,11 @@ export class SponsorshipService {
 
         // Retry logic for specific codes
         if (resultCodes?.transaction === 'tx_bad_seq' || err.response?.status === 503) {
+          // If sequence is bad, sync from Horizon to reset cache
+          if (resultCodes?.transaction === 'tx_bad_seq') {
+            await sequenceManager.sync(channel.publicKey);
+          }
+
           if (retries < maxRetries) {
             retries++;
             const backoff = Math.pow(2, retries) * 1000;
