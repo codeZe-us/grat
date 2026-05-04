@@ -10,7 +10,7 @@
     "dev": "tsx watch src/server.ts",
     "start": "node dist/index.js",
     "lint": "eslint src --ext .ts",
-    "test": "echo \"Error: no test specified\" && exit 0",
+    "test": "vitest run",
     "create-channels": "tsx scripts/create-channels.ts"
   },
   "dependencies": {
