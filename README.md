@@ -2,6 +2,8 @@
 
 **Eliminate the "XLM for Gas" problem and onboard users to Stellar with zero friction.**
 
+[![npm version](https://img.shields.io/npm/v/@grat-official-sdk/sdk?label=%40grat-official-sdk%2Fsdk&color=blue)](https://www.npmjs.com/package/@grat-official-sdk/sdk)
+
 ## What is Grat?
 
 Stellar transactions require XLM to pay for network fees. For many users, especially those only interested in stablecoins (like USDC), acquiring XLM is a high-friction barrier to entry.

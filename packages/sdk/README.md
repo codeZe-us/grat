@@ -2,6 +2,9 @@
 
 The official client for interacting with the **Grat Relay Server** to enable zero-fee transaction sponsorship on Stellar.
 
+[![npm version](https://img.shields.io/npm/v/@grat-official-sdk/sdk?label=%40grat-official-sdk%2Fsdk&color=blue)](https://www.npmjs.com/package/@grat-official-sdk/sdk)
+[![npm downloads](https://img.shields.io/npm/dm/@grat-official-sdk/sdk)](https://www.npmjs.com/package/@grat-official-sdk/sdk)
+
 ## Installation
 
 ```bash
