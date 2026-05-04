@@ -5,6 +5,8 @@ import { app } from '../src/app';
 import { redis } from '../src/utils/redis';
 import { channelManager } from '../src/modules/channels/ChannelManager';
 
+import { config } from '../src/config';
+
 describe('Grat Relay Integration Tests', () => {
   let userKeypair: Keypair;
 
@@ -12,6 +14,11 @@ describe('Grat Relay Integration Tests', () => {
     // Ensure we are on testnet for tests
     process.env.NETWORK = 'testnet';
     
+    // Provide a dummy seed phrase for tests if missing in the config object
+    if (!config.channelSeedPhrase) {
+      (config as any).channelSeedPhrase = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+    }
+
     // Initialize channels (will fund via Friendbot if needed)
     await channelManager.initialize();
     
