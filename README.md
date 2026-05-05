@@ -20,7 +20,7 @@ Stellar transactions require XLM to pay for network fees. For many users, especi
 Clone the repo and start the local stack in under 2 minutes:
 
 ```bash
-git clone https://github.com/codeze-us/grat.git
+git clone https://github.com/gratnetwork/grat.git
 cd grat
 cp .env.example .env
 # Open .env and add your STELLAR_FUNDING_SECRET (get one at https://laboratory.stellar.org)
@@ -147,4 +147,4 @@ We welcome contributions! Please check the [Contributing Guide](CONTRIBUTING.md)
 
 ## License
 
-Apache 2.0 © [CodeZeus](https://github.com/codeze-us)
+Apache 2.0 © [Grat Network](https://github.com/gratnetwork)

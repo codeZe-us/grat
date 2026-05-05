@@ -36,7 +36,7 @@
     {
       "name": "GitHub",
       "icon": "github",
-      "url": "https://github.com/codeze-us/grat"
+      "url": "https://github.com/gratnetwork/grat"
     },
     {
       "name": "Telegram",
@@ -107,7 +107,7 @@
   ],
   "footerSocials": {
     "twitter": "https://twitter.com/gratnetwork",
-    "github": "https://github.com/codeze-us/grat",
+    "github": "https://github.com/gratnetwork/grat",
     "telegram": "https://t.me/+c_v7590Y4a5lY2U0"
   }
 }

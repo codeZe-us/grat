@@ -94,7 +94,7 @@ Creates a client for Stellar mainnet. **Requires an API key.**
 
 ## Examples
 
-Check out the **[Examples Directory](https://github.com/codeze-us/grat/tree/main/examples)** for full project demos including USDC transfers and Soroban contract calls.
+Check out the **[Examples Directory](https://github.com/gratnetwork/grat/tree/main/examples)** for full project demos including USDC transfers and Soroban contract calls.
 
 ## License
 
