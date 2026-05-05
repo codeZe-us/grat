@@ -1,9 +1,156 @@
 ---
-title: Python SDK
-description: "Sponsor transactions in your Python apps."
+title: "Python SDK"
+description: "Native Python client for Grat with full support for sync and async operations."
+icon: "python"
 ---
 
-> [!NOTE]
-> The Python SDK is currently under development.
+<Info>
+  This SDK is under development. [Star the GitHub repo](https://github.com/codeze-us/grat) or [join our Discord](https://discord.gg/grat) to get notified when it launches. You can track progress on [this GitHub issue](https://github.com/codeze-us/grat/issues/python-sdk).
+</Info>
 
-[Track progress on GitHub](https://github.com/codeze-us/grat/issues)
+The Grat Python SDK allows you to easily integrate Stellar fee-sponsorship into your Python backends, bots, and scripts.
+
+## Installation
+
+The SDK requires Python 3.9+.
+
+<CodeGroup>
+```bash pip
+pip install grat
+```
+
+```bash poetry
+poetry add grat
+```
+</CodeGroup>
+
+## Quick Setup
+
+The SDK provides both synchronous and asynchronous clients to fit your architecture.
+
+<CodeGroup>
+```python Synchronous
+from grat import Grat
+from stellar_sdk import Keypair, TransactionBuilder, Networks, Asset
+
+grat = Grat(network='testnet') # Defaults to https://api.grat.network
+# Sponsor a transaction
+result = grat.sponsor(signed_xdr)
+print(f"Success! Hash: {result.hash}")
+```
+
+```python Asynchronous
+import asyncio
+from grat import AsyncGrat
+
+async def main():
+    async with AsyncGrat(network='testnet') as grat:
+        result = await grat.sponsor(signed_xdr)
+        print(f"Success! Hash: {result.hash}")
+
+asyncio.run(main())
+```
+</CodeGroup>
+
+## Client Reference
+
+### Constructor Parameters
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `relay_url` | `str` | The URL of the Grat Relay. |
+| `network` | `str` | `testnet` or `mainnet`. |
+| `api_key` | `str` | Your API key (optional for testnet). |
+| `max_retries` | `int` | Number of times to retry failed requests (default: 3). |
+| `timeout` | `int` | Request timeout in seconds (default: 30). |
+
+### Methods
+
+#### `sponsor(transaction: str) -> SponsorResult`
+Wraps a signed transaction and submits it.
+
+#### `sponsor_contract(transaction: str) -> SponsorResult`
+Specifically for Soroban auth-entry transactions.
+
+#### `simulate(transaction: str) -> SimulationResult`
+Performs Soroban simulation to determine resource costs.
+
+#### `estimate(transaction: str) -> EstimateResult`
+Predicts the total fee (inclusion + resource) for a transaction.
+
+#### `status() -> HealthStatus`
+Returns relay health and network info.
+
+#### `credits() -> CreditBalance`
+Returns API key balance and usage statistics.
+
+<Note>
+  `AsyncGrat` provides the exact same methods but they must be `awaited`.
+</Note>
+
+## Response Types
+
+### `SponsorResult`
+- `hash`: `str`
+- `ledger`: `int`
+- `fee_paid`: `str`
+- `network`: `str`
+- `channel_account`: `str`
+
+### `SimulationResult`
+- `cost`: `Dict[str, int]` (cpu_instructions, memory_bytes)
+- `resource_fee`: `str`
+- `latest_ledger`: `int`
+- `auth`: `List[str]`
+- `events`: `List[dict]`
+
+## Error Handling
+
+All exceptions inherit from `GratError`.
+
+```python
+from grat import Grat, AuthenticationError, RateLimitError, GratError
+
+grat = Grat(api_key="invalid_key")
+
+try:
+    grat.status()
+except AuthenticationError:
+    print("Check your API key!")
+except RateLimitError as e:
+    print(f"Backing off for {e.retry_after} seconds")
+except GratError as e:
+    print(f"An error occurred: {e}")
+```
+
+## Example: Sponsor USDC Payment
+
+```python
+from grat import Grat
+from stellar_sdk import Keypair, TransactionBuilder, Networks, Asset, Operation
+
+# 1. Initialize
+grat = Grat(network='testnet')
+alice = Keypair.from_secret("S...")
+usdc = Asset("USDC", "G...")
+
+# 2. Build Transaction
+# Note: get_source_account() is a helper that fetches account info
+source = grat.get_source_account(alice.public_key)
+tx = (
+    TransactionBuilder(source, Networks.TESTNET)
+    .append_payment_op("BOB_ADDRESS", usdc, "50.0")
+    .set_timeout(30)
+    .build()
+)
+
+# 3. Sign and Sponsor
+tx.sign(alice)
+result = grat.sponsor(tx.to_xdr())
+
+print(f"USDC Sent! View on Stellar.Expert: https://stellar.expert/explorer/testnet/tx/{result.hash}")
+```
+
+<Tip>
+  When building high-concurrency applications with FastAPI or aiohttp, always use `AsyncGrat` to prevent blocking the event loop.
+</Tip>

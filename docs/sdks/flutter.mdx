@@ -1,0 +1,160 @@
+---
+title: "Flutter / Dart"
+description: "Build fee-less mobile wallets on Stellar using the Grat Flutter SDK."
+icon: "mobile"
+---
+
+<Info>
+  This SDK is under development. [Star the GitHub repo](https://github.com/codeze-us/grat) or [join our Discord](https://discord.gg/grat) to get notified when it launches. You can track progress on [this GitHub issue](https://github.com/codeze-us/grat/issues/flutter-sdk).
+</Info>
+
+Flutter is the platform of choice for Stellar wallets in emerging markets. The Grat Flutter SDK enables developers to build professional-grade mobile apps where users can transact in USDC without ever seeing a gas fee.
+
+## Installation
+
+Add the dependency to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  grat: ^1.0.0
+  stellar_flutter_sdk: ^2.5.0
+```
+
+Then run:
+```bash
+flutter pub get
+```
+
+## Quick Setup
+
+```dart
+import 'package:grat/grat.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
+
+final grat = Grat.testnet(); // Defaults to https://api.grat.network
+
+// Sponsor a transaction
+final result = await grat.sponsor(signedXdr);
+print('Success! Hash: ${result.hash}');
+```
+
+## Client Reference
+
+### Constructor Parameters
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `relayUrl` | `String` | The URL of the Grat Relay. |
+| `network` | `String` | `testnet` or `mainnet`. |
+| `apiKey` | `String` | Your API key (optional for testnet). |
+| `maxRetries` | `int` | Number of retries (default: 3). |
+| `timeout` | `Duration` | Request timeout (default: 30 seconds). |
+
+### Methods
+
+- `Future<SponsorResult> sponsor(String xdr)`
+- `Future<SponsorResult> sponsorContract(String xdr)`
+- `Future<SimulationResult> simulate(String xdr)`
+- `Future<EstimateResult> estimate(String xdr)`
+- `Future<HealthStatus> status()`
+- `Future<CreditBalance> credits()`
+
+## Error Handling
+
+The SDK uses typed exceptions for precise error handling.
+
+```dart
+try {
+  await grat.sponsor(txXdr);
+} on AuthenticationException {
+  // Handle invalid API key
+} on RateLimitException catch (e) {
+  print('Rate limited. Retry after ${e.retryAfter} seconds');
+} on GratException catch (e) {
+  print('Error: ${e.message}');
+}
+```
+
+## Full Widget Example: Send Payment Screen
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:grat/grat.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as stellar;
+
+class SendPaymentScreen extends StatefulWidget {
+  @override
+  _SendPaymentScreenState createState() => _SendPaymentScreenState();
+}
+
+class _SendPaymentScreenState extends State<SendPaymentScreen> {
+  final _recipientController = TextEditingController();
+  final _amountController = TextEditingController();
+  final _grat = Grat.testnet();
+  bool _isLoading = false;
+
+  void _handleSend() async {
+    setState(() => _isLoading = true);
+    try {
+      // 1. Build and sign transaction (simplified)
+      // ... 
+      
+      // 2. Sponsor
+      final result = await _grat.sponsor(signedXdr);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sent! Hash: ${result.hash}')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Send Sponsored Payment')),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(controller: _recipientController, decoration: InputDecoration(labelText: 'Recipient G...')),
+            TextField(controller: _amountController, decoration: InputDecoration(labelText: 'Amount')),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _handleSend,
+              child: _isLoading ? CircularProgressIndicator() : Text('Send USDC (Zero Fee)'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Mobile-Specific Tips
+
+<AccordionGroup>
+  <Accordion title="Security">
+    Never bundle your `GRAT_API_KEY` in the application binary. For production apps, you should proxy requests through your own backend or use a session-based key system.
+  </Accordion>
+  <Accordion title="Network Reliability">
+    Mobile networks can be unstable. We recommend increasing the `timeout` to 60 seconds and using a package like `connectivity_plus` to detect when the user is back online before retrying.
+  </Accordion>
+  <Accordion title="Secure Storage">
+    Store any temporary credentials or session keys using `flutter_secure_storage` to keep them encrypted on the device.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  The Grat Flutter SDK is designed to work seamlessly with the `stellar_flutter_sdk` package for transaction building and signing.
+</Note>
+
+## Real-World Callout: Building a USDC Wallet
+
+Imagine a user in a market where XLM is hard to acquire. They download your app, receive USDC from a friend, and send it to a merchant—all without ever knowing that Stellar requires XLM for fees. That is the power of Grat + Flutter.

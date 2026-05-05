@@ -90,9 +90,10 @@
       "pages": [
         "sdks/typescript",
         "sdks/react",
+        "sdks/nextjs",
         "sdks/python",
-        "sdks/rust",
-        "sdks/go"
+        "sdks/flutter",
+        "sdks/react-native"
       ]
     },
     {

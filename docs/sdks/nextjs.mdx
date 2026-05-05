@@ -1,0 +1,168 @@
+---
+title: "Next.js"
+description: "Server-side transaction sponsorship and API route proxying for Next.js."
+icon: "n"
+---
+
+<Info>
+  This SDK is under development. [Star the GitHub repo](https://github.com/codeze-us/grat) or [join our Discord](https://discord.gg/grat) to get notified when it launches. You can track progress on [this GitHub issue](https://github.com/codeze-us/grat/issues/nextjs-sdk).
+</Info>
+
+The Grat Next.js SDK provides utilities for securely sponsoring transactions on the server-side, preventing your API keys from being exposed to the client.
+
+<Warning>
+  Never put your Grat API key in client-side code (e.g., prefixing with `NEXT_PUBLIC_`). Always use server-side routes or actions to handle sponsorship.
+</Warning>
+
+## Installation
+
+<CodeGroup>
+```bash npm
+npm install @grat/nextjs @grat-official-sdk/sdk @stellar/stellar-sdk
+```
+
+```bash yarn
+yarn add @grat/nextjs @grat-official-sdk/sdk @stellar/stellar-sdk
+```
+
+```bash pnpm
+pnpm add @grat/nextjs @grat-official-sdk/sdk @stellar/stellar-sdk
+```
+</CodeGroup>
+
+## Configuration
+
+Add the following environment variables to your `.env.local` file:
+
+```env
+GRAT_API_KEY=your_secret_api_key
+GRAT_NETWORK=testnet
+GRAT_RELAY_URL=https://api.grat.network
+```
+
+## Usage Patterns
+
+### App Router Route Handler
+
+Use the `withGrat` wrapper to automatically initialize a server-side client.
+
+```tsx
+// app/api/sponsor/route.ts
+import { withGrat } from '@grat/nextjs';
+import { NextResponse } from 'next/server';
+
+export const POST = withGrat(async (req, grat) => {
+  const { transactionXDR } = await req.json();
+
+  try {
+    // Optional: Add your own server-side validation here
+    const result = await grat.sponsor(transactionXDR);
+    return NextResponse.json(result);
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+});
+```
+
+### Pages Router API Route
+
+The same `withGrat` wrapper works for the classic Pages router.
+
+```tsx
+// pages/api/sponsor.ts
+import { withGrat } from '@grat/nextjs';
+
+export default withGrat(async (req, res, grat) => {
+  if (req.method !== 'POST') return res.status(405).end();
+
+  const { transactionXDR } = req.body;
+  const result = await grat.sponsor(transactionXDR);
+  res.status(200).json(result);
+});
+```
+
+### Server Actions
+
+For a seamless full-stack experience, use `createGrat()` within a Server Action.
+
+```tsx
+// app/actions.ts
+'use server'
+
+import { createGrat } from '@grat/nextjs';
+
+export async function sponsorTransaction(xdr: string) {
+  const grat = createGrat();
+  const result = await grat.sponsor(xdr);
+  return result;
+}
+```
+
+<Note>
+  Grat Next.js utilities are compatible with the Next.js Edge Runtime.
+</Note>
+
+## Client-Side Integration
+
+To use gas abstraction in your frontend while keeping your API key secure, point your React SDK `relayUrl` to your own Next.js API route.
+
+<CodeGroup>
+```tsx API Route
+// app/api/grat/route.ts
+import { withGrat } from '@grat/nextjs';
+import { NextResponse } from 'next/server';
+
+export const POST = withGrat(async (req, grat) => {
+  const body = await req.json();
+  // Proxy the request to the real relay
+  const result = await grat.sponsor(body.transaction);
+  return NextResponse.json(result);
+});
+```
+
+```tsx Providers
+// app/providers.tsx
+'use client'
+import { GratProvider } from '@grat/react';
+
+export function Providers({ children }) {
+  return (
+    <GratProvider 
+      relayUrl="/api/grat" // Points to your Next.js route
+      network="testnet"
+    >
+      {children}
+    </GratProvider>
+  );
+}
+```
+
+```tsx Client Component
+// app/page.tsx
+'use client'
+import { useSponsor } from '@grat/react';
+
+export default function Page() {
+  const { sponsor, isLoading } = useSponsor();
+  
+  const handleAction = async () => {
+    // This will POST to /api/grat, which then proxies to Grat Relay
+    await sponsor(myTx);
+  };
+
+  return <button onClick={handleAction}>Sponsor via Proxy</button>;
+}
+```
+</CodeGroup>
+
+## Environment Variables Reference
+
+| Variable | Description |
+| :--- | :--- |
+| `GRAT_API_KEY` | Your secret API key from the Grat dashboard. |
+| `GRAT_NETWORK` | `testnet` or `mainnet`. |
+| `GRAT_RELAY_URL` | The URL of the Grat Relay (default: `https://api.grat.network`). |
+
+<Tip>
+  Always validate the transaction XDR on your server before calling `grat.sponsor()` to ensure users aren't abusing your sponsorship.
+</Tip>

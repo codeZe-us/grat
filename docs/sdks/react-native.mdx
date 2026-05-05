@@ -1,0 +1,148 @@
+---
+title: "React Native"
+description: "Mobile-optimized hooks for building fee-less Stellar wallets with React Native."
+icon: "mobile-screen"
+---
+
+<Info>
+  This SDK is under development. [Star the GitHub repo](https://github.com/codeze-us/grat) or [join our Discord](https://discord.gg/grat) to get notified when it launches. You can track progress on [this GitHub issue](https://github.com/codeze-us/grat/issues/react-native-sdk).
+</Info>
+
+The Grat React Native SDK extends our React SDK with mobile-specific optimizations, including better network handling, secure storage integration, and offline-aware queueing.
+
+## Installation
+
+<CodeGroup>
+```bash npm
+npm install @grat/react-native @grat/react @grat-official-sdk/sdk @stellar/stellar-sdk
+```
+
+```bash yarn
+yarn add @grat/react-native @grat/react @grat-official-sdk/sdk @stellar/stellar-sdk
+```
+</CodeGroup>
+
+<Note>
+  `@grat/react-native` re-exports all hooks from the [React SDK](/sdks/react) with mobile-specific defaults (like a 60s timeout).
+</Note>
+
+## Setup
+
+Wrap your `App.tsx` with the `GratProvider`.
+
+```tsx
+import { GratProvider } from '@grat/react-native';
+
+export default function App() {
+  return (
+    <GratProvider 
+      network="testnet"
+      relayUrl="https://api.grat.network"
+    >
+      <MainNavigator />
+    </GratProvider>
+  );
+}
+```
+
+## Mobile-Specific Hooks
+
+### `useNetworkAwareSponsorship()`
+
+This hook monitors device connectivity. If a user tries to send a transaction while offline, it can optionally queue it or provide immediate feedback.
+
+```tsx
+const { sponsor, isOnline, pendingCount, error } = useNetworkAwareSponsorship({
+  autoSubmitOnConnect: true
+});
+
+// Use it like a regular sponsor call
+await sponsor(signedTx);
+```
+
+### `useSecureGrat()`
+
+Automatically initializes the Grat client by retrieving the API key from the device's secure keychain.
+
+```tsx
+import * as Keychain from 'react-native-keychain';
+
+function MyComponent() {
+  const { client, isReady } = useSecureGrat({
+    getApiKey: async () => {
+      const credentials = await Keychain.getGenericPassword();
+      return credentials ? credentials.password : null;
+    }
+  });
+
+  if (!isReady) return <Loading />;
+  // ...
+}
+```
+
+## Security
+
+<Warning>
+  **Never bundle your Grat API key in your binary.** Attackers can easily extract it. 
+</Warning>
+
+**Recommended Architecture:**
+1. User logs into your app.
+2. Your backend issues a temporary, scoped Grat API key for that user's session.
+3. Your app stores this key using `react-native-keychain` (iOS) or `EncryptedSharedPreferences` (Android).
+4. The key expires automatically when the session ends.
+
+## Platform Notes
+
+- **Engine**: We recommend using the **Hermes** engine for optimal performance.
+- **Compatibility**: Tested on iOS 15+ and Android API 26+.
+- **Secure Storage**: Use `react-native-keychain` for bare React Native projects or `expo-secure-store` for Expo projects.
+
+## Feature Comparison
+
+| Feature | @grat/react | @grat/react-native |
+| :--- | :--- | :--- |
+| **Core Hooks** | ✅ | ✅ |
+| **Network Monitoring** | ❌ | ✅ |
+| **Offline Queueing** | ❌ | ✅ |
+| **Secure Storage Helper** | ❌ | ✅ |
+| **Default Timeout** | 30s | 60s |
+
+## Full Example: Mobile Payment Screen
+
+```tsx
+import React from 'react';
+import { View, TextInput, Button, Text, ActivityIndicator } from 'react-native';
+import { useSponsor, useEstimate } from '@grat/react-native';
+
+export function MobilePaymentScreen({ userKeypair }) {
+  const [recipient, setRecipient] = React.useState('');
+  const [amount, setAmount] = React.useState('');
+  const { sponsor, isLoading, error } = useSponsor();
+  const { estimate, result: fee } = useEstimate();
+
+  const handleSend = async () => {
+    // Build and sign transaction...
+    await sponsor(tx);
+    alert('Payment Sent!');
+  };
+
+  return (
+    <View style={{ padding: 20 }}>
+      <Text>Recipient</Text>
+      <TextInput value={recipient} onChangeText={setRecipient} style={{ borderBottomWidth: 1, marginBottom: 10 }} />
+      
+      <Text>Amount</Text>
+      <TextInput value={amount} onChangeText={setAmount} style={{ borderBottomWidth: 1, marginBottom: 20 }} />
+
+      {isLoading ? (
+        <ActivityIndicator />
+      ) : (
+        <Button title="Send Sponsored Payment" onPress={handleSend} />
+      )}
+
+      {error && <Text style={{ color: 'red', marginTop: 10 }}>{error.message}</Text>}
+    </View>
+  );
+}
+```
