@@ -91,9 +91,13 @@ export class SponsorshipService {
         const feeStats = await this.horizon.feeStats();
         const baseFee = feeStats.fee_charged.p70 || '100';
 
+        const innerFee = BigInt(innerTx.fee);
+        const numOps = BigInt(innerTx.operations.length);
+        const minOuterFee = innerFee + (numOps + 1n) * BigInt(baseFee);
+
         const feeBump = TransactionBuilder.buildFeeBumpTransaction(
           channel.publicKey,
-          baseFee,
+          minOuterFee.toString(),
           innerTx,
           networkPassphrase
         );
@@ -245,7 +249,9 @@ export class SponsorshipService {
 
     if (isSoroban) {
       const sim = await this.simulate(xdr);
-      resourceFee = sim.resourceFee;
+      // Protocol 26: Add a 15% buffer to resource fees to account for 
+      // host function variance and network fluctuations.
+      resourceFee = ((BigInt(sim.resourceFee) * 115n) / 100n).toString();
     }
 
     return {
