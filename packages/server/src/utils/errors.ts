@@ -87,3 +87,11 @@ export class NetworkError extends RelayError {
     super(message, 'NETWORK_ERROR', 503, details);
   }
 }
+export class FrozenEntryError extends RelayError {
+  constructor(
+    message: string = 'Transaction rejected: it references a ledger entry that has been frozen by network consensus. This is a network-level restriction and cannot be resolved by retrying or adjusting the transaction.',
+    frozenKeys: string[] = []
+  ) {
+    super(message, 'FROZEN_ENTRY', 422, { frozenKeys });
+  }
+}

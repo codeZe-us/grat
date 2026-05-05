@@ -15,6 +15,7 @@ import {
   ChannelExhaustedError,
   SimulationFailedError,
   SubmissionFailedError,
+  FrozenEntryError,
 } from '../../utils/errors';
 
 export interface SponsorRequest {
@@ -32,10 +33,6 @@ export interface SponsorResponse {
 }
 
 export interface SimulationResult {
-  cost: {
-    cpuInstructions: string;
-    memoryBytes: string;
-  };
   resourceFee: string;
   latestLedger: number;
   transactionData: string;
@@ -132,6 +129,12 @@ export class SponsorshipService {
           opCodes: opResultCodes,
         });
 
+        if (resultCodes?.transaction === 'tx_frozen' || resultCodes?.inner_transaction?.transaction === 'tx_frozen') {
+          const frozenKeys = (err as any).response?.data?.extras?.frozen_keys || [];
+          logger.warn({ msg: 'Transaction rejected due to frozen entry', requestId, frozenKeys });
+          throw new FrozenEntryError(undefined, frozenKeys);
+        }
+
         if (resultCodes?.transaction === 'tx_bad_seq' || err.response?.status === 503) {
           if (resultCodes?.transaction === 'tx_bad_seq') {
             await sequenceManager.sync(channel.publicKey);
@@ -186,7 +189,6 @@ export class SponsorshipService {
 
       if (!isSoroban) {
         return {
-          cost: { cpuInstructions: '0', memoryBytes: '0' },
           resourceFee: '0',
           latestLedger: 0,
           transactionData: xdr,
@@ -203,10 +205,6 @@ export class SponsorshipService {
 
       if (rpc.Api.isSimulationSuccess(result)) {
         return {
-          cost: {
-            cpuInstructions: result.cost.cpuInsns,
-            memoryBytes: result.cost.memBytes,
-          },
           resourceFee: result.minResourceFee,
           latestLedger: result.latestLedger,
           transactionData: result.transactionData.build().toXDR().toString('base64'),

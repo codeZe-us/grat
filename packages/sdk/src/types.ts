@@ -34,13 +34,6 @@ export interface SponsorResult {
  * Resource cost estimates from Soroban simulation.
  */
 export interface SimulationResult {
-  /** Execution costs. */
-  cost: {
-    /** CPU instructions consumed. */
-    cpuInstructions: string;
-    /** Memory used in bytes. */
-    memoryBytes: string;
-  };
   /** Minimum resource fee required for the transaction. */
   resourceFee: string;
   /** The latest ledger sequence known by the RPC. */

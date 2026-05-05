@@ -83,6 +83,17 @@ export class RateLimitError extends GratError {
 export class NetworkError extends GratError {}
 
 /**
+ * Thrown when the transaction references a frozen ledger entry.
+ */
+export class FrozenEntryError extends GratError {
+  public readonly frozenKeys: string[];
+  constructor(message: string, statusCode: number, details?: any, requestId?: string) {
+    super(message, 'FROZEN_ENTRY', statusCode, details, requestId);
+    this.frozenKeys = (details as { frozenKeys?: string[] })?.frozenKeys || [];
+  }
+}
+
+/**
  * Helper to map server error responses to typed SDK errors.
  */
 export async function handleResponseError(response: Response, requestId?: string) {
@@ -117,6 +128,8 @@ export async function handleResponseError(response: Response, requestId?: string
       throw new RateLimitError(message, response.status, details, reqId);
     case 'NETWORK_ERROR':
       throw new NetworkError(message, code, response.status, details, reqId);
+    case 'FROZEN_ENTRY':
+      throw new FrozenEntryError(message, response.status, details, reqId);
     default:
       throw new GratError(message, code, response.status, details, reqId);
   }
