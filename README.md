@@ -11,6 +11,8 @@ Stellar transactions require XLM to pay for network fees. For many users, especi
 
 **Grat** is a relay server and SDK that implements **Gas Abstraction**. It allows developers to sponsor the transaction fees for their users by wrapping transactions in fee-bump envelopes. With Grat, your users can hold USDC and perform operations without ever needing to touch or even know about XLM.
 
+Compatible with Protocol 26 (Yardstick), including all new Soroban host functions, precise TTL extensions, and frozen ledger entry handling.
+
 ---
 
 ## Quick Start
@@ -56,6 +58,7 @@ Grat leverages Stellar's native **Fee-Bump Transactions (CAP-0015)**.
 4. The Relay wraps the inner transaction in a Fee-Bump envelope, signs it with the channel account, and submits it to the network.
 5. **Deep Error Diagnostics**: If a transaction fails, Grat drills down into the inner results to expose the exact operation error (e.g., `op_low_reserve`, `op_no_issuer`), saving developers hours of debugging.
 6. **Redis-backed sequence management** ensures high concurrency without sequence conflicts across multiple instances.
+7. **Protocol 26 (Yardstick) Ready**: Handles all new Soroban host functions, precise TTL extensions, and frozen ledger entry rejections (CAP-0077) with distinct error codes.
 
 ---
 
@@ -134,6 +137,7 @@ Grat has completed its Phase 1 milestone. All core gas-abstraction features for 
 - [x] High-Concurrency Channel Pool
 - [x] Deep Error Diagnostics
 - [x] Multi-platform SDK (TypeScript)
+- [x] Protocol 26 (Yardstick) Compatibility
 
 ---
 

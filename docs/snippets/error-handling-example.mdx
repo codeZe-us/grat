@@ -1,5 +1,5 @@
 ```typescript
-import { SubmissionFailedError, RateLimitError } from '@grat-official-sdk/sdk';
+import { SubmissionFailedError, RateLimitError, FrozenEntryError } from '@grat-official-sdk/sdk';
 
 try {
   const result = await grat.sponsor(tx);
@@ -11,6 +11,9 @@ try {
   } else if (error instanceof RateLimitError) {
     // Relay rate limit exceeded
     console.log(`Retrying in ${error.retryAfter} seconds...`);
+  } else if (error instanceof FrozenEntryError) {
+    // Network-level block on this ledger entry (Protocol 26)
+    console.warn("Action restricted: one or more ledger entries are frozen.");
   }
 }
 ```

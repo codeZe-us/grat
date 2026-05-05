@@ -22,6 +22,9 @@ Grat solves this by maintaining a **pool of Channel Accounts**. When a request c
 
 ## Atomic Sequence Tracking
 
-To prevent "sequence number already used" errors in a distributed environment, Grat uses **Redis** to track the state of every channel account. Even if you run 10 instances of the Grat Relay, they will coordinate via Redis to ensure no two transactions ever use the same sequence number from the same channel at the same time.
+
+## Protocol 26 Support
+
+Grat tracks Stellar protocol upgrades and handles protocol-specific transaction behavior. With Protocol 26 (Yardstick), the relay correctly processes transactions using new Soroban host functions (checked integer arithmetic, BN254 cryptographic operations, precise TTL extensions) and handles frozen ledger entry rejections (CAP-0077) with a distinct error response rather than a generic failure.
 
 
