@@ -39,9 +39,9 @@
       "url": "https://github.com/codeze-us/grat"
     },
     {
-      "name": "Community",
-      "icon": "discord",
-      "url": "https://discord.gg/grat"
+      "name": "Telegram",
+      "icon": "telegram",
+      "url": "https://t.me/+c_v7590Y4a5lY2U0"
     },
     {
       "name": "Status",
@@ -106,6 +106,6 @@
   "footerSocials": {
     "twitter": "https://twitter.com/gratnetwork",
     "github": "https://github.com/codeze-us/grat",
-    "discord": "https://discord.gg/grat"
+    "telegram": "https://t.me/+c_v7590Y4a5lY2U0"
   }
 }
