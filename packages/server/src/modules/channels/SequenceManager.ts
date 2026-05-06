@@ -23,8 +23,10 @@ export class SequenceManager {
       
       logger.debug({ msg: 'Synced sequence number', publicKey, sequence });
       return sequence;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      logger.error({ msg: 'Failed to sync sequence number', publicKey, err: err.message });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      logger.error({ msg: 'Failed to sync sequence number', publicKey, err: (err as any).message });
       throw err;
     }
   }

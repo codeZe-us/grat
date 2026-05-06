@@ -75,8 +75,10 @@ export class ChannelManager {
         if (parseFloat(balance) < minBalance) {
           logger.warn({ msg: 'Low channel balance', publicKey, balance, minBalance });
         }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        if (err.response?.status === 404 || err.name === 'NotFoundError') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((err as any).response?.status === 404 || err.name === 'NotFoundError') {
           if (config.network === 'testnet') {
             logger.info({ msg: 'Funding new testnet channel account via Friendbot', publicKey });
             try {
@@ -89,8 +91,10 @@ export class ChannelManager {
                 logger.error({ msg: 'Friendbot funding failed', publicKey, status: fbResponse.status });
                 channel.status = 'error';
               }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (fbErr: any) {
-              logger.error({ msg: 'Error calling Friendbot', publicKey, err: fbErr.message });
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              logger.error({ msg: 'Error calling Friendbot', publicKey, err: (fbErr as any).message });
               channel.status = 'error';
             }
           } else {

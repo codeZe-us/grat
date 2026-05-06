@@ -8,6 +8,7 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction,
 ) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const requestId = (req as any).id;
 
   if (err instanceof RelayError) {
@@ -23,7 +24,9 @@ export const errorHandler = (
       details: err.details,
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((err as any).retryAfter) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       res.setHeader('Retry-After', (err as any).retryAfter.toString());
     }
 

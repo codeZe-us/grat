@@ -120,6 +120,7 @@ export class SponsorshipService {
           channelAccount: channel.publicKey,
         };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const resultCodes = (err as any).response?.data?.extras?.result_codes;
@@ -134,6 +135,7 @@ export class SponsorshipService {
         });
 
         if (resultCodes?.transaction === 'tx_frozen' || resultCodes?.inner_transaction?.transaction === 'tx_frozen') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const frozenKeys = (err as any).response?.data?.extras?.frozen_keys || [];
           logger.warn({ msg: 'Transaction rejected due to frozen entry', requestId, frozenKeys });
           throw new FrozenEntryError(undefined, frozenKeys);
@@ -161,6 +163,7 @@ export class SponsorshipService {
           opResult = extras.result_codes.inner_transaction.operations[0];
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const msg = opResult || txResult || (err as any).response?.data?.title || (err as Error).message;
         throw new SubmissionFailedError(`Transaction Failed: ${msg}`, extras);
 

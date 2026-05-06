@@ -87,7 +87,7 @@ export class NetworkError extends GratError {}
  */
 export class FrozenEntryError extends GratError {
   public readonly frozenKeys: string[];
-  constructor(message: string, statusCode: number, details?: any, requestId?: string) {
+  constructor(message: string, statusCode: number, details?: unknown, requestId?: string) {
     super(message, 'FROZEN_ENTRY', statusCode, details, requestId);
     this.frozenKeys = (details as { frozenKeys?: string[] })?.frozenKeys || [];
   }
@@ -99,6 +99,7 @@ export class FrozenEntryError extends GratError {
 export async function handleResponseError(response: Response, requestId?: string) {
   let body: { error?: { message?: string; code?: string; details?: unknown; requestId?: string } };
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     body = (await response.json()) as any;
   } catch (e) {
     throw new NetworkError('Failed to parse error response from relay', 'PARSE_ERROR', response.status, null, requestId);
