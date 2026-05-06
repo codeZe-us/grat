@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@grat-official-sdk/sdk": "workspace:*",
-    "@stellar/stellar-sdk": "^12.1.0"
+    "@stellar/stellar-sdk": "^15.1.0"
   },
   "devDependencies": {
     "tsx": "^4.7.2",

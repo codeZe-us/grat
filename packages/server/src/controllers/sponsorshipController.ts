@@ -16,7 +16,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
       });
     }
 
-    // Handle Idempotency
+
     if (idempotencyKey) {
       const cached = await sponsorshipService.checkIdempotency(idempotencyKey);
       if (cached) {
@@ -33,7 +33,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
       req.id as string
     );
 
-    // Save Idempotency
+
     if (idempotencyKey) {
       await sponsorshipService.setIdempotency(idempotencyKey, result);
     }

@@ -1,5 +1,5 @@
 import { Keypair, Asset, Operation, TransactionBuilder, Networks, Account } from '@stellar/stellar-sdk';
-import { Grat } from '@grat-official-sdk/sdk';
+import { Grat, FrozenEntryError } from '@grat-official-sdk/sdk';
 
 async function run() {
   console.log('🚀 Starting USDC Transfer Example with Fee Sponsorship');
@@ -54,7 +54,7 @@ async function run() {
   await grat.sponsor(bobTrustlineTx);
   console.log('   ✅ Bob is ready to receive USDC.');
   
-  // 3.5 Issuer sends USDC to Alice (SPONSORED)
+
   console.log('\n3.5. Minting 100 USDC for Alice (SPONSORED)...');
   const issuerInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${issuer.publicKey()}`)).json();
   const mintTx = new TransactionBuilder(
@@ -98,6 +98,10 @@ async function run() {
 }
 
 run().catch(err => {
-  console.error('\n❌ Example failed:', err.message);
-  if (err.requestId) console.error('   Request ID:', err.requestId);
+  if (err instanceof FrozenEntryError) {
+    console.error('\n❌ Action Restricted: One or more ledger entries are currently frozen by the network.');
+  } else {
+    console.error('\n❌ Example failed:', err.message);
+    if (err.requestId) console.error('   Request ID:', err.requestId);
+  }
 });

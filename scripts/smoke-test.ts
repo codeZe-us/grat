@@ -19,7 +19,6 @@ async function runSmokeTest() {
   const totalTests = 8;
 
   try {
-    // 1. Health Check
     try {
       const status = await grat.status();
       console.log(`${COLORS.green}✓ Relay server is healthy (${status.network})${COLORS.reset}`);
@@ -29,14 +28,12 @@ async function runSmokeTest() {
       throw e;
     }
 
-    // 2. Redis & Channel Health (via status)
     const status = await grat.status();
     if (status.pool) {
       console.log(`${COLORS.green}✓ Redis connected & ${status.pool.funded}/${status.pool.total} channels funded (total: ${status.pool.totalXlm} XLM)${COLORS.reset}`);
       passCount++;
     }
 
-    // 3. Create Fresh Account
     const user = Keypair.random();
     console.log(`${COLORS.cyan}i Creating fresh test account: ${user.publicKey()}...${COLORS.reset}`);
     const fbResponse = await fetch(`https://friendbot.stellar.org/?addr=${user.publicKey()}`);
@@ -47,7 +44,6 @@ async function runSmokeTest() {
       throw new Error('Friendbot failed');
     }
 
-    // 4. Build Transaction
     const userAccount = await horizon.loadAccount(user.publicKey());
     const tx = new TransactionBuilder(userAccount, {
       fee: '100',
@@ -62,13 +58,11 @@ async function runSmokeTest() {
 
     tx.sign(user);
 
-    // 5. Sponsor via SDK
     console.log(`${COLORS.cyan}i Sponsoring transaction via relay...${COLORS.reset}`);
     const result = await grat.sponsor(tx);
     console.log(`${COLORS.green}✓ Transaction sponsored: hash ${result.hash}${COLORS.reset}`);
     passCount++;
 
-    // 6. Verify Fee-Bump on Horizon
     const txData = await horizon.transactions().transaction(result.hash).call();
     if (txData.fee_bump_transaction) {
       console.log(`${COLORS.green}✓ Fee-bump verified on Horizon (Inner fee: ${txData.fee_charged})${COLORS.reset}`);
@@ -77,7 +71,6 @@ async function runSmokeTest() {
       console.log(`${COLORS.red}✗ Transaction is not a fee-bump${COLORS.reset}`);
     }
 
-    // 7. Test Simulation
     const simTx = new TransactionBuilder(userAccount, {
       fee: '100',
       networkPassphrase: Networks.TESTNET
@@ -93,7 +86,6 @@ async function runSmokeTest() {
     console.log(`${COLORS.green}✓ Simulation returned results${COLORS.reset}`);
     passCount++;
 
-    // 8. Test Estimate
     const est = await grat.estimate(simTx);
     console.log(`${COLORS.green}✓ Fee estimate received: ${est.estimatedFee} stroops${COLORS.reset}`);
     passCount++;

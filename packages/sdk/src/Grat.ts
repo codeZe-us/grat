@@ -43,7 +43,7 @@ export class Grat {
     const network = config.network || 'testnet';
     const relayUrl = config.relayUrl || (network === 'testnet' ? 'http://localhost:3000' : '');
 
-    // Validation
+
     if (network === 'mainnet') {
       if (!config.apiKey) {
         throw new Error('API key is required for mainnet. Get one at https://grat.network');
@@ -168,14 +168,14 @@ export class Grat {
 
       clearTimeout(timeoutId);
 
-      // Handle 429 Rate Limit
+
       if (response.status === 429 && retryCount < this.config.maxRetries) {
         const retryAfter = parseInt(response.headers.get('Retry-After') || '1') * 1000;
         await this.delay(retryAfter);
         return this.request<T>(path, options, retryCount + 1);
       }
 
-      // Handle 503 or other 5xx errors with exponential backoff
+
       if ((response.status === 503 || response.status >= 500) && retryCount < this.config.maxRetries) {
         const backoff = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
         await this.delay(backoff);
@@ -198,7 +198,7 @@ export class Grat {
       if (error instanceof GratError) throw error;
       if (error instanceof NetworkError) throw error;
 
-      // Handle network errors with retry
+
       if (retryCount < this.config.maxRetries) {
         const backoff = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
         await this.delay(backoff);

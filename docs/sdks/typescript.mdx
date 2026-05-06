@@ -68,10 +68,10 @@ Checks the health of the relay server.
 
 The SDK throws typed errors that you can catch to handle specific scenarios:
 
-- **FrozenEntryError** (422) — Thrown when the sponsored transaction references a ledger entry that has been frozen by network consensus (Protocol 26, CAP-0077). This is a network-level security measure, not a problem with the transaction itself.
-- **InsufficientCreditsError** (402) — The project has run out of gas credits.
-- **RateLimitError** (429) — You have exceeded the relay's rate limit.
-- **SubmissionFailedError** (400) — The transaction was rejected by the Stellar network (e.g., bad sequence, op_failed).
-- **ValidationError** (400) — The XDR or request parameters are invalid.
+- **FrozenEntryError** (422) - Thrown when the sponsored transaction references a ledger entry that has been frozen by network consensus (Protocol 26, CAP-0077). This is a network-level security measure, not a problem with the transaction itself.
+- **InsufficientCreditsError** (402) - The project has run out of gas credits.
+- **RateLimitError** (429) - You have exceeded the relay's rate limit.
+- **SubmissionFailedError** (400) - The transaction was rejected by the Stellar network (e.g., bad sequence, op_failed).
+- **ValidationError** (400) - The XDR or request parameters are invalid.
 
 <errorExample />

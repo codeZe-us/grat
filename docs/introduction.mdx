@@ -3,11 +3,14 @@ title: Introduction
 description: "Eliminate the 'XLM for Gas' problem and onboard users to Stellar with zero friction."
 ---
 
-import testnetNote from '/snippets/testnet-note.mdx'
+import testnetNote from '/snippets/testnet-note.mdx';
 
 <testnetNote />
 
-Grat is a high-performance relay server and SDK that implements **Gas Abstraction** for the Stellar blockchain. It allows developers to sponsor transaction fees for their users, enabling a seamless UX where users never need to hold or acquire XLM. Grat is compatible with Protocol 26 (Yardstick), including all new Soroban host functions and updated transaction semantics.
+Grat is a relay server and SDK that implements **Gas Abstraction** for the Stellar blockchain. It allows developers to sponsor transaction fees for their users, enabling a seamless UX where users never need to hold or acquire XLM. 
+
+Grat supports all Stellar transaction types including **Protocol 26 (Yardstick)** operations: checked integer arithmetic, BN254 cryptographic functions, precise TTL extensions, and SAC improvements.
+
 
 <CardGroup cols={2}>
   <Card title="Zero-XLM UX" icon="gas-pump">
@@ -30,11 +33,10 @@ Grat is a high-performance relay server and SDK that implements **Gas Abstractio
   <Step title="Sign">
     The user signs a standard transaction (the "inner" transaction) as they normally would.
   </Step>
-  <Step title="Relay">
-    The SDK sends the signed XDR to the Grat Relay instead of Horizon.
-  </Step>
+  <Step title="Relay">The SDK sends the signed XDR to the Grat Relay instead of Horizon.</Step>
   <Step title="Sponsor">
-    The Relay wraps the transaction in a **Fee-Bump envelope**, pays the network fee from a channel pool, and submits it to Stellar.
+    The Relay wraps the transaction in a **Fee-Bump envelope**, pays the network fee from a channel
+    pool, and submits it to Stellar.
   </Step>
 </Steps>
 

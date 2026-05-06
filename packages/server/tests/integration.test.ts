@@ -11,19 +11,19 @@ describe('Grat Relay Integration Tests', () => {
   let userKeypair: Keypair;
 
   beforeAll(async () => {
-    // Ensure we are on testnet for tests
+
     process.env.NETWORK = 'testnet';
     process.env.REDIS_URL = 'redis://127.0.0.1:6379';
     
-    // Provide a dummy seed phrase for tests if missing in the config object
+
     if (!config.channelSeedPhrase) {
       (config as any).channelSeedPhrase = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
     }
 
-    // Initialize channels (will fund via Friendbot if needed)
+
     await channelManager.initialize();
     
-    // Create and fund a test user
+
     userKeypair = Keypair.random();
     console.log('Funding test user:', userKeypair.publicKey());
     const fbRes = await fetch(`https://friendbot.stellar.org/?addr=${userKeypair.publicKey()}`);
@@ -50,7 +50,7 @@ describe('Grat Relay Integration Tests', () => {
 
   describe('POST /v1/sponsor', () => {
     it('sponsors a classic payment transaction', async () => {
-      // 1. Build a simple payment
+
       const accountInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${userKeypair.publicKey()}`)).json();
       const tx = new TransactionBuilder(
         new Account(userKeypair.publicKey(), accountInfo.sequence),
@@ -67,7 +67,7 @@ describe('Grat Relay Integration Tests', () => {
 
       tx.sign(userKeypair);
 
-      // 2. Submit to relay
+
       const res = await request(app)
         .post('/v1/sponsor')
         .send({

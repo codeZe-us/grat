@@ -15,7 +15,7 @@ importers:
         specifier: workspace:*
         version: link:packages/sdk
       '@stellar/stellar-sdk':
-        specifier: ^15.0.1
+        specifier: ^15.1.0
         version: 15.1.0
       '@types/supertest':
         specifier: ^7.2.0
@@ -54,8 +54,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/sdk
       '@stellar/stellar-sdk':
-        specifier: ^12.1.0
-        version: 12.3.0
+        specifier: ^15.1.0
+        version: 15.1.0
     devDependencies:
       tsx:
         specifier: ^4.7.2
@@ -70,8 +70,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/sdk
       '@stellar/stellar-sdk':
-        specifier: ^12.1.0
-        version: 12.3.0
+        specifier: ^15.1.0
+        version: 15.1.0
     devDependencies:
       tsx:
         specifier: ^4.7.2
@@ -86,8 +86,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/sdk
       '@stellar/stellar-sdk':
-        specifier: ^12.1.0
-        version: 12.3.0
+        specifier: ^15.1.0
+        version: 15.1.0
     devDependencies:
       tsx:
         specifier: ^4.7.2
@@ -99,7 +99,7 @@ importers:
   packages/sdk:
     dependencies:
       '@stellar/stellar-sdk':
-        specifier: ^15.0.1
+        specifier: ^15.1.0
         version: 15.1.0
     devDependencies:
       '@types/node':
@@ -109,7 +109,7 @@ importers:
   packages/server:
     dependencies:
       '@stellar/stellar-sdk':
-        specifier: ^15.0.1
+        specifier: ^15.1.0
         version: 15.1.0
       bip39:
         specifier: ^3.1.0
@@ -533,22 +533,13 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@stellar/js-xdr@3.1.2':
-    resolution: {integrity: sha512-VVolPL5goVEIsvuGqDc5uiKxV03lzfWdvYg1KikvwheDmTBO68CKDji3bAZ/kppZrx5iTA8z3Ld5yuytcvhvOQ==}
-
   '@stellar/js-xdr@4.0.0':
     resolution: {integrity: sha512-+NmNa7Tk5BI5XFdy/6xGTqAN4J9a9KgCrCGhj2uEUTCBhLkch0M+QbKzNH8zEnejWe0p8w+0q5hUVX6L3OzoVA==}
     engines: {node: '>=20.0.0', pnpm: '>=9.0.0'}
 
-  '@stellar/stellar-base@12.1.1':
-    resolution: {integrity: sha512-gOBSOFDepihslcInlqnxKZdIW9dMUO1tpOm3AtJR33K2OvpXG6SaVHCzAmCFArcCqI9zXTEiSoh70T48TmiHJA==}
-
   '@stellar/stellar-base@15.0.0':
     resolution: {integrity: sha512-XQhxUr9BYiEcFcgc4oWcCMR9QJCny/GmmGsuwPKf/ieIcOeb5149KLHYx9mJCA0ea8QbucR2/GzV58QbXOTxQA==}
     engines: {node: '>=20.0.0'}
-
-  '@stellar/stellar-sdk@12.3.0':
-    resolution: {integrity: sha512-F2DYFop/M5ffXF0lvV5Ezjk+VWNKg0QDX8gNhwehVU3y5LYA3WAY6VcCarMGPaG9Wdgoeh1IXXzOautpqpsltw==}
 
   '@stellar/stellar-sdk@15.1.0':
     resolution: {integrity: sha512-GsJUcWx2yboVzYdhTe/LHS3V1wVLSHkUkglC5bBoYWGJt31vzIhbSGno60NP9CdCTNkLJdnrsLJ63oA58Zvh5A==}
@@ -779,30 +770,8 @@ packages:
   axios@1.15.0:
     resolution: {integrity: sha512-wWyJDlAatxk30ZJer+GeCWS209sA42X+N5jU2jy6oHTp7ufw8uzUTVFBX9+wTfAlhiJXGS0Bq7X6efruWjuK9Q==}
 
-  axios@1.16.0:
-    resolution: {integrity: sha512-6hp5CwvTPlN2A31g5dxnwAX0orzM7pmCRDLnZSX772mv8WDqICwFjowHuPs04Mc8deIld1+ejhtaMn5vp6b+1w==}
-
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
-
-  bare-addon-resolve@1.10.0:
-    resolution: {integrity: sha512-sSd0jieRJlDaODOzj0oe0RjFVC1QI0ZIjGIdPkbrTXsdVVtENg14c+lHHAhHwmWCZ2nQlMhy8jA3Y5LYPc/isA==}
-    peerDependencies:
-      bare-url: '*'
-    peerDependenciesMeta:
-      bare-url:
-        optional: true
-
-  bare-module-resolve@1.12.2:
-    resolution: {integrity: sha512-j+hiD5k99qec4KjJvYsI67q5AOBifmy9JG3oeMVxTmvrhn2sIdp8StrUvZu4YNgwTpO+NhniQG16N1ETDe1k5w==}
-    peerDependencies:
-      bare-url: '*'
-    peerDependenciesMeta:
-      bare-url:
-        optional: true
-
-  bare-semver@1.0.3:
-    resolution: {integrity: sha512-HS/A30bi2+PiRJfU6R4+Kp+6KeLSCSByjYM2iiobOKzLAvtu1CT+S8xWfiU7wz0erknjkUoC+yXy108tzIuP5Q==}
 
   base32.js@0.1.0:
     resolution: {integrity: sha512-n3TkB02ixgBOhTvANakDb4xaMXnYUVkNoRFJjQflcqMQhyEKxEHdj3E6N8t8sUQ0mjH/3/JxzlXuz3ul/J90pQ==}
@@ -1665,8 +1634,8 @@ packages:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
 
-  postcss@8.5.13:
-    resolution: {integrity: sha512-qif0+jGGZoLWdHey3UFHHWP0H7Gbmsk8T5VEqyYFbWqPr1XqvLGBbk/sl8V5exGmcYJklJOhOQq1pV9IcsiFag==}
+  postcss@8.5.14:
+    resolution: {integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==}
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -1746,10 +1715,6 @@ packages:
   redis-parser@3.0.0:
     resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
     engines: {node: '>=4'}
-
-  require-addon@1.2.0:
-    resolution: {integrity: sha512-VNPDZlYgIYQwWp9jMTzljx+k0ZtatKlcvOhktZ/anNPI3dQ9NXk7cq2U4iJ1wd9IrytRnYhyEocFWbkdPb+MYA==}
-    engines: {bare: '>=1.10.0'}
 
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
@@ -1853,9 +1818,6 @@ packages:
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
-
-  sodium-native@4.3.3:
-    resolution: {integrity: sha512-OnxSlN3uyY8D0EsLHpmm2HOFmKddQVvEMmsakCrXUzSd8kjjbzL413t4ZNF3n0UxSwNgwTyUvkmZHTfuCeiYSw==}
 
   sonic-boom@3.8.1:
     resolution: {integrity: sha512-y4Z8LCDBuum+PBP3lSV7RHrXscqksve/bi0as7mhwVnBW+/wUqKT/2Kb7um8yqcFy0duYbbPxzt89Zy2nOCaxg==}
@@ -2400,22 +2362,7 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@stellar/js-xdr@3.1.2': {}
-
   '@stellar/js-xdr@4.0.0': {}
-
-  '@stellar/stellar-base@12.1.1':
-    dependencies:
-      '@stellar/js-xdr': 3.1.2
-      base32.js: 0.1.0
-      bignumber.js: 9.3.1
-      buffer: 6.0.3
-      sha.js: 2.4.12
-      tweetnacl: 1.0.3
-    optionalDependencies:
-      sodium-native: 4.3.3
-    transitivePeerDependencies:
-      - bare-url
 
   '@stellar/stellar-base@15.0.0':
     dependencies:
@@ -2425,19 +2372,6 @@ snapshots:
       bignumber.js: 9.3.1
       buffer: 6.0.3
       sha.js: 2.4.12
-
-  '@stellar/stellar-sdk@12.3.0':
-    dependencies:
-      '@stellar/stellar-base': 12.1.1
-      axios: 1.16.0
-      bignumber.js: 9.3.1
-      eventsource: 2.0.2
-      randombytes: 2.1.0
-      toml: 3.0.0
-      urijs: 1.19.11
-    transitivePeerDependencies:
-      - bare-url
-      - debug
 
   '@stellar/stellar-sdk@15.1.0':
     dependencies:
@@ -2721,29 +2655,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  axios@1.16.0:
-    dependencies:
-      follow-redirects: 1.16.0
-      form-data: 4.0.5
-      proxy-from-env: 2.1.0
-    transitivePeerDependencies:
-      - debug
-
   balanced-match@1.0.2: {}
-
-  bare-addon-resolve@1.10.0:
-    dependencies:
-      bare-module-resolve: 1.12.2
-      bare-semver: 1.0.3
-    optional: true
-
-  bare-module-resolve@1.12.2:
-    dependencies:
-      bare-semver: 1.0.3
-    optional: true
-
-  bare-semver@1.0.3:
-    optional: true
 
   base32.js@0.1.0: {}
 
@@ -3622,7 +3534,7 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss@8.5.13:
+  postcss@8.5.14:
     dependencies:
       nanoid: 3.3.12
       picocolors: 1.1.1
@@ -3702,13 +3614,6 @@ snapshots:
   redis-parser@3.0.0:
     dependencies:
       redis-errors: 1.2.0
-
-  require-addon@1.2.0:
-    dependencies:
-      bare-addon-resolve: 1.10.0
-    transitivePeerDependencies:
-      - bare-url
-    optional: true
 
   resolve-from@4.0.0: {}
 
@@ -3845,13 +3750,6 @@ snapshots:
   signal-exit@4.1.0: {}
 
   slash@3.0.0: {}
-
-  sodium-native@4.3.3:
-    dependencies:
-      require-addon: 1.2.0
-    transitivePeerDependencies:
-      - bare-url
-    optional: true
 
   sonic-boom@3.8.1:
     dependencies:
@@ -4020,7 +3918,7 @@ snapshots:
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
-      postcss: 8.5.13
+      postcss: 8.5.14
       rolldown: 1.0.0-rc.17
       tinyglobby: 0.2.16
     optionalDependencies:

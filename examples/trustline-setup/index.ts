@@ -1,5 +1,5 @@
 import { Keypair, Asset, Operation, TransactionBuilder, Networks, Account } from '@stellar/stellar-sdk';
-import { Grat } from '@grat-official-sdk/sdk';
+import { Grat, FrozenEntryError } from '@grat-official-sdk/sdk';
 
 async function run() {
   console.log('🚀 Starting Trustline Setup Example (Zero-Fee Onboarding)');
@@ -43,7 +43,11 @@ async function run() {
     console.log(`   Transaction Hash: ${result.hash}`);
     console.log(`   Fee Payer (Channel): ${result.channelAccount}`);
   } catch (err: any) {
-    console.error('\n❌ Sponsorship failed:', err.message);
+    if (err instanceof FrozenEntryError) {
+      console.error('\n❌ Action Restricted: One or more ledger entries are currently frozen by the network.');
+    } else {
+      console.error('\n❌ Sponsorship failed:', err.message);
+    }
   }
 }
 

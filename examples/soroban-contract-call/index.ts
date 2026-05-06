@@ -6,7 +6,7 @@ import {
   xdr,
   Contract,
 } from '@stellar/stellar-sdk';
-import { Grat } from '@grat-official-sdk/sdk';
+import { Grat, FrozenEntryError } from '@grat-official-sdk/sdk';
 
 async function run() {
   console.log('🚀 Starting Soroban Contract Call Example with Fee Sponsorship');
@@ -36,8 +36,6 @@ async function run() {
   console.log('\nSimulating transaction via Grat Relay...');
   const simulation = await grat.simulate(tx);
   console.log('Simulation Successful!');
-  console.log(`CPU Instructions: ${simulation.cost.cpuInstructions}`);
-  console.log(`Memory Bytes:     ${simulation.cost.memoryBytes}`);
   console.log(`Resource Fee:     ${simulation.resourceFee} stroops`);
 
   tx.sign(user);
@@ -52,6 +50,11 @@ async function run() {
 }
 
 run().catch((err) => {
-  console.error('\n❌ Example failed:', err.message);
-  if (err.details) console.error('   Details:', JSON.stringify(err.details, null, 2));
+  if (err instanceof FrozenEntryError) {
+    console.error('\n❌ Action Restricted: One or more ledger entries are currently frozen by the network.');
+    if (err.frozenKeys) console.log('   Frozen Keys:', err.frozenKeys);
+  } else {
+    console.error('\n❌ Example failed:', err.message);
+    if (err.details) console.error('   Details:', JSON.stringify(err.details, null, 2));
+  }
 });

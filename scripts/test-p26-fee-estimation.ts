@@ -32,7 +32,8 @@ async function runTest() {
       throw new Error('Friendbot failed to fund account');
   }
   
-  // Wait for account to be created
+  
+
   let userAccount;
   for (let i = 0; i < 5; i++) {
       try {
@@ -45,12 +46,9 @@ async function runTest() {
   
   if (!userAccount) throw new Error('Account creation timed out');
 
-  // Native Token Contract on Testnet
   const contractId = Asset.native().contractId(Networks.TESTNET);
   const contract = new Contract(contractId);
 
-  // Simple transfer call to native token
-  // balance(id: Address) -> i128 (Read-only is easier to test without needing tokens)
   const op = contract.call('balance', 
     nativeToScVal(user.publicKey(), { type: 'address' })
   );
@@ -63,17 +61,14 @@ async function runTest() {
   .setTimeout(30)
   .build();
 
-  // 1. Simulate via Grat
   console.log(`${COLORS.cyan}i Simulating via Grat...${COLORS.reset}`);
   const sim = await grat.simulate(tx);
   console.log(`${COLORS.green}✓ Simulation success. Resource Fee: ${sim.resourceFee} stroops${COLORS.reset}`);
 
-  // 2. Estimate via Grat
   console.log(`${COLORS.cyan}i Estimating via Grat...${COLORS.reset}`);
   const est = await grat.estimate(tx);
   console.log(`${COLORS.green}✓ Estimate: ${est.estimatedFee} stroops${COLORS.reset}`);
 
-  // Update transaction with simulation results
   userAccount = await horizon.loadAccount(user.publicKey());
   const finalTx = new TransactionBuilder(userAccount, {
     fee: est.estimatedFee,
@@ -86,12 +81,10 @@ async function runTest() {
 
   finalTx.sign(user);
 
-  // 3. Sponsor via Grat
   console.log(`${COLORS.cyan}i Sponsoring via Grat...${COLORS.reset}`);
   const result = await grat.sponsor(finalTx);
   console.log(`${COLORS.green}✓ Sponsored! Hash: ${result.hash}${COLORS.reset}`);
 
-  // 4. Verify on-chain
   console.log(`${COLORS.cyan}i Waiting for ingestion...${COLORS.reset}`);
   let txData;
   for (let i = 0; i < 10; i++) {

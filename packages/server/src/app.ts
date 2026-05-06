@@ -13,7 +13,7 @@ import { testnetRateLimiter } from './middleware/rateLimiter';
 
 const app: Express = express();
 
-// Middlewares
+
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
@@ -30,10 +30,10 @@ app.use(
   }),
 );
 
-// Apply rate limiter for testnet faucet mode
+
 app.use(testnetRateLimiter);
 
-// Health check
+
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -49,7 +49,7 @@ app.post('/v1/sponsor', sponsorHandler);
 app.post('/v1/simulate', simulateHandler);
 app.post('/v1/estimate', estimateHandler);
 
-// Error handler (must be last)
+
 app.use(errorHandler);
 
 export { app };
