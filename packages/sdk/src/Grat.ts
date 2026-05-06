@@ -23,7 +23,7 @@ export class Grat {
    * @param relayUrl Optional relay URL (defaults to http://localhost:3000).
    */
   static testnet(relayUrl?: string): Grat {
-    return new Grat({ relayUrl: relayUrl || 'http://localhost:3000', network: 'testnet' });
+    return new Grat({ relayUrl: relayUrl || 'http://127.0.0.1:3000', network: 'testnet' });
   }
 
   /**
@@ -41,7 +41,7 @@ export class Grat {
    */
   constructor(config: GratConfig) {
     const network = config.network || 'testnet';
-    const relayUrl = config.relayUrl || (network === 'testnet' ? 'http://localhost:3000' : '');
+    const relayUrl = config.relayUrl || (network === 'testnet' ? 'http://127.0.0.1:3000' : '');
 
 
     if (network === 'mainnet') {

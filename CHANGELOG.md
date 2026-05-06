@@ -5,20 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2026-05-04
+## [0.2.0] - 2026-05-05
+
+This release marks the successful completion of Phase 1 development. Grat is now fully verified for production-grade gas abstraction on the Stellar Testnet, covering Classic Payments, Soroban Smart Contracts, and complex Asset Lifecycles.
 
 ### Added
-- Initial release of Grat Relay Server.
-- TypeScript SDK (`@grat-official-sdk/sdk`) for easy client integration.
-- Automated testnet channel funding via Friendbot.
-- Redis-backed sequence management for high concurrency.
-- Docker and Docker Compose configuration.
-- Comprehensive integration and unit testing suites.
-- Example projects for USDC transfers, Soroban calls, and trustline setup.
-- GitHub Actions CI/CD workflows.
-- Bug report and feature request templates.
+- **Deep Error Diagnostics**: The Relay now "drills down" into fee-bump inner transaction failures, exposing granular network error codes (e.g., `op_no_issuer`, `op_low_reserve`) directly to the SDK.
+- **Verified Asset Lifecycle**: Successful end-to-end demonstrations of zero-fee USDC onboarding (Trustline → Mint → Payment).
+- **Enhanced Soroban Support**: Robust simulation logic and sponsorship for smart contract resource fees (CPU/Memory).
+- **Documentation Launch**: Comprehensive Docs introduced including Interactive API Reference (OAS 3.0), Migration Guide from Launchtube, Step-by-step Self-Hosting (Docker/Cloud), and React/TypeScript SDK guides.
+
+### Changed
+- **Atomic Sequence Management**: Improved Redis-backed locking to ensure zero sequence conflicts across multi-channel environments.
+- **Project Sanitization**: Completely refactored codebase for professional standards, removing redundant comments and debug logs.
 
 ### Fixed
-- Resolved `ReqId` type mismatches in server controllers.
-- Corrected `ioredis` set argument order for atomic locks.
-- Fixed `TransactionBuilder` type errors in integration tests.
+- Fixed `SubmissionFailedError` type signature mismatch.
+- Resolved simulation errors for non-Soroban transactions.
+- Fixed `op_no_destination` errors in automated smoke tests.
+- Standardized environment variable loading across the monorepo.
+
+## [0.1.0] - 2026-05-04
+
+We are excited to announce the initial release of Grat, a production-ready relay server and SDK designed to eliminate gas friction on the Stellar network.
+
+### Added
+- **Gas Abstraction**: Sponsor transactions (Classic & Soroban) so users don't need XLM.
+- **TypeScript SDK**: A type-safe, resilient client with automatic retries and idempotency.
+- **Automated Channel Funding**: Built-in testnet faucet integration for developers.
+- **High Concurrency**: Redis-backed sequence management to prevent transaction conflicts.
+- **Docker Ready**: One-command deployment via Docker Compose.
+
+### Fixed
+- Resolved TypeScript build errors in the server package.
+- Fixed SDK unit test timeouts for network error handling.
+- Optimized Redis atomic lock logic in the Channel Manager.

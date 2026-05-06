@@ -5,6 +5,8 @@ import {
   Account,
   xdr,
   Contract,
+  Asset,
+  nativeToScVal,
 } from '@stellar/stellar-sdk';
 import { Grat, FrozenEntryError } from '@grat-official-sdk/sdk';
 
@@ -12,7 +14,8 @@ async function run() {
   console.log('🚀 Starting Soroban Contract Call Example with Fee Sponsorship');
 
   const grat = Grat.testnet();
-  const contractId = 'CAAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQCAIBAEAQC526';
+  // We use the Native XLM Soroban contract for this example to ensure it survives Testnet resets
+  const contractId = Asset.native().contractId(Networks.TESTNET);
   const contract = new Contract(contractId);
 
   const user = Keypair.random();
@@ -25,11 +28,13 @@ async function run() {
     await fetch(`https://horizon-testnet.stellar.org/accounts/${user.publicKey()}`)
   ).json();
 
+  const op = contract.call('balance', nativeToScVal(user.publicKey(), { type: 'address' }));
+  
   const tx = new TransactionBuilder(new Account(user.publicKey(), userInfo.sequence), {
     fee: '100',
     networkPassphrase: Networks.TESTNET,
   })
-    .addOperation(contract.call('hello', xdr.ScVal.scvSymbol('World')))
+    .addOperation(op)
     .setTimeout(30)
     .build();
 
@@ -38,10 +43,20 @@ async function run() {
   console.log('Simulation Successful!');
   console.log(`Resource Fee:     ${simulation.resourceFee} stroops`);
 
-  tx.sign(user);
+  // For Soroban, you must rebuild the transaction with the simulation data (footprint) attached
+  const finalTx = new TransactionBuilder(new Account(user.publicKey(), userInfo.sequence), {
+    fee: '100',
+    networkPassphrase: Networks.TESTNET,
+  })
+    .setSorobanData(xdr.SorobanTransactionData.fromXDR(simulation.transactionData, 'base64'))
+    .addOperation(op)
+    .setTimeout(30)
+    .build();
+
+  finalTx.sign(user);
 
   console.log('\nSponsoring and submitting Soroban transaction...');
-  const result = await grat.sponsor(tx);
+  const result = await grat.sponsor(finalTx);
 
   console.log(`✅ Transaction Submitted! Hash: ${result.hash}`);
   console.log(`Channel Used: ${result.channelAccount}`);
