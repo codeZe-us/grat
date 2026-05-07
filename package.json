@@ -11,7 +11,9 @@
     "test:integration": "pnpm --filter @grat/server exec vitest tests/integration.test.ts --run",
     "test:unit": "pnpm --filter @grat-official-sdk/sdk exec vitest tests/Grat.test.ts --run",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
-    "smoke-test": "tsx scripts/smoke-test.ts"
+    "smoke-test": "tsx scripts/smoke-test.ts",
+    "db:migrate": "pnpm --filter @grat/server db:migrate",
+    "db:seed": "pnpm --filter @grat/server db:seed"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",

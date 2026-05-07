@@ -2,11 +2,14 @@ import { app } from './app';
 import { config } from './config';
 import { logger } from './utils/logger';
 import { channelManager } from './modules/channels/ChannelManager';
+import { initializeDatabase, closeDatabase } from './database/db';
 
 const port = config.port;
 
 const start = async () => {
   try {
+    await initializeDatabase();
+    
     await channelManager.initialize();
     
     const server = app.listen(port, () => {
@@ -15,10 +18,19 @@ const start = async () => {
 
     const shutdown = async (signal: string) => {
       logger.info(`${signal} signal received: closing HTTP server`);
-      channelManager.stop();
-      server.close(() => {
+      
+      server.close(async () => {
         logger.info('HTTP server closed');
-        process.exit(0);
+        
+        try {
+          channelManager.stop();
+          await closeDatabase();
+          logger.info('Graceful shutdown completed');
+          process.exit(0);
+        } catch (err) {
+          logger.error({ msg: 'Error during shutdown', err });
+          process.exit(1);
+        }
       });
     };
 

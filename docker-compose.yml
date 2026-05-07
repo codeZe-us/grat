@@ -10,8 +10,10 @@ services:
       - .env
     environment:
       - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://postgres:000000@postgres:5432/grat?sslmode=disable
     depends_on:
       - redis
+      - postgres
     restart: unless-stopped
     networks:
       - grat-network
@@ -26,9 +28,23 @@ services:
     networks:
       - grat-network
 
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=000000
+      - POSTGRES_DB=grat
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - grat-network
+
 networks:
   grat-network:
     name: grat-network
 
 volumes:
   redis-data:
+  postgres-data:
