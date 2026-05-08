@@ -17,4 +17,5 @@ export const config = {
   channelSeedPhrase: process.env.CHANNEL_SEED_PHRASE,
   stellarFundingSecret: process.env.STELLAR_FUNDING_SECRET,
   isProduction: process.env.NODE_ENV === 'production',
+  adminToken: process.env.ADMIN_TOKEN || 'dev-admin-token',
 };

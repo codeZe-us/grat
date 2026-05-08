@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { config } from './config';
 import { sponsorHandler } from './controllers/sponsorshipController';
 import { simulateHandler, estimateHandler } from './controllers/sorobanController';
+import keysRoutes from './modules/keys/keys.routes';
 
 import { testnetRateLimiter } from './middleware/rateLimiter';
 
@@ -45,6 +46,7 @@ app.get('/health', (req, res) => {
 });
 
 
+app.use('/v1/keys', keysRoutes);
 app.post('/v1/sponsor', sponsorHandler);
 app.post('/v1/simulate', simulateHandler);
 app.post('/v1/estimate', estimateHandler);

@@ -3,6 +3,7 @@ import { config } from './config';
 import { logger } from './utils/logger';
 import { channelManager } from './modules/channels/ChannelManager';
 import { initializeDatabase, closeDatabase } from './database/db';
+import { keysWorker } from './modules/keys/keys.worker';
 
 const port = config.port;
 
@@ -11,6 +12,7 @@ const start = async () => {
     await initializeDatabase();
     
     await channelManager.initialize();
+    keysWorker.start();
     
     const server = app.listen(port, () => {
       logger.info(`Server listening on port ${port} in ${config.network} mode`);
@@ -24,6 +26,7 @@ const start = async () => {
         
         try {
           channelManager.stop();
+          keysWorker.stop();
           await closeDatabase();
           logger.info('Graceful shutdown completed');
           process.exit(0);
