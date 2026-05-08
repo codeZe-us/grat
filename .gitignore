@@ -1,8 +1,30 @@
-node_modules
-dist
-.env
-.DS_Store
-*.log
-.eslintcache
-.agents
+# Dependency directories
+node_modules/
 
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+.eslintcache
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Database data
+postgres-data/
+redis-data/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS/IDE files
+.DS_Store
+.vscode/
+.idea/
+
+# Project specific
+.agents
