@@ -1,6 +1,6 @@
 import db from '../../database/knex';
 import { generateRandomString, generateSalt, hashKey } from '../../utils/crypto';
-import { NotFoundError, ValidationError } from '../../utils/errors';
+import { NotFoundError } from '../../utils/errors';
 
 export interface KeyCreateRequest {
   email: string;
