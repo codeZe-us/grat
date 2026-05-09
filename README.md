@@ -1,4 +1,9 @@
+<p align="center">
+  <img src="assets/logo.png" width="120" alt="Grat Logo" />
+</p>
+
 # Grat: Stellar Fee-Sponsorship Relay
+
 
 **Eliminate the "XLM for Gas" problem and onboard users to Stellar with zero friction.**
 
@@ -148,6 +153,12 @@ Grat has completed its Phase 1 milestone. All core gas-abstraction features for 
 ## Contributing
 
 We welcome contributions! Please check the [Contributing Guide](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Contact & Support
+
+- **Twitter**: [@gratnetworkHq](https://x.com/gratnetworkHq)
+- **Email**: [gratnetworkofficial@gmail.com](mailto:gratnetworkofficial@gmail.com)
+- **GitHub**: [gratnetwork/grat](https://github.com/gratnetwork/grat)
 
 ## License
 

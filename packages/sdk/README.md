@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../../assets/logo.png" width="80" alt="Grat Logo" />
+</p>
+
 # Grat TypeScript SDK
 
 The official client for interacting with the **Grat Relay Server** to enable zero-fee transaction sponsorship on Stellar.
@@ -95,6 +99,12 @@ Creates a client for Stellar mainnet. **Requires an API key.**
 ## Examples
 
 Check out the **[Examples Directory](https://github.com/gratnetwork/grat/tree/main/examples)** for full project demos including USDC transfers and Soroban contract calls.
+
+## Support & Contact
+
+- **Twitter**: [@gratnetworkHq](https://x.com/gratnetworkHq)
+- **Email**: [gratnetworkofficial@gmail.com](mailto:gratnetworkofficial@gmail.com)
+- **Docs**: [grat.mintlify.app](https://grat.mintlify.app)
 
 ## License
 

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../assets/logo.png" width="80" alt="Grat Logo" />
+</p>
+
 # Grat Documentation
 
 This directory contains the Mintlify-powered documentation for Grat.
@@ -29,3 +33,8 @@ The docs will be available at `http://localhost:3000`.
 ## Deployment
 
 Changes to the `main` branch are automatically deployed to `docs.grat.network`.
+
+## Support & Contact
+
+- **Twitter**: [@gratnetworkHq](https://x.com/gratnetworkHq)
+- **Email**: [gratnetworkofficial@gmail.com](mailto:gratnetworkofficial@gmail.com)

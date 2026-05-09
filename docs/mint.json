@@ -2,6 +2,10 @@
   "name": "Grat",
   "openapi": "openapi.json",
   "favicon": "favicon.png",
+  "logo": {
+    "light": "/assets/logo.png",
+    "dark": "/assets/logo.png"
+  },
   "colors": {
     "primary": "#4F46E5",
     "light": "#818CF8",
@@ -106,7 +110,7 @@
     }
   ],
   "footerSocials": {
-    "twitter": "https://twitter.com/gratnetwork",
+    "twitter": "https://x.com/gratnetworkHq",
     "github": "https://github.com/gratnetwork/grat",
     "telegram": "https://t.me/+c_v7590Y4a5lY2U0"
   }

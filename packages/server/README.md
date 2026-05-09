@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="../../assets/logo.png" width="80" alt="Grat Logo" />
+</p>
+
 # Grat Relay Server
 
 The high-performance gas abstraction relay for Stellar. It handles transaction sponsorship, channel pool management, and atomic sequence tracking.
@@ -16,5 +20,12 @@ The high-performance gas abstraction relay for Stellar. It handles transaction s
 
 For full configuration and self-hosting guides, visit the [Official Documentation](https://grat.mintlify.app/self-hosting).
 
+## Support & Contact
+
+- **Twitter**: [@gratnetworkHq](https://x.com/gratnetworkHq)
+- **Email**: [gratnetworkofficial@gmail.com](mailto:gratnetworkofficial@gmail.com)
+- **Docs**: [grat.mintlify.app](https://grat.mintlify.app)
+
 ## License
+
 Apache 2.0
