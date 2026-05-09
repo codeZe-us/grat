@@ -22,11 +22,19 @@ async function run() {
   console.log(`\nCreating test account: ${user.publicKey()}`);
   await fetch(`https://friendbot.stellar.org/?addr=${user.publicKey()}`);
   console.log('✅ Account funded via Friendbot');
+  console.log('Waiting for network sync (polling Horizon)...');
+
+  async function getAccountInfo(publicKey: string): Promise<any> {
+    for (let i = 0; i < 10; i++) {
+      const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${publicKey}`);
+      if (res.ok) return res.json();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    throw new Error(`Failed to fetch account info for ${publicKey} after 10 attempts`);
+  }
 
   console.log('\nBuilding contract invocation (hello method)...');
-  const userInfo = await (
-    await fetch(`https://horizon-testnet.stellar.org/accounts/${user.publicKey()}`)
-  ).json();
+  const userInfo = await getAccountInfo(user.publicKey());
 
   const op = contract.call('balance', nativeToScVal(user.publicKey(), { type: 'address' }));
   

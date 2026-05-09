@@ -51,8 +51,8 @@ importers:
   examples/soroban-contract-call:
     dependencies:
       '@grat-official-sdk/sdk':
-        specifier: workspace:*
-        version: link:../../packages/sdk
+        specifier: ^0.3.0
+        version: 0.3.0
       '@stellar/stellar-sdk':
         specifier: ^15.1.0
         version: 15.1.0
@@ -67,8 +67,8 @@ importers:
   examples/trustline-setup:
     dependencies:
       '@grat-official-sdk/sdk':
-        specifier: workspace:*
-        version: link:../../packages/sdk
+        specifier: ^0.3.0
+        version: 0.3.0
       '@stellar/stellar-sdk':
         specifier: ^15.1.0
         version: 15.1.0
@@ -83,8 +83,8 @@ importers:
   examples/usdc-transfer:
     dependencies:
       '@grat-official-sdk/sdk':
-        specifier: workspace:*
-        version: link:../../packages/sdk
+        specifier: ^0.3.0
+        version: 0.3.0
       '@stellar/stellar-sdk':
         specifier: ^15.1.0
         version: 15.1.0
@@ -381,6 +381,9 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@grat-official-sdk/sdk@0.3.0':
+    resolution: {integrity: sha512-WATYd4HtTeWhJysGqyxTZFfb3ZHFByLdU9KK6SVWUmcoe9AwAQKswGMJRg43Opv1JYTTKpYkyDlZnGJxRm4iuw==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2486,6 +2489,12 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@grat-official-sdk/sdk@0.3.0':
+    dependencies:
+      '@stellar/stellar-sdk': 15.1.0
+    transitivePeerDependencies:
+      - debug
 
   '@humanfs/core@0.19.2':
     dependencies:

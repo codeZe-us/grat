@@ -9,6 +9,7 @@ services:
     env_file:
       - .env
     environment:
+      - NODE_ENV=production
       - REDIS_URL=redis://redis:6379
       - DATABASE_URL=postgresql://postgres:000000@postgres:5432/grat?sslmode=disable
     depends_on:

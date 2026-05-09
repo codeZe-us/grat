@@ -21,12 +21,19 @@ async function run() {
     fetch(`https://friendbot.stellar.org/?addr=${issuer.publicKey()}`)
   ]);
   console.log('   ✅ Accounts funded with XLM for base reserve (via Friendbot)');
-  console.log('   Waiting for network sync...');
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  console.log('   Waiting for network sync (polling Horizon)...');
+  
+  async function getAccountInfo(publicKey: string): Promise<any> {
+    for (let i = 0; i < 10; i++) {
+      const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${publicKey}`);
+      if (res.ok) return res.json();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    throw new Error(`Failed to fetch account info for ${publicKey} after 10 attempts`);
+  }
 
   console.log('\n--- TRUSTLINE SETUP ---');
-  const aliceInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${alice.publicKey()}`)).json();
-  
+  const aliceInfo = await getAccountInfo(alice.publicKey());
   const trustlineTx = new TransactionBuilder(
     new Account(alice.publicKey(), aliceInfo.sequence),
     { fee: '100', networkPassphrase: Networks.TESTNET }
@@ -42,7 +49,7 @@ async function run() {
   console.log(`   ✅ Trustline established! Hash: ${trustlineResult.hash}`);
 
   console.log('\n--- BOB TRUSTLINE SETUP ---');
-  const bobInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${bob.publicKey()}`)).json();
+  const bobInfo = await getAccountInfo(bob.publicKey());
   const bobTrustlineTx = new TransactionBuilder(
     new Account(bob.publicKey(), bobInfo.sequence),
     { fee: '100', networkPassphrase: Networks.TESTNET }
@@ -56,7 +63,7 @@ async function run() {
   
 
   console.log('\n3.5. Minting 100 USDC for Alice (SPONSORED)...');
-  const issuerInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${issuer.publicKey()}`)).json();
+  const issuerInfo = await getAccountInfo(issuer.publicKey());
   const mintTx = new TransactionBuilder(
     new Account(issuer.publicKey(), issuerInfo.sequence),
     { fee: '100', networkPassphrase: Networks.TESTNET }
@@ -73,7 +80,7 @@ async function run() {
   console.log('   ✅ Alice received 100 USDC.');
 
   console.log('\n--- USDC TRANSFER ---');
-  const aliceInfo2 = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${alice.publicKey()}`)).json();
+  const aliceInfo2 = await getAccountInfo(alice.publicKey());
   
   const paymentTx = new TransactionBuilder(
     new Account(alice.publicKey(), aliceInfo2.sequence),

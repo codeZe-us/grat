@@ -16,11 +16,19 @@ async function run() {
     fetch(`https://friendbot.stellar.org/?addr=${newUser.publicKey()}`),
     fetch(`https://friendbot.stellar.org/?addr=${issuerAddress}`)
   ]);
+  console.log('Waiting for network sync (polling Horizon)...');
   
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  async function getAccountInfo(publicKey: string): Promise<any> {
+    for (let i = 0; i < 10; i++) {
+      const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${publicKey}`);
+      if (res.ok) return res.json();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    throw new Error(`Failed to fetch account info for ${publicKey} after 10 attempts`);
+  }
 
   console.log('\nEstablishing USDC trustline...');
-  const info = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${newUser.publicKey()}`)).json();
+  const info = await getAccountInfo(newUser.publicKey());
   
   const tx = new TransactionBuilder(
     new Account(newUser.publicKey(), info.sequence),
