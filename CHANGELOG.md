@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-05-09
+
+This patch release improves project branding, fixes critical relay server stability issues in Docker, and enhances the reliability of the examples.
+
+### Added
+- **Project Branding**: Integrated new official Grat logo and social links (Twitter, Email) across documentation and READMEs.
+- **Robust Examples**: Added an account-polling mechanism to all examples to ensure they wait for Stellar network synchronization before execution.
+
+### Fixed
+- **Relay Stability**: Fixed a critical relay server crash in Docker by implementing a real `ioredis` client (replacing the mock) and setting `NODE_ENV=production` to avoid `pino-pretty` dependency issues.
+- **Documentation**: Updated contact information and social links in Mintlify configuration and project footers.
+
 ## [0.3.0] - 2026-05-06
 
 This release brings full compatibility with Stellar Protocol 26 (Yardstick) and introduces a major bump to the underlying SDK dependencies.
