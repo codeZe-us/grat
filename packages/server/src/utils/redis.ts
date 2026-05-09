@@ -1,20 +1,19 @@
-const createMockRedis = () => {
-  const store = new Map<string, string>();
-  return {
-    get: async (key: string) => store.get(key) || null,
-    set: async (key: string, value: string, ..._args: unknown[]) => {
-      store.set(key, value);
-      return 'OK';
-    },
-    del: async (key: string) => {
-      store.delete(key);
-      return 1;
-    },
-    on: (_event: string, _cb: unknown) => {},
-    once: () => {},
-    quit: async () => 'OK',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
-};
+import Redis from 'ioredis';
+import { config } from '../config';
+import { logger } from './logger';
 
-export const redis = createMockRedis();
+export const redis = new Redis(config.redisUrl, {
+  maxRetriesPerRequest: null,
+  retryStrategy(times) {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  },
+});
+
+redis.on('connect', () => {
+  logger.info('Connected to Redis');
+});
+
+redis.on('error', (err) => {
+  logger.error({ msg: 'Redis error', err });
+});
