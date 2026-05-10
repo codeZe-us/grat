@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Keypair, Asset, TransactionBuilder, Operation, BASE_FEE } from '@stellar/stellar-sdk';
 import type { UserAccount } from '../types';
-import { fundWithFriendbot, server } from '../lib/stellar';
+import { fundWithFriendbot, buildChangeTrustTx, server } from '../lib/stellar';
+import { grat } from '../lib/grat';
 import { USDC_CODE, NETWORK_PASSPHRASE } from '../lib/constants';
 
 export function useAccounts() {
@@ -34,26 +35,31 @@ export function useAccounts() {
         .addOperation(Operation.createAccount({ destination: aliceKp.publicKey(), startingBalance: '2.0' }))
         .addOperation(Operation.createAccount({ destination: bobKp.publicKey(), startingBalance: '2.0' }))
         .addOperation(Operation.createAccount({ destination: charlieKp.publicKey(), startingBalance: '2.0' }))
-        .setTimeout(30)
+        .setTimeout(300)
         .build();
 
       createTx.sign(issuerKp);
       await server.submitTransaction(createTx);
 
-      const finalAccount = await server.loadAccount(issuerKp.publicKey());
-      const batchTx = new TransactionBuilder(finalAccount, {
+      const setupTrust = async (kp: Keypair) => {
+        const tx = await buildChangeTrustTx(kp.publicKey(), usdcAsset);
+        tx.sign(kp);
+        return grat.sponsor(tx);
+      };
+
+      await Promise.all([setupTrust(aliceKp), setupTrust(bobKp), setupTrust(charlieKp)]);
+
+      const mintAccount = await server.loadAccount(issuerKp.publicKey());
+      const mintTx = new TransactionBuilder(mintAccount, {
         fee: BASE_FEE,
         networkPassphrase: NETWORK_PASSPHRASE,
       })
-        .addOperation(Operation.changeTrust({ asset: usdcAsset, source: aliceKp.publicKey() }))
-        .addOperation(Operation.changeTrust({ asset: usdcAsset, source: bobKp.publicKey() }))
-        .addOperation(Operation.changeTrust({ asset: usdcAsset, source: charlieKp.publicKey() }))
         .addOperation(Operation.payment({ destination: aliceKp.publicKey(), asset: usdcAsset, amount: '1000.00' }))
-        .setTimeout(30)
+        .setTimeout(300)
         .build();
 
-      batchTx.sign(aliceKp, bobKp, charlieKp, issuerKp);
-      await server.submitTransaction(batchTx);
+      mintTx.sign(issuerKp);
+      await server.submitTransaction(mintTx);
 
       setAlice({
         name: 'Alice',

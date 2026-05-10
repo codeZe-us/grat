@@ -32,7 +32,7 @@ export async function buildChangeTrustTx(
         asset,
       })
     )
-    .setTimeout(30)
+    .setTimeout(300)
     .build();
 }
 
@@ -55,7 +55,7 @@ export async function buildPaymentTx(
         amount,
       })
     )
-    .setTimeout(30)
+    .setTimeout(300)
     .build();
 }
 

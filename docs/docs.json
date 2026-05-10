@@ -51,10 +51,7 @@
         "pages": [
           "sdks/typescript",
           "sdks/react",
-          "sdks/nextjs",
-          "sdks/python",
-          "sdks/flutter",
-          "sdks/react-native"
+          "sdks/rest-api"
         ]
       },
       {

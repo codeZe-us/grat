@@ -1,0 +1,243 @@
+---
+title: "REST API (Any Language)"
+description: "Integrate Grat from any language using the REST API directly"
+icon: "code"
+---
+
+The TypeScript SDK is the recommended way to integrate Grat. But Grat's relay is a standard REST API. Any language that can make HTTP requests can integrate directly. No SDK required.
+
+## Quick Example
+
+Send a signed transaction XDR to `/v1/sponsor` and get back a confirmed hash.
+
+```bash cURL
+curl -X POST https://your-relay.example.com/v1/sponsor \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: grat_your_api_key" \
+  -H "X-Idempotency-Key: a8f3c1d2-4b5e-6f7a-8b9c-0d1e2f3a4b5c" \
+  -d '{"xdr": "AAAAAQAAAA..."}'
+```
+
+**Success response:**
+
+```json
+{
+  "hash": "3b6a4f2e...",
+  "ledger": 52841293,
+  "feePaid": "100",
+  "network": "testnet",
+  "channelAccount": "GDQP2..."
+}
+```
+
+<CodeGroup>
+
+```python Python
+import requests
+import uuid
+
+RELAY_URL = "https://your-relay.example.com"
+API_KEY = "grat_your_api_key"
+
+def sponsor(xdr: str) -> dict:
+    response = requests.post(
+        f"{RELAY_URL}/v1/sponsor",
+        headers={
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
+            "X-Idempotency-Key": str(uuid.uuid4()),
+        },
+        json={"xdr": xdr},
+        timeout=30,
+    )
+    response.raise_for_status()
+    return response.json()
+```
+
+```go Go
+package grat
+
+import (
+    "bytes"
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "github.com/google/uuid"
+)
+
+const relayURL = "https://your-relay.example.com"
+const apiKey = "grat_your_api_key"
+
+func Sponsor(xdr string) (map[string]interface{}, error) {
+    body, _ := json.Marshal(map[string]string{"xdr": xdr})
+    req, _ := http.NewRequest("POST", relayURL+"/v1/sponsor", bytes.NewBuffer(body))
+    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("X-API-Key", apiKey)
+    req.Header.Set("X-Idempotency-Key", uuid.New().String())
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+    if resp.StatusCode != 200 {
+        return nil, fmt.Errorf("sponsor failed: %s", resp.Status)
+    }
+    var result map[string]interface{}
+    json.NewDecoder(resp.Body).Decode(&result)
+    return result, nil
+}
+```
+
+```rust Rust
+use reqwest::Client;
+use serde_json::{json, Value};
+use uuid::Uuid;
+
+const RELAY_URL: &str = "https://your-relay.example.com";
+const API_KEY: &str = "grat_your_api_key";
+
+pub async fn sponsor(xdr: &str) -> Result<Value, reqwest::Error> {
+    let client = Client::new();
+    let response = client
+        .post(format!("{}/v1/sponsor", RELAY_URL))
+        .header("Content-Type", "application/json")
+        .header("X-API-Key", API_KEY)
+        .header("X-Idempotency-Key", Uuid::new_v4().to_string())
+        .json(&json!({ "xdr": xdr }))
+        .send()
+        .await?
+        .error_for_status()?
+        .json::<Value>()
+        .await?;
+    Ok(response)
+}
+```
+
+```dart Dart/Flutter
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
+
+const relayUrl = 'https://your-relay.example.com';
+const apiKey = 'grat_your_api_key';
+
+Future<Map<String, dynamic>> sponsor(String xdr) async {
+  final response = await http.post(
+    Uri.parse('$relayUrl/v1/sponsor'),
+    headers: {
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+      'X-Idempotency-Key': const Uuid().v4(),
+    },
+    body: jsonEncode({'xdr': xdr}),
+  );
+  if (response.statusCode != 200) throw Exception('Sponsor failed: ${response.body}');
+  return jsonDecode(response.body);
+}
+```
+
+</CodeGroup>
+
+## Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Check relay status and uptime |
+| `POST` | `/v1/sponsor` | Wrap and submit a signed transaction as a fee bump |
+| `POST` | `/v1/simulate` | Simulate a Soroban contract call |
+| `POST` | `/v1/estimate` | Estimate the fee for a transaction |
+
+See the [API Reference](/api-reference/sponsor) for full request and response schemas.
+
+## Error Handling
+
+All errors return a consistent JSON body:
+
+```json
+{
+  "error": "RATE_LIMITED",
+  "message": "Too many requests. Try again in 10 seconds.",
+  "retryAfter": 10
+}
+```
+
+Example 429 rate limit response:
+
+```bash
+HTTP/1.1 429 Too Many Requests
+Retry-After: 10
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1715000000
+
+{
+  "error": "RATE_LIMITED",
+  "message": "Rate limit exceeded. Please slow down."
+}
+```
+
+## Retry Logic
+
+Retry on these status codes using exponential backoff:
+
+| Status | Retry? | Reason |
+|--------|--------|--------|
+| `429` | Yes | Rate limited. Respect the `Retry-After` header. |
+| `503` | Yes | Relay temporarily unavailable. |
+| `5xx` | Yes | Server error. Usually transient. |
+| `400` | No | Bad request. Fix the XDR or payload before retrying. |
+| `401` | No | Invalid API key. |
+| `402` | No | Insufficient credits. Top up your balance. |
+| `403` | No | Forbidden by policy. |
+
+Simple retry with backoff in Python:
+
+```python
+import time
+import requests
+
+def sponsor_with_retry(xdr: str, max_retries: int = 3) -> dict:
+    delay = 1
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(
+                f"{RELAY_URL}/v1/sponsor",
+                headers={"X-API-Key": API_KEY, "X-Idempotency-Key": str(uuid.uuid4())},
+                json={"xdr": xdr},
+                timeout=30,
+            )
+            if response.status_code == 429:
+                retry_after = int(response.headers.get("Retry-After", delay))
+                time.sleep(retry_after)
+                continue
+            if response.status_code in (503,) or response.status_code >= 500:
+                time.sleep(delay)
+                delay *= 2
+                continue
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException as e:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(delay)
+            delay *= 2
+    raise Exception("Max retries exceeded")
+```
+
+## Tips
+
+<Tip>
+  Always include an `X-Idempotency-Key` header on `/v1/sponsor` requests. If a request times out and you retry, the relay will return the original result instead of submitting the transaction twice.
+</Tip>
+
+<Tip>
+  Parse the `X-RateLimit-Remaining` header in each response. If it drops below 10, slow your request rate to avoid hitting the limit.
+</Tip>
+
+<Tip>
+  All fee values are in stroops. 1 XLM = 10,000,000 stroops. The `feePaid` field in the sponsor response is a stroop string like `"100"`.
+</Tip>
+
+<Info>
+  Need a dedicated SDK for your language? Open a feature request on [GitHub](https://github.com/gratnetwork/grat/issues). We build based on demand.
+</Info>
