@@ -1,6 +1,5 @@
 import {
   Asset,
-  Keypair,
   Operation,
   TransactionBuilder,
   BASE_FEE,

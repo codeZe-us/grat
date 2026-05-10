@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Keypair } from '@stellar/stellar-sdk';
 import { LoadingScreen } from './components/LoadingScreen';
 import { SendMoney } from './components/SendMoney';

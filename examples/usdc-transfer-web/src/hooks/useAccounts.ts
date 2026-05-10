@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Keypair, Asset, TransactionBuilder, Operation, BASE_FEE } from '@stellar/stellar-sdk';
 import type { UserAccount } from '../types';
-import { fundWithFriendbot, buildChangeTrustTx, server } from '../lib/stellar';
-import { grat } from '../lib/grat';
+import { fundWithFriendbot, server } from '../lib/stellar';
 import { USDC_CODE, NETWORK_PASSPHRASE } from '../lib/constants';
 
 export function useAccounts() {
