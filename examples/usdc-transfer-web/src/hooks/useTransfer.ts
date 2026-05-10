@@ -18,11 +18,18 @@ export function useTransfer() {
     const tx = await buildPaymentTx(fromKp.publicKey(), toPublicKey, usdcAsset, amount);
     tx.sign(fromKp);
     
-    console.log('[Grat Demo] Sponsoring via Grat relay...');
-    const result = await grat.sponsor(tx);
-    console.log(`[Grat Demo] Sponsored! Hash: ${result.hash}, Fee: ${result.feePaid} stroops (paid by Grat)`);
-    
-    return result;
+    try {
+      console.log('[Grat Demo] Sponsoring via Grat relay...');
+      const result = await grat.sponsor(tx);
+      console.log(`[Grat Demo] Sponsored! Hash: ${result.hash}, Fee: ${result.feePaid} stroops (paid by Grat)`);
+      return result;
+    } catch (err: any) {
+      console.error('[Grat Demo] useTransfer Error:', err.message);
+      if (err.response?.data) {
+        console.error('[Grat Demo] Relay Data:', JSON.stringify(err.response.data, null, 2));
+      }
+      throw err;
+    }
   }, []);
 
   return { transfer };
