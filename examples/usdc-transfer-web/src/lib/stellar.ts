@@ -63,7 +63,7 @@ export async function getUSDCBalance(publicKey: string, issuerPublicKey: string)
   try {
     const account = await server.loadAccount(publicKey);
     const usdc = account.balances.find(
-      (b: any) => b.asset_code === 'USDC' && b.asset_issuer === issuerPublicKey
+      (b) => 'asset_code' in b && b.asset_code === 'USDC' && b.asset_issuer === issuerPublicKey
     );
     return usdc?.balance || '0';
   } catch (e) {

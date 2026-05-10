@@ -4,7 +4,6 @@
 
 # Grat: Stellar Fee-Sponsorship Relay
 
-
 **Eliminate the "XLM for Gas" problem and onboard users to Stellar with zero friction.**
 
 [![npm version](https://img.shields.io/npm/v/@grat-official-sdk/sdk?label=%40grat-official-sdk%2Fsdk&color=blue)](https://www.npmjs.com/package/@grat-official-sdk/sdk)
@@ -143,10 +142,6 @@ Grat has completed its Phase 1 milestone. All core gas-abstraction features for 
 - [x] Deep Error Diagnostics
 - [x] Multi-platform SDK (TypeScript)
 - [x] Protocol 26 (Yardstick) Compatibility
-
----
-
-## Roadmap
 
 ---
 
