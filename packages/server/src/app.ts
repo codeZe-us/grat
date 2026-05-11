@@ -16,7 +16,12 @@ const app: Express = express();
 
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: config.isProduction ? [/\.grat\.network$/] : true,
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Idempotency-Key', 'X-SDK-Version'],
+  exposedHeaders: ['Retry-After'],
+}));
 app.use(express.json());
 app.use(requestId);
 app.use(

@@ -78,6 +78,24 @@ export class SponsorshipService {
       throw new ValidationError('Transaction must be signed by the source account');
     }
 
+    // SECURITY: Prevent using channel accounts as inner transaction sources
+    if (channelManager.isChannelAccount(innerTx.source)) {
+      throw new ValidationError('Channel accounts cannot be used as inner transaction sources');
+    }
+
+    // SECURITY: Validate time bounds (max 10 minutes in the future)
+    const now = Math.floor(Date.now() / 1000);
+    const maxAllowedTime = now + 600; 
+    
+    if (innerTx.timeBounds) {
+      const maxTime = parseInt(innerTx.timeBounds.maxTime);
+      if (maxTime === 0 || maxTime > maxAllowedTime) {
+         throw new ValidationError('Transaction expiration (maxTime) is too far in the future or infinite');
+      }
+    } else {
+      throw new ValidationError('Transaction must have time bounds set');
+    }
+
     let retries = 0;
     const maxRetries = 3;
 
@@ -94,6 +112,11 @@ export class SponsorshipService {
         const innerFee = BigInt(innerTx.fee);
         const numOps = BigInt(innerTx.operations.length);
         const minOuterFee = innerFee + (numOps + 1n) * BigInt(baseFee);
+
+        // SECURITY: Enforce maximum fee cap
+        if (minOuterFee > BigInt(config.maxSponsorFeeStroops)) {
+          throw new ValidationError(`Transaction fee (${minOuterFee} stroops) exceeds maximum allowed (${config.maxSponsorFeeStroops} stroops)`);
+        }
 
         const feeBump = TransactionBuilder.buildFeeBumpTransaction(
           channel.publicKey,
@@ -175,13 +198,15 @@ export class SponsorshipService {
     throw new Error('Max retries exceeded');
   }
 
-  async checkIdempotency(key: string): Promise<SponsorResponse | null> {
-    const cached = await redis.get(`idempotency:${key}`);
+  async checkIdempotency(key: string, apiKeyId?: string): Promise<SponsorResponse | null> {
+    const scope = apiKeyId || 'public';
+    const cached = await redis.get(`idempotency:${scope}:${key}`);
     return cached ? JSON.parse(cached) : null;
   }
 
-  async setIdempotency(key: string, result: SponsorResponse) {
-    await redis.set(`idempotency:${key}`, JSON.stringify(result), 'EX', 86400); // 24h
+  async setIdempotency(key: string, result: SponsorResponse, apiKeyId?: string) {
+    const scope = apiKeyId || 'public';
+    await redis.set(`idempotency:${scope}:${key}`, JSON.stringify(result), 'EX', 86400); // 24h
   }
 
   async simulate(xdr: string): Promise<SimulationResult> {

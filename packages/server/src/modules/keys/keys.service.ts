@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import db from '../../database/knex';
 import { generateRandomString, generateSalt, hashKey } from '../../utils/crypto';
 import { NotFoundError } from '../../utils/errors';
@@ -135,6 +136,30 @@ export class KeysService {
     if (result === 0) {
       throw new NotFoundError('Key not found');
     }
+  }
+
+  async validateKey(rawKey: string): Promise<any> {
+    const prefix = rawKey.substring(0, 12);
+    const key = await db('api_keys').where({ key_prefix: prefix, is_active: true }).first();
+
+    if (!key) return null;
+
+    const computedHash = hashKey(rawKey, key.key_salt);
+    
+    // Constant-time comparison to prevent timing attacks
+    const isValid = crypto.timingSafeEqual(
+      Buffer.from(computedHash),
+      Buffer.from(key.key_hash)
+    );
+
+    if (!isValid) return null;
+
+    // Check if expired
+    if (key.expires_at && new Date() > key.expires_at) {
+      return null;
+    }
+
+    return key;
   }
 }
 

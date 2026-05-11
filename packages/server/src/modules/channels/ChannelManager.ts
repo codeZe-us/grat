@@ -165,6 +165,10 @@ export class ChannelManager {
     }));
   }
 
+  isChannelAccount(publicKey: string): boolean {
+    return this.channels.has(publicKey);
+  }
+
   async getPoolHealth() {
     let funded = 0;
     let totalXlm = 0;
