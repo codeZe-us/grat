@@ -2,12 +2,20 @@
   <img src="assets/logo.png" width="120" alt="Grat Logo" />
 </p>
 
-# Grat: Stellar Fee-Sponsorship Relay
+<h1 align="center">Grat: Stellar Fee-Sponsorship Relay</h1>
 
-**Eliminate the "XLM for Gas" problem and onboard users to Stellar with zero friction.**
+<p align="center">
+  <strong>Eliminate the "XLM for Gas" problem and onboard users to Stellar with zero friction.</strong>
+</p>
 
-[![npm version](https://img.shields.io/npm/v/@grat-official-sdk/sdk?label=%40grat-official-sdk%2Fsdk&color=blue)](https://www.npmjs.com/package/@grat-official-sdk/sdk)
-[![Documentation](https://img.shields.io/badge/docs-Mintlify-indigo)](https://grat.mintlify.app/introduction)
+<p align="center">
+  <a href="https://www.npmjs.com/package/@grat-official-sdk/sdk">
+    <img src="https://img.shields.io/npm/v/@grat-official-sdk/sdk?label=%40grat-official-sdk%2Fsdk&color=blue" alt="npm version" />
+  </a>
+  <a href="https://grat.mintlify.app/introduction">
+    <img src="https://img.shields.io/badge/docs-Mintlify-indigo" alt="Documentation" />
+  </a>
+</p>
 
 ## What is Grat?
 
@@ -114,7 +122,7 @@ Grat is designed to be horizontally scalable and production-ready.
 
 Explore the `examples/` directory for production-ready blueprints:
 
-- **[USDC Transfer](examples/usdc-transfer)**: Complete lifecycle (Trustline -> Mint -> Payment) with zero XLM fees.
+- **[USDC Transfer](examples/usdc-transfer-web)**: Complete lifecycle (Trustline -> Mint -> Payment) with zero XLM fees. [Live Demo](https://grat-usdc-transfer-web.vercel.app/)
 - **[Soroban Call](examples/soroban-contract-call)**: Sponsor smart contract interactions and Soroban resource fees.
 - **[Trustline Setup](examples/trustline-setup)**: One-click onboarding for new Stellar users.
 

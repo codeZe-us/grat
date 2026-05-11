@@ -1,4 +1,10 @@
-# USDC Transfer Demo (Invisible Blockchain)
+# USDC Transfer Web Example
+
+**A zero-gas payment onboarding flow built with Grat and React.**
+
+[Live Demo](https://grat-usdc-transfer-web.vercel.app/)
+
+## Overview
 
 A payment app demonstration built with Grat, where users can send dollars to each other seamlessly. This demo proves that Grat makes blockchain infrastructure entirely invisible to the end user.
 

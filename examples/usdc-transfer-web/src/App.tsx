@@ -70,18 +70,19 @@ function App() {
       });
 
       setScreen('success');
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e as any; // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('--- GRAT TRANSFER ERROR ---');
-      console.error('Message:', e.message);
+      console.error('Message:', err.message);
 
-      if (e.details) {
-        console.error('Error Details:', JSON.stringify(e.details, null, 2));
+      if (err.details) {
+        console.error('Error Details:', JSON.stringify(err.details, null, 2));
       }
-      if (e.response?.data) {
-        console.error('Relay Response Body:', JSON.stringify(e.response.data, null, 2));
+      if (err.response?.data) {
+        console.error('Relay Response Body:', JSON.stringify(err.response.data, null, 2));
       }
 
-      console.error('Full Error Object:', e);
+      console.error('Full Error Object:', err);
       console.error('---------------------------');
       setScreen('error');
     }

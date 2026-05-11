@@ -23,7 +23,8 @@ export function useTransfer() {
       const result = await grat.sponsor(tx);
       console.log(`[Grat Demo] Sponsored! Hash: ${result.hash}, Fee: ${result.feePaid} stroops (paid by Grat)`);
       return result;
-    } catch (err: any) {
+    } catch (e: unknown) {
+      const err = e as any; // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error('[Grat Demo] useTransfer Error:', err.message);
       if (err.response?.data) {
         console.error('[Grat Demo] Relay Data:', JSON.stringify(err.response.data, null, 2));
