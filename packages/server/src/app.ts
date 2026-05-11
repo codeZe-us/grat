@@ -11,6 +11,8 @@ import { simulateHandler, estimateHandler } from './controllers/sorobanControlle
 import keysRoutes from './modules/keys/keys.routes';
 
 import { testnetRateLimiter } from './middleware/rateLimiter';
+import { adminAuth } from './middleware/auth';
+import * as adminController from './controllers/adminController';
 
 const app: Express = express();
 
@@ -22,7 +24,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Idempotency-Key', 'X-SDK-Version'],
   exposedHeaders: ['Retry-After'],
 }));
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(requestId);
 app.use(
   pinoHttp({
@@ -55,6 +57,8 @@ app.use('/v1/keys', keysRoutes);
 app.post('/v1/sponsor', sponsorHandler);
 app.post('/v1/simulate', simulateHandler);
 app.post('/v1/estimate', estimateHandler);
+app.get('/v1/circuit-breaker/status', adminAuth, adminController.getCircuitBreakerStatus);
+app.post('/v1/circuit-breaker/reset', adminAuth, adminController.resetCircuitBreaker);
 
 
 app.use(errorHandler);

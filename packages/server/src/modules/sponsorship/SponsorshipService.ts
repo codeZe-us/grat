@@ -9,6 +9,8 @@ import { config } from '../../config';
 import { logger } from '../../utils/logger';
 import { channelManager } from '../channels/ChannelManager';
 import { sequenceManager } from '../channels/SequenceManager';
+import { creditService } from './CreditService';
+import { circuitBreaker } from '../../utils/circuitBreaker';
 import { redis } from '../../utils/redis';
 import {
   ValidationError,
@@ -78,12 +80,25 @@ export class SponsorshipService {
       throw new ValidationError('Transaction must be signed by the source account');
     }
 
-    // SECURITY: Prevent using channel accounts as inner transaction sources
+    // SECURITY: Prevent using channel accounts as inner transaction sources (Global)
     if (channelManager.isChannelAccount(innerTx.source)) {
       throw new ValidationError('Channel accounts cannot be used as inner transaction sources');
     }
 
-    // SECURITY: Validate time bounds (max 10 minutes in the future)
+    for (const op of innerTx.operations) {
+      if (op.source && channelManager.isChannelAccount(op.source)) {
+        throw new ValidationError('Channel accounts cannot be used as operation source accounts');
+      }
+
+      if (op.type === 'accountMerge' && channelManager.isChannelAccount(op.destination)) {
+        throw new ValidationError('Channel accounts cannot be merged into other accounts');
+      }
+
+      if (op.type === 'setOptions' && (op as any).signer && channelManager.isChannelAccount(innerTx.source)) {
+         // This is secondary check as channel-as-source is already blocked.
+      }
+    }
+
     const now = Math.floor(Date.now() / 1000);
     const maxAllowedTime = now + 600; 
     
@@ -99,11 +114,15 @@ export class SponsorshipService {
     let retries = 0;
     const maxRetries = 3;
 
+    await circuitBreaker.check();
+
     while (retries <= maxRetries) {
       const channel = await channelManager.acquire();
       if (!channel) {
         throw new ChannelExhaustedError();
       }
+
+      let minOuterFee: bigint | undefined;
 
       try {
         const feeStats = await this.horizon.feeStats();
@@ -111,11 +130,16 @@ export class SponsorshipService {
 
         const innerFee = BigInt(innerTx.fee);
         const numOps = BigInt(innerTx.operations.length);
-        const minOuterFee = innerFee + (numOps + 1n) * BigInt(baseFee);
+        minOuterFee = innerFee + (numOps + 1n) * BigInt(baseFee);
 
         // SECURITY: Enforce maximum fee cap
         if (minOuterFee > BigInt(config.maxSponsorFeeStroops)) {
           throw new ValidationError(`Transaction fee (${minOuterFee} stroops) exceeds maximum allowed (${config.maxSponsorFeeStroops} stroops)`);
+        }
+
+        const apiKey = (req as any).apiKey;
+        if (apiKey && config.network === 'mainnet') {
+          await creditService.placeHold(apiKey.id, minOuterFee);
         }
 
         const feeBump = TransactionBuilder.buildFeeBumpTransaction(
@@ -127,12 +151,24 @@ export class SponsorshipService {
 
         feeBump.sign(channel.keypair);
 
-        const result = await this.horizon.submitTransaction(feeBump);
+        const result = await Promise.race([
+          this.horizon.submitTransaction(feeBump),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Horizon submission timeout')), 25000))
+        ]) as any;
         
         if (config.network === 'testnet') {
           const ops = innerTx.operations.map(op => op.type).join(', ');
           const source = `${innerTx.source?.substring(0, 4)}...${innerTx.source?.substring(52)}`;
           logger.info({ hash: result.hash, channel: channel.publicKey }, `SPONSOR SUCCESS: ${source} [${ops}]`);
+        }
+
+        await circuitBreaker.record(
+          BigInt(feeBump.fee), 
+          (req as any).apiKey?.key_prefix || 'anonymous'
+        );
+
+        if (apiKey && config.network === 'mainnet') {
+          await creditService.confirmDeduction(apiKey.id, minOuterFee, BigInt(feeBump.fee));
         }
 
         return {
@@ -155,6 +191,7 @@ export class SponsorshipService {
           retries,
           code: resultCodes?.transaction,
           opCodes: opResultCodes,
+          err: err.message
         });
 
         if (resultCodes?.transaction === 'tx_frozen' || resultCodes?.inner_transaction?.transaction === 'tx_frozen') {
@@ -164,8 +201,9 @@ export class SponsorshipService {
           throw new FrozenEntryError(undefined, frozenKeys);
         }
 
-        if (resultCodes?.transaction === 'tx_bad_seq' || err.response?.status === 503) {
+        if (resultCodes?.transaction === 'tx_bad_seq' || err.response?.status === 503 || err.message === 'Horizon submission timeout') {
           if (resultCodes?.transaction === 'tx_bad_seq') {
+            await new Promise(resolve => setTimeout(resolve, 1000));
             await sequenceManager.sync(channel.publicKey);
           }
 
@@ -188,6 +226,14 @@ export class SponsorshipService {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const msg = opResult || txResult || (err as any).response?.data?.title || (err as Error).message;
+        
+        const apiKey = (req as any).apiKey;
+        if (apiKey && config.network === 'mainnet' && txResult !== 'tx_bad_seq' && minOuterFee) {
+          await creditService.releaseHold(apiKey.id, minOuterFee).catch(e => 
+            logger.error({ err: e, apiKeyId: apiKey.id }, 'Failed to release credit hold after submission error')
+          );
+        }
+
         throw new SubmissionFailedError(`Transaction Failed: ${msg}`, extras);
 
       } finally {
@@ -206,7 +252,7 @@ export class SponsorshipService {
 
   async setIdempotency(key: string, result: SponsorResponse, apiKeyId?: string) {
     const scope = apiKeyId || 'public';
-    await redis.set(`idempotency:${scope}:${key}`, JSON.stringify(result), 'EX', 86400); // 24h
+    await redis.set(`idempotency:${scope}:${key}`, JSON.stringify(result), 'EX', 86400);
   }
 
   async simulate(xdr: string): Promise<SimulationResult> {
@@ -277,8 +323,6 @@ export class SponsorshipService {
 
     if (isSoroban) {
       const sim = await this.simulate(xdr);
-      // Protocol 26: Add a 15% buffer to resource fees to account for 
-      // host function variance and network fluctuations.
       resourceFee = ((BigInt(sim.resourceFee) * 115n) / 100n).toString();
     }
 
