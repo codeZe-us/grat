@@ -12,7 +12,7 @@ import type { AppState, DevStats } from './types';
 function App() {
   const [screen, setScreen] = useState<AppState>('loading');
   const [currentRole, setCurrentRole] = useState<string>('Alice');
-  const { alice, bob, charlie, issuer, isReady, setup, setAlice, setBob, setCharlie } =
+  const { alice, bob, charlie, issuer, isReady, progress, status, setup, setAlice, setBob, setCharlie } =
     useAccounts();
   const { transfer } = useTransfer();
   const { activities, addActivity } = useActivity();
@@ -92,7 +92,7 @@ function App() {
     setCurrentRole(name);
   };
 
-  if (screen === 'loading') return <LoadingScreen />;
+  if (screen === 'loading') return <LoadingScreen progress={progress} status={status} />;
 
   const user = allUsers[currentRole as keyof typeof allUsers];
   const otherUsers = Object.keys(allUsers).filter((name) => name !== currentRole);

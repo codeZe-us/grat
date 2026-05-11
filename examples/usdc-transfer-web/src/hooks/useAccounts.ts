@@ -11,19 +11,27 @@ export function useAccounts() {
   const [charlie, setCharlie] = useState<UserAccount | null>(null);
   const [issuer, setIssuer] = useState<Keypair | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState('Initializing...');
 
   const setup = useCallback(async () => {
     try {
+      setStatus('Generating secure keys...');
+      setProgress(5);
       const aliceKp = Keypair.random();
       const bobKp = Keypair.random();
       const charlieKp = Keypair.random();
       const issuerKp = Keypair.random();
       setIssuer(issuerKp);
 
+      setStatus('Funding issuer with Friendbot...');
+      setProgress(20);
       await fundWithFriendbot(issuerKp.publicKey());
 
       const usdcAsset = new Asset(USDC_CODE, issuerKp.publicKey());
 
+      setStatus('Creating user accounts on Stellar...');
+      setProgress(40);
       const issuerAccount = await server.loadAccount(issuerKp.publicKey());
       const createTx = new TransactionBuilder(issuerAccount, {
         fee: BASE_FEE,
@@ -44,6 +52,8 @@ export function useAccounts() {
       createTx.sign(issuerKp);
       await server.submitTransaction(createTx);
 
+      setStatus('Setting up USDC trustlines (Sponored by Grat)...');
+      setProgress(60);
       const setupTrust = async (kp: Keypair) => {
         const tx = await buildChangeTrustTx(kp.publicKey(), usdcAsset);
         tx.sign(kp);
@@ -52,6 +62,8 @@ export function useAccounts() {
 
       await Promise.all([setupTrust(aliceKp), setupTrust(bobKp), setupTrust(charlieKp)]);
 
+      setStatus('Minting test USDC to Alice...');
+      setProgress(85);
       const mintAccount = await server.loadAccount(issuerKp.publicKey());
       const mintTx = new TransactionBuilder(mintAccount, {
         fee: BASE_FEE,
@@ -69,6 +81,9 @@ export function useAccounts() {
 
       mintTx.sign(issuerKp);
       await server.submitTransaction(mintTx);
+
+      setStatus('Finishing up...');
+      setProgress(100);
 
       setAlice({
         name: 'Alice',
@@ -106,6 +121,8 @@ export function useAccounts() {
     setCharlie,
     issuer,
     isReady,
+    progress,
+    status,
     setup,
   };
 }
