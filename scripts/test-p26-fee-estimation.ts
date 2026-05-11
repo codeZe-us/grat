@@ -20,9 +20,9 @@ const COLORS = {
 };
 
 async function runTest() {
-  console.log(`${COLORS.bold}${COLORS.cyan}🧪 Testing Protocol 26 Fee Estimation (RPC Mode)...${COLORS.reset}\n`);
+  console.log(`${COLORS.bold}${COLORS.cyan}Testing Protocol 26 Fee Estimation (RPC Mode)...${COLORS.reset}\n`);
 
-  const grat = Grat.testnet('http://127.0.0.1:45678');
+  const grat = Grat.testnet('http://127.0.0.1:3000');
   const rpcServer = new rpc.Server('https://soroban-testnet.stellar.org');
   const user = Keypair.random();
   
