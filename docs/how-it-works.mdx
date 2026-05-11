@@ -32,8 +32,8 @@ Grat provides unified support for both Stellar Classic and Soroban Smart Contrac
 * **Classic**: Sponsoring simple payments, trustline creation, and account configuration.
 * **Soroban**: Sponsoring host function invocations, including the complex resource fees (CPU, Memory, and Storage) required by smart contracts.
 
-### Performance and Reliability
+### Protocol 26 (Yardstick) Support
 
-Grat uses Redis to manage its channel pool and track sequence numbers across distributed instances. This ensures that even if you run multiple relay nodes, channel accounts are locked and released atomically, preventing "bad sequence" errors. The relay also implements intelligent retry logic and idempotency checks to ensure that transactions are never submitted twice.
+Stellar Protocol 26 introduces significant changes to how the network handles resource metering and fee structures, particularly for Soroban smart contracts. It refines the calculation of execution costs and updates the baseline for storage and compute pricing. Grat is designed to absorb these complexities automatically. The relay handles the updated resource fee estimation and ensures that fee-bump envelopes are built according to the latest protocol requirements. Developers using Grat do not need to manually adjust their transaction logic for protocol upgrades, as the relay and SDK adapt to network-level fee changes in real-time.
 
 [View on GitHub](https://github.com/gratnetwork/grat)

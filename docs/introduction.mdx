@@ -3,71 +3,76 @@ title: "Introduction"
 description: "Eliminate gas friction on Stellar and Soroban."
 ---
 
-Imagine you have built a seamless USDC off-ramp for a small merchant in Lagos, Nigeria. The user has downloaded your app and received their first digital payment. They are ready to withdraw to their local bank, but the transaction fails. They do not have XLM to pay for the network fee. You now have to explain what a "native asset" is and why they need to buy a second currency just to move the first one. This friction kills adoption before it even begins.
+Every Stellar app hits the same problem: users need XLM to pay transaction fees before they can do anything. For apps serving non-crypto users, this breaks onboarding completely. Grat removes that wall.
 
-Grat solves this by allowing your application to pay the network fees for your users. By leveraging native Stellar fee-bumps, you can provide a zero-gas experience that feels like a modern fintech app, not a complex blockchain protocol.
+Grat is an open-source gas abstraction relay and SDK for Stellar. Developers send signed transactions to Grat, it wraps them in fee-bump envelopes (CAP-0015), pays the fee from a managed pool of channel accounts, and submits them to the network. Users never touch XLM.
+
+### Protocol 26 (Yardstick) Compatibility
+
+<Note>
+Grat is fully compatible with Stellar Protocol 26 (Yardstick).
+</Note>
+
+Protocol 26 introduces critical updates to the Stellar network, including refined resource metering and updated fee structures for Soroban smart contracts. Grat is built to handle these protocol-level changes automatically. By using Grat, developers benefit from optimized resource pricing and stable fee handling without needing to manually adjust their application logic for every network upgrade.
 
 <CardGroup cols={2}>
   <Card title="Zero-XLM UX" icon="gas-pump-slash">
-    Remove the requirement for users to hold XLM. Sponsor classic payments and Soroban contract calls.
+    Users transact without holding or managing XLM.
   </Card>
   <Card title="Stellar-Native" icon="bolt">
-    Built on CAP-0015 standards. Uses native fee-bump transactions for maximum security and compatibility.
+    Built on CAP-0015 fee-bump transactions, not adapted from another chain.
   </Card>
-  <Card title="Apache 2.0 Licensed" icon="file-shield">
-    Permissive open-source licensing. Build your commercial product without worrying about restrictive AGPL terms.
+  <Card title="Protocol 26 Ready" icon="shield-check">
+    Compatible with Stellar latest protocol upgrade.
   </Card>
   <Card title="Self-Hostable" icon="server">
-    Keep full control over your infrastructure. Deploy the relay server to your own cloud in minutes using Docker.
+    Run your own relay with Docker, or wait for managed cloud.
   </Card>
 </CardGroup>
 
-### How it works in 3 steps
+### How it works
 
 <Steps>
-  <Step title="Build a Transaction">
-    Your application builds a standard Stellar or Soroban transaction as usual. Your user signs it to authorize the intent.
+  <Step title="Build and Sign">
+    Your app builds and signs a standard Stellar transaction.
   </Step>
   <Step title="Send to Grat">
-    Instead of submitting to the network, your app sends the signed transaction to the Grat relay via the SDK or REST API.
+    Your app sends it to Grat via the SDK or REST API.
   </Step>
-  <Step title="Sponsorship and Submission">
-    Grat wraps your transaction in a fee-bump envelope, pays the fee using its own channel accounts, and submits it to the network.
+  <Step title="Sponsor and Submit">
+    Grat wraps it in a fee-bump envelope, pays the fee, and submits it to Stellar.
   </Step>
 </Steps>
 
 ### What is available today
 
-Grat is currently optimized for the Stellar Testnet while mainnet features are being finalized.
+Grat is currently in active development with core features ready for testnet integration.
 
-* **Classic Payments**: Full support for XLM and Asset transfers.
-* **Soroban Support**: Native sponsorship for smart contract invocations and resource fees.
-* **TypeScript SDK**: A resilient, type-safe client with automatic retries.
+* **Relay Server**: High-performance transaction wrapper and submitter.
+* **TypeScript SDK**: Type-safe client for Node and Web applications.
 * **REST API**: Standard endpoints for integration with any programming language.
+* **Soroban Support**: Full sponsorship for smart contract resource fees.
+* **Docker Support**: One-command deployment for self-hosting.
 
 <Info>
-Mainnet support, API key management, and the policy engine are currently in active development and will ship in Phase 2 and 3.
+Mainnet support, API key management, a developer credits dashboard, and the advanced policy engine are coming soon.
 </Info>
-
-### The Apache 2.0 Advantage
-
-We believe that core infrastructure should be as permissive as possible. Unlike alternative solutions that use AGPL licenses, Grat uses the Apache 2.0 license. This allows you to integrate, modify, and distribute Grat as part of your commercial application without being forced to open-source your proprietary business logic.
 
 ### Quick Links
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Get your first sponsored transaction running in under 10 minutes.
+    Get started in under 10 minutes.
   </Card>
   <Card title="TypeScript SDK" icon="code" href="/sdks/typescript">
-    Full reference for the official TypeScript and JavaScript client.
+    Official client reference.
   </Card>
   <Card title="REST API" icon="globe" href="/sdks/rest-api">
-    Integrate from Python, Go, Rust, or any other language.
+    Direct API integration guide.
   </Card>
   <Card title="Self-Hosting" icon="docker" href="/guides/self-hosting">
-    Step-by-step guide to deploying your own relay instance.
+    Deploy your own instance.
   </Card>
 </CardGroup>
 
-[View on GitHub](https://github.com/gratnetwork/grat)
+Grat is licensed under Apache 2.0 and available on [GitHub](https://github.com/gratnetwork/grat).
