@@ -32,7 +32,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
     }
 
     const result = await sponsorshipService.sponsor(
-      { transaction, network, idempotencyKey },
+      { transaction, network, idempotencyKey, apiKeyId } as any,
       req.id as string
     );
 

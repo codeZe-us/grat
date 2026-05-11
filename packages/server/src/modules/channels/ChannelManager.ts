@@ -81,7 +81,9 @@ export class ChannelManager {
         }
       } catch (err: unknown) {
         const errorMessage = getErrorMessage(err);
-        const isNotFound = (err as any).response?.status === 404 || (err as any).name === 'NotFoundError';
+        const isNotFound = (err as any).response?.status === 404 || 
+                           (err as any).status === 404 || 
+                           (err as any).name === 'NotFoundError';
 
         if (isNotFound) {
           if (this.config.network === 'testnet') {

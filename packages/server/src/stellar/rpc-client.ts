@@ -3,6 +3,7 @@ import {
   Transaction,
   FeeBumpTransaction,
   xdr,
+  Keypair,
 } from '@stellar/stellar-sdk';
 import {
   StellarClient,
@@ -31,6 +32,7 @@ export class RpcClient implements StellarClient {
       const response: any = await this.server.sendTransaction(tx);
 
       if (response.status === 'ERROR') {
+        this.logger.error({ hash, response }, 'Transaction rejected by RPC');
         return {
           hash,
           status: 'FAILED',
@@ -64,11 +66,12 @@ export class RpcClient implements StellarClient {
         const txResponse: any = await this.server.getTransaction(hash);
         
         if (txResponse.status === rpc.Api.GetTransactionStatus.SUCCESS) {
+          const feeCharged = txResponse.feeCharged ?? txResponse.feeBump?.feeCharged ?? '0';
           return {
             hash,
             status: 'SUCCESS',
             ledger: txResponse.ledger,
-            feePaid: txResponse.resultMetaXdr?.toXDR('base64') || txResponse.resultMetaXdr, 
+            feePaid: feeCharged.toString(),
           };
         }
 
@@ -96,18 +99,58 @@ export class RpcClient implements StellarClient {
   async getAccount(publicKey: string): Promise<AccountInfo> {
     try {
       const account: any = await this.server.getAccount(publicKey);
+      
+      let balances = account.balances || [];
+      
+      // If balances are missing (common in Soroban RPC), fetch the AccountEntry from the ledger
+      if (balances.length === 0) {
+        try {
+          const ledgerKey = xdr.LedgerKey.account(new xdr.LedgerKeyAccount({
+            accountId: Keypair.fromPublicKey(publicKey).xdrPublicKey()
+          }));
+          
+          const entries = await this.server.getLedgerEntries(ledgerKey);
+          if (entries.entries && entries.entries.length > 0) {
+            const entry = entries.entries[0];
+            const accountEntry = entry.val.account();
+            // Balance is in stroops in the ledger entry
+            const balanceStroops = accountEntry.balance().toString();
+            const balanceXlm = (BigInt(balanceStroops) / 10_000_000n).toString();
+            
+            balances.push({
+              asset_type: 'native',
+              balance: balanceXlm
+            });
+          }
+        } catch (e) {
+          this.logger.debug({ publicKey, err: (e as any).message }, 'Failed to fetch ledger entry for balance');
+        }
+      }
+
       return {
         publicKey: account.accountId ? account.accountId() : (account.id || publicKey),
-        sequenceNumber: account.sequenceNumber(),
-        balances: (account.balances || []).map((b: any) => ({
-          asset_type: b.asset_type,
-          asset_code: b.asset_code,
-          asset_issuer: b.asset_issuer,
-          balance: b.balance,
+        sequenceNumber: account.sequenceNumber ? account.sequenceNumber() : (account.sequence || "0"),
+        balances: balances.map((b: any) => ({
+          asset_type: b.asset_type || b.assetType || (b.asset === 'native' ? 'native' : b.asset) || 'native',
+          asset_code: b.asset_code || b.assetCode,
+          asset_issuer: b.asset_issuer || b.issuer,
+          balance: b.amount || b.balance || "0",
         })),
       };
-    } catch (err) {
-      throw new Error(`getAccount failed for ${publicKey}: ${err instanceof Error ? err.message : String(err)}`);
+    } catch (err: any) {
+      const isNotFound = err?.response?.status === 404 || 
+                         err?.name === 'NotFoundError' || 
+                         err?.message?.includes('404') ||
+                         err?.message?.includes('not found');
+      
+      if (isNotFound) {
+        const error = new Error(`Account not found: ${publicKey}`);
+        (error as any).status = 404;
+        (error as any).name = 'NotFoundError';
+        throw error;
+      }
+      
+      throw err;
     }
   }
 
