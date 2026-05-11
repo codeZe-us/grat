@@ -18,4 +18,5 @@ export const config = {
   stellarFundingSecret: process.env.STELLAR_FUNDING_SECRET,
   isProduction: process.env.NODE_ENV === 'production',
   adminToken: process.env.ADMIN_TOKEN || 'dev-admin-token',
+  maxSponsorFeeStroops: process.env.MAX_SPONSOR_FEE_STROOPS || '5000000', // 0.5 XLM default
 };

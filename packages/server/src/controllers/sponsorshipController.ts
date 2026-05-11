@@ -17,8 +17,9 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
     }
 
 
+    const apiKeyId = (req as any).apiKey?.id;
     if (idempotencyKey) {
-      const cached = await sponsorshipService.checkIdempotency(idempotencyKey);
+      const cached = await sponsorshipService.checkIdempotency(idempotencyKey, apiKeyId);
       if (cached) {
         return res.json({
           ...cached,
@@ -35,7 +36,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
 
 
     if (idempotencyKey) {
-      await sponsorshipService.setIdempotency(idempotencyKey, result);
+      await sponsorshipService.setIdempotency(idempotencyKey, result, apiKeyId);
     }
 
     res.json({
