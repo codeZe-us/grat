@@ -21,7 +21,7 @@
 
 Stellar transactions require XLM to pay for network fees. For many users, especially those only interested in stablecoins (like USDC), acquiring XLM is a high-friction barrier to entry.
 
-**Grat** is a relay server and SDK that implements **Gas Abstraction**. It allows developers to sponsor the transaction fees for their users by wrapping transactions in fee-bump envelopes. With Grat, your users can hold USDC and perform operations without ever needing to touch or even know about XLM.
+**Grat** is a relay server and SDK that implements **Gas Abstraction**. It allows developers to sponsor the transaction fees for their users by wrapping transactions in fee-bump envelopes. With Grat, your users can hold USDC and perform operations without ever needing to touch or even know about XLM. **[Try the Live Demo](https://grat-usdc-transfer-web.vercel.app/)**
 
 Compatible with Protocol 26 (Yardstick), including all new Soroban host functions, precise TTL extensions, and frozen ledger entry handling.
 
