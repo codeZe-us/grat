@@ -2,7 +2,7 @@ import { Keypair, Asset, Operation, TransactionBuilder, Networks, Account } from
 import { Grat, FrozenEntryError } from '@grat-official-sdk/sdk';
 
 async function run() {
-  console.log('🚀 Starting USDC Transfer Example with Fee Sponsorship');
+  console.log('Starting USDC Transfer Example with Fee Sponsorship');
   
   const grat = Grat.testnet();
   const issuer = Keypair.random();

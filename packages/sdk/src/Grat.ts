@@ -8,13 +8,12 @@ import {
 } from './types';
 import { GratError, handleResponseError, NetworkError } from './errors';
 
-// Package version for headers
 const SDK_VERSION = '0.3.2';
 
 export class Grat {
   private config: Required<GratConfig>;
   private static testnetLogged = false;
-
+  
   /**
    * Shorthand to create a testnet-configured client.
    * @param relayUrl Optional relay URL (defaults to http://localhost:3000).
@@ -32,6 +31,14 @@ export class Grat {
     return new Grat({ apiKey, relayUrl, network: 'mainnet' });
   }
 
+  /**
+   * Create a new Grat SDK client.
+   * @param config Configuration options.
+   * @param config.relayUrl The URL of the Grat relay server.
+   * @param config.network The Stellar network ('testnet' or 'mainnet'). Defaults to 'testnet'.
+   * @param config.apiKey Required for mainnet. Get one at https://grat.network.
+   * @param config.fetch Optional custom fetch implementation (useful for serverless or older Node).
+   */
   constructor(config: GratConfig) {
     const network = config.network || 'testnet';
     const relayUrl = config.relayUrl || (network === 'testnet' ? 'http://127.0.0.1:3000' : '');
@@ -60,6 +67,7 @@ export class Grat {
       apiKey: config.apiKey || '',
       maxRetries: config.maxRetries ?? 3,
       timeout: config.timeout ?? 30000,
+      fetch: config.fetch || globalThis.fetch.bind(globalThis),
     };
   }
 
@@ -110,9 +118,6 @@ export class Grat {
     });
   }
 
-  /**
-   * Internal request helper with retry logic.
-   */
   private async request<T>(
     path: string,
     options: RequestInit,
@@ -135,7 +140,7 @@ export class Grat {
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
-      const response = await fetch(url, {
+      const response = await this.config.fetch(url, {
         ...options,
         headers,
         signal: controller.signal,

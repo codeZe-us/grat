@@ -190,4 +190,64 @@ describe('Grat SDK Unit Tests', () => {
       await expect(grat.status()).rejects.toThrow(NetworkError);
     });
   });
+
+  describe('Custom Fetch Support', () => {
+    it('uses custom fetch when provided', async () => {
+      const customFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ status: 'custom-ok' })
+      });
+
+      const grat = new Grat({
+        relayUrl: 'http://localhost:3000',
+        fetch: customFetch as any
+      });
+
+      const result = await grat.status();
+      expect(customFetch).toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+      expect(result.status).toBe('custom-ok');
+    });
+
+    it('falls back to global fetch when not provided', async () => {
+      (fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ status: 'global-ok' })
+      });
+
+      const grat = new Grat({ relayUrl: 'http://localhost:3000' });
+      const result = await grat.status();
+      
+      expect(fetch).toHaveBeenCalled();
+      expect(result.status).toBe('global-ok');
+    });
+
+    it('wraps custom fetch errors in NetworkError', async () => {
+      const customFetch = vi.fn().mockRejectedValue(new Error('Custom fetch fail'));
+      
+      const grat = new Grat({
+        relayUrl: 'http://localhost:3000',
+        fetch: customFetch as any,
+        maxRetries: 0
+      });
+
+      await expect(grat.status()).rejects.toThrow(NetworkError);
+      await expect(grat.status()).rejects.toMatchObject({ message: 'Custom fetch fail' });
+    });
+
+    it('handles non-JSON response from custom fetch', async () => {
+      const customFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.reject(new Error('SyntaxError: Unexpected token'))
+      });
+
+      const grat = new Grat({
+        relayUrl: 'http://localhost:3000',
+        fetch: customFetch as any,
+        maxRetries: 0
+      });
+
+      await expect(grat.status()).rejects.toThrow(NetworkError);
+    });
+  });
 });

@@ -1,10 +1,10 @@
 import { Keypair, Horizon } from '@stellar/stellar-sdk';
 import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
-import { config } from '../../config';
-import { logger } from '../../utils/logger';
-import { redis } from '../../utils/redis';
-import { sequenceManager } from './SequenceManager';
+import { Redis } from 'ioredis';
+import { Logger } from 'pino';
+import { SequenceManager } from './SequenceManager';
+import { getErrorMessage } from '../../utils/error-guards';
 
 export interface ChannelAccount {
   keypair: Keypair;
@@ -19,23 +19,26 @@ export class ChannelManager {
   private channels: Map<string, ChannelAccount> = new Map();
   private publicKeys: string[] = [];
   private currentIndex = 0;
-  private horizon: Horizon.Server;
   private cleanupInterval?: NodeJS.Timeout;
 
-  constructor() {
-    this.horizon = new Horizon.Server(config.horizonUrl);
-  }
+  constructor(
+    private readonly redis: Redis,
+    private readonly horizon: Horizon.Server,
+    private readonly sequenceManager: SequenceManager,
+    private readonly config: any,
+    private readonly logger: Logger
+  ) {}
 
   async initialize() {
-    if (!config.channelSeedPhrase) {
+    if (!this.config.channelSeedPhrase) {
       throw new Error('CHANNEL_SEED_PHRASE is not configured');
     }
 
-    logger.info('Initializing Fee Channel Manager...');
+    this.logger.info('Initializing Fee Channel Manager...');
 
-    const seed = await bip39.mnemonicToSeed(config.channelSeedPhrase);
+    const seed = await bip39.mnemonicToSeed(this.config.channelSeedPhrase);
     
-    for (let i = 0; i < config.channelCount; i++) {
+    for (let i = 0; i < this.config.channelCount; i++) {
       const path = `m/44'/148'/${i}'`;
       const derived = derivePath(path, seed.toString('hex'));
       const keypair = Keypair.fromRawEd25519Seed(derived.key);
@@ -50,11 +53,11 @@ export class ChannelManager {
     }
 
     await this.verifyChannels();
-    await sequenceManager.syncAll(this.publicKeys);
+    await this.sequenceManager.syncAll(this.publicKeys);
     this.startCleanupInterval();
     
     const health = await this.getPoolHealth();
-    logger.info({ 
+    this.logger.info({ 
       msg: 'Channel Manager initialized', 
       total: health.total,
       funded: health.funded,
@@ -63,7 +66,7 @@ export class ChannelManager {
   }
 
   private async verifyChannels() {
-    const minBalance = config.network === 'mainnet' ? 10 : 2;
+    const minBalance = this.config.network === 'mainnet' ? 10 : 2;
     for (const publicKey of this.publicKeys) {
       const channel = this.channels.get(publicKey)!;
       try {
@@ -73,36 +76,35 @@ export class ChannelManager {
         channel.balance = balance;
 
         if (parseFloat(balance) < minBalance) {
-          logger.warn({ msg: 'Low channel balance', publicKey, balance, minBalance });
+          this.logger.warn({ msg: 'Low channel balance', publicKey, balance, minBalance });
         }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((err as any).response?.status === 404 || err.name === 'NotFoundError') {
-          if (config.network === 'testnet') {
-            logger.info({ msg: 'Funding new testnet channel account via Friendbot', publicKey });
+      } catch (err: unknown) {
+        const errorMessage = getErrorMessage(err);
+        const isNotFound = (err as any).response?.status === 404 || (err as any).name === 'NotFoundError';
+
+        if (isNotFound) {
+          if (this.config.network === 'testnet') {
+            this.logger.info({ msg: 'Funding new testnet channel account via Friendbot', publicKey });
             try {
               const fbResponse = await fetch(`https://friendbot.stellar.org/?addr=${publicKey}`);
               if (fbResponse.ok) {
-                logger.info({ msg: 'Successfully funded channel account', publicKey });
+                this.logger.info({ msg: 'Successfully funded channel account', publicKey });
                 channel.status = 'available';
-                channel.balance = '10000.00'; // Friendbot default
+                channel.balance = '10000.00';
               } else {
-                logger.error({ msg: 'Friendbot funding failed', publicKey, status: fbResponse.status });
+                this.logger.error({ msg: 'Friendbot funding failed', publicKey, status: fbResponse.status });
                 channel.status = 'error';
               }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } catch (fbErr: any) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              logger.error({ msg: 'Error calling Friendbot', publicKey, err: (fbErr as any).message });
+            } catch (fbErr: unknown) {
+              this.logger.error({ msg: 'Error calling Friendbot', publicKey, err: getErrorMessage(fbErr) });
               channel.status = 'error';
             }
           } else {
             channel.status = 'error';
-            logger.error({ msg: 'Channel account not found on network', publicKey });
+            this.logger.error({ msg: 'Channel account not found on network', publicKey });
           }
         } else {
-          logger.error({ msg: 'Error verifying channel', publicKey, err: err.message });
+          this.logger.error({ msg: 'Error verifying channel', publicKey, err: errorMessage });
         }
       }
     }
@@ -114,7 +116,7 @@ export class ChannelManager {
       for (const publicKey of this.publicKeys) {
         const channel = this.channels.get(publicKey)!;
         if (channel.status === 'locked' && channel.lockedAt && now - channel.lockedAt > 30000) {
-          logger.warn({ msg: 'Stale lock detected, releasing channel', publicKey });
+          this.logger.warn({ msg: 'Stale lock detected, releasing channel', publicKey });
           await this.release(publicKey);
         }
       }
@@ -131,14 +133,17 @@ export class ChannelManager {
 
       if (channel.status === 'available') {
         const lockKey = `channel:lock:${publicKey}`;
-        // Set lock in Redis with 30s TTL
-        const acquired = await redis.set(lockKey, 'locked', 'EX', 30, 'NX');
-        
-        if (acquired) {
-          channel.status = 'locked';
-          channel.lockedAt = Date.now();
-          this.currentIndex = (idx + 1) % this.publicKeys.length;
-          return channel;
+        try {
+          const acquired = await this.redis.set(lockKey, 'locked', 'EX', 30, 'NX');
+          
+          if (acquired) {
+            channel.status = 'locked';
+            channel.lockedAt = Date.now();
+            this.currentIndex = (idx + 1) % this.publicKeys.length;
+            return channel;
+          }
+        } catch (err: unknown) {
+          this.logger.error({ msg: 'Redis error during channel acquisition', err: getErrorMessage(err) });
         }
       }
     }
@@ -150,7 +155,11 @@ export class ChannelManager {
     const channel = this.channels.get(publicKey);
     if (!channel) return;
 
-    await redis.del(`channel:lock:${publicKey}`);
+    try {
+      await this.redis.del(`channel:lock:${publicKey}`);
+    } catch (err: unknown) {
+      this.logger.error({ msg: 'Redis error during channel release', err: getErrorMessage(err) });
+    }
     channel.status = 'available';
     channel.lockedAt = undefined;
     channel.lastUsedAt = Date.now();
@@ -188,5 +197,3 @@ export class ChannelManager {
     if (this.cleanupInterval) clearInterval(this.cleanupInterval);
   }
 }
-
-export const channelManager = new ChannelManager();

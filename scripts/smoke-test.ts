@@ -11,7 +11,7 @@ const COLORS = {
 };
 
 async function runSmokeTest() {
-  console.log(`${COLORS.bold}${COLORS.cyan}🚀 Starting Grat Phase 1 Smoke Test...${COLORS.reset}\n`);
+  console.log(`${COLORS.bold}${COLORS.cyan}Starting Grat Phase 1 Smoke Test...${COLORS.reset}\n`);
   
   const grat = Grat.testnet();
   const horizon = new Horizon.Server('https://horizon-testnet.stellar.org');

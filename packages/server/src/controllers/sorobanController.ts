@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { sponsorshipService } from '../modules/sponsorship/SponsorshipService';
+import { container } from '../container';
+
+const { sponsorshipService } = container;
 
 export const simulateHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {

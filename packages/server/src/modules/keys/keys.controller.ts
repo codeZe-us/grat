@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { keysService } from './keys.service';
+import { container } from '../../container';
+
+const { keysService } = container;
 
 export const createKeyHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {

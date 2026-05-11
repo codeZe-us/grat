@@ -1,14 +1,14 @@
 import { Horizon } from '@stellar/stellar-sdk';
-import { config } from '../../config';
-import { logger } from '../../utils/logger';
-import { redis } from '../../utils/redis';
+import { Redis } from 'ioredis';
+import { Logger } from 'pino';
+import { getErrorMessage } from '../../utils/error-guards';
 
 export class SequenceManager {
-  private horizon: Horizon.Server;
-
-  constructor() {
-    this.horizon = new Horizon.Server(config.horizonUrl);
-  }
+  constructor(
+    private readonly redis: Redis,
+    private readonly horizon: Horizon.Server,
+    private readonly logger: Logger
+  ) {}
 
   /**
    * Loads the current sequence number from Horizon and caches it in Redis.
@@ -19,14 +19,16 @@ export class SequenceManager {
       const sequence = account.sequenceNumber();
       
       // Store in Redis
-      await redis.set(`sequence:${publicKey}`, sequence);
+      await this.redis.set(`sequence:${publicKey}`, sequence);
       
-      logger.debug({ msg: 'Synced sequence number', publicKey, sequence });
+      this.logger.debug({ msg: 'Synced sequence number', publicKey, sequence });
       return sequence;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      logger.error({ msg: 'Failed to sync sequence number', publicKey, err: (err as any).message });
+    } catch (err: unknown) {
+      this.logger.error({ 
+        msg: 'Failed to sync sequence number', 
+        publicKey, 
+        err: getErrorMessage(err) 
+      });
       throw err;
     }
   }
@@ -39,9 +41,7 @@ export class SequenceManager {
     const key = `sequence:${publicKey}`;
     
     // Increment in Redis and get the new value
-    // Note: Stellar sequence numbers are BigInt strings. Redis INCR works on integers.
-    // Since Stellar sequence numbers fit in 64-bit integers, Redis INCR is safe.
-    const nextSeq = await redis.incr(key);
+    const nextSeq = await this.redis.incr(key);
     
     return nextSeq.toString();
   }
@@ -50,9 +50,7 @@ export class SequenceManager {
    * Useful for initialization: syncs all channels in a list.
    */
   async syncAll(publicKeys: string[]) {
-    logger.info(`Syncing sequence numbers for ${publicKeys.length} channels...`);
+    this.logger.info(`Syncing sequence numbers for ${publicKeys.length} channels...`);
     await Promise.all(publicKeys.map(pk => this.sync(pk)));
   }
 }
-
-export const sequenceManager = new SequenceManager();
