@@ -8,6 +8,11 @@ import { getErrorMessage } from '../../utils/error-guards';
 
 export interface HealthStatus {
   status: 'ok' | 'error';
+  pool?: {
+    total: number;
+    funded: number;
+    totalXlm: string;
+  };
   checks: {
     stellar: { reachable: boolean; url: string; error?: string; clientType: string };
     redis: { reachable: boolean; error?: string };
@@ -85,6 +90,11 @@ export class HealthCheckService {
 
     return {
       status: isOk ? 'ok' : 'error',
+      pool: {
+        total: channels.total,
+        funded: channels.funded,
+        totalXlm: channels.totalXlm
+      },
       checks: {
         stellar,
         redis,

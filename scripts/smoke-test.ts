@@ -34,6 +34,11 @@ async function runSmokeTest() {
       passCount++;
     }
 
+    if ((status as any).checks?.postgresql?.reachable) {
+      console.log(`${COLORS.green}✓ PostgreSQL connected and reachable${COLORS.reset}`);
+      passCount++;
+    }
+
     const user = Keypair.random();
     console.log(`${COLORS.cyan}i Creating fresh test account: ${user.publicKey()}...${COLORS.reset}`);
     const fbResponse = await fetch(`https://friendbot.stellar.org/?addr=${user.publicKey()}`);
@@ -44,7 +49,6 @@ async function runSmokeTest() {
       throw new Error('Friendbot failed');
     }
 
-    // Wait for account to appear on network
     await new Promise(r => setTimeout(r, 2000));
 
     const userAccount = await rpcServer.getAccount(user.publicKey());

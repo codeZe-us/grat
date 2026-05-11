@@ -5,7 +5,7 @@ const { sponsorshipService } = container;
 
 export const simulateHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { transaction } = req.body;
+    const { transaction, network } = req.body;
 
     if (!transaction) {
       return res.status(400).json({
@@ -17,7 +17,7 @@ export const simulateHandler = async (req: Request, res: Response, next: NextFun
       });
     }
 
-    const result = await sponsorshipService.simulate(transaction);
+    const result = await sponsorshipService.simulate({ transaction, network });
     res.json({
       ...result,
       requestId: req.id,
@@ -29,7 +29,7 @@ export const simulateHandler = async (req: Request, res: Response, next: NextFun
 
 export const estimateHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { transaction } = req.body;
+    const { transaction, network } = req.body;
 
     if (!transaction) {
       return res.status(400).json({
@@ -41,7 +41,7 @@ export const estimateHandler = async (req: Request, res: Response, next: NextFun
       });
     }
 
-    const result = await sponsorshipService.estimate(transaction);
+    const result = await sponsorshipService.estimate({ transaction, network });
     res.json({
       ...result,
       requestId: req.id,
