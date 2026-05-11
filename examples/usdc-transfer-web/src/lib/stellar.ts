@@ -3,11 +3,11 @@ import {
   Operation,
   TransactionBuilder,
   BASE_FEE,
-  Horizon,
+  rpc,
 } from '@stellar/stellar-sdk';
-import { HORIZON_URL, NETWORK_PASSPHRASE } from './constants';
+import { RPC_URL, NETWORK_PASSPHRASE } from './constants';
 
-export const server = new Horizon.Server(HORIZON_URL);
+export const server = new rpc.Server(RPC_URL);
 
 export async function fundWithFriendbot(publicKey: string) {
   const response = await fetch(`https://friendbot.stellar.org?addr=${publicKey}`);
@@ -22,7 +22,7 @@ export async function buildChangeTrustTx(
   asset: Asset,
   fee: string = BASE_FEE
 ) {
-  const account = await server.loadAccount(publicKey);
+  const account = await server.getAccount(publicKey);
   return new TransactionBuilder(account, {
     fee,
     networkPassphrase: NETWORK_PASSPHRASE,
@@ -43,7 +43,7 @@ export async function buildPaymentTx(
   amount: string,
   fee: string = BASE_FEE
 ) {
-  const account = await server.loadAccount(fromPublicKey);
+  const account = await server.getAccount(fromPublicKey);
   return new TransactionBuilder(account, {
     fee,
     networkPassphrase: NETWORK_PASSPHRASE,
@@ -61,9 +61,9 @@ export async function buildPaymentTx(
 
 export async function getUSDCBalance(publicKey: string, issuerPublicKey: string) {
   try {
-    const account = await server.loadAccount(publicKey);
-    const usdc = account.balances.find(
-      (b) => 'asset_code' in b && b.asset_code === 'USDC' && b.asset_issuer === issuerPublicKey
+    const account = await server.getAccount(publicKey) as any;
+    const usdc = account.balances?.find(
+      (b: any) => b.asset_code === 'USDC' && b.asset_issuer === issuerPublicKey
     );
     return usdc?.balance || '0';
   } catch (e) {

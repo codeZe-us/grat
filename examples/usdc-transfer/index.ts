@@ -1,10 +1,12 @@
-import { Keypair, Asset, Operation, TransactionBuilder, Networks, Account } from '@stellar/stellar-sdk';
+import { Keypair, Asset, Operation, TransactionBuilder, Networks, Account, rpc } from '@stellar/stellar-sdk';
 import { Grat, FrozenEntryError } from '@grat-official-sdk/sdk';
 
 async function run() {
-  console.log('Starting USDC Transfer Example with Fee Sponsorship');
+  console.log('Starting USDC Transfer Example with Fee Sponsorship (RPC Mode)');
   
   const grat = Grat.testnet();
+  const rpcServer = new rpc.Server('https://soroban-testnet.stellar.org');
+  
   const issuer = Keypair.random();
   const usdc = new Asset('USDC', issuer.publicKey());
 
@@ -13,6 +15,7 @@ async function run() {
 
   console.log(`\nAccounts:\n  Alice: ${alice.publicKey()}\n  Bob:   ${bob.publicKey()}`);
 
+  console.log('\nFunding accounts via Friendbot...');
   await Promise.all([
     fetch(`https://friendbot.stellar.org/?addr=${alice.publicKey()}`),
     fetch(`https://friendbot.stellar.org/?addr=${bob.publicKey()}`),
@@ -21,9 +24,12 @@ async function run() {
   
   async function getAccountInfo(publicKey: string): Promise<any> {
     for (let i = 0; i < 10; i++) {
-      const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${publicKey}`);
-      if (res.ok) return res.json();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      try {
+        const acc = await rpcServer.getAccount(publicKey);
+        return acc;
+      } catch (e) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     }
     throw new Error(`Failed to fetch account info for ${publicKey} after 10 attempts`);
   }
@@ -31,7 +37,7 @@ async function run() {
   console.log('\n--- TRUSTLINE SETUP ---');
   const aliceInfo = await getAccountInfo(alice.publicKey());
   const trustlineTx = new TransactionBuilder(
-    new Account(alice.publicKey(), aliceInfo.sequence),
+    new Account(alice.publicKey(), aliceInfo.sequenceNumber()),
     { fee: '100', networkPassphrase: Networks.TESTNET }
   )
     .addOperation(Operation.changeTrust({ asset: usdc }))
@@ -46,7 +52,7 @@ async function run() {
   console.log('\n--- BOB TRUSTLINE SETUP ---');
   const bobInfo = await getAccountInfo(bob.publicKey());
   const bobTrustlineTx = new TransactionBuilder(
-    new Account(bob.publicKey(), bobInfo.sequence),
+    new Account(bob.publicKey(), bobInfo.sequenceNumber()),
     { fee: '100', networkPassphrase: Networks.TESTNET }
   )
     .addOperation(Operation.changeTrust({ asset: usdc }))
@@ -60,7 +66,7 @@ async function run() {
   console.log('\n3.5. Minting 100 USDC for Alice (SPONSORED)...');
   const issuerInfo = await getAccountInfo(issuer.publicKey());
   const mintTx = new TransactionBuilder(
-    new Account(issuer.publicKey(), issuerInfo.sequence),
+    new Account(issuer.publicKey(), issuerInfo.sequenceNumber()),
     { fee: '100', networkPassphrase: Networks.TESTNET }
   )
     .addOperation(Operation.payment({
@@ -78,7 +84,7 @@ async function run() {
   const aliceInfo2 = await getAccountInfo(alice.publicKey());
   
   const paymentTx = new TransactionBuilder(
-    new Account(alice.publicKey(), aliceInfo2.sequence),
+    new Account(alice.publicKey(), aliceInfo2.sequenceNumber()),
     { fee: '100', networkPassphrase: Networks.TESTNET }
   )
     .addOperation(Operation.payment({

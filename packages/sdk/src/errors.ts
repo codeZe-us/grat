@@ -56,7 +56,7 @@ export class SimulationFailedError extends GratError {
 }
 
 /**
- * Thrown when Horizon rejects the transaction submission.
+ * Thrown when the Stellar network rejects the transaction submission.
  */
 export class SubmissionFailedError extends GratError {
   public readonly resultCodes: unknown;

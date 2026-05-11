@@ -10,18 +10,14 @@ describe('Grat Relay Integration Tests', () => {
   let userKeypair: Keypair;
 
   beforeAll(async () => {
-
     process.env.NETWORK = 'testnet';
     
-
     if (!config.channelSeedPhrase) {
       (config as any).channelSeedPhrase = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
     }
 
-
     await container.channelManager.initialize();
     
-
     userKeypair = Keypair.random();
     console.log('Funding test user:', userKeypair.publicKey());
     const fbRes = await fetch(`https://friendbot.stellar.org/?addr=${userKeypair.publicKey()}`);
@@ -48,10 +44,9 @@ describe('Grat Relay Integration Tests', () => {
 
   describe('POST /v1/sponsor', () => {
     it('sponsors a classic payment transaction', async () => {
-
-      const accountInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${userKeypair.publicKey()}`)).json();
+      const accountInfo = await (container as any).stellarClient.getAccount(userKeypair.publicKey());
       const tx = new TransactionBuilder(
-        new Account(userKeypair.publicKey(), accountInfo.sequence),
+        new Account(userKeypair.publicKey(), accountInfo.sequenceNumber),
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
         .addOperation(
@@ -64,7 +59,6 @@ describe('Grat Relay Integration Tests', () => {
         .build();
 
       tx.sign(userKeypair);
-
 
       const res = await request(app)
         .post('/v1/sponsor')
@@ -79,9 +73,9 @@ describe('Grat Relay Integration Tests', () => {
     }, 60000);
 
     it('returns identical response for the same idempotency key', async () => {
-      const accountInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${userKeypair.publicKey()}`)).json();
+      const accountInfo = await (container as any).stellarClient.getAccount(userKeypair.publicKey());
       const tx = new TransactionBuilder(
-        new Account(userKeypair.publicKey(), accountInfo.sequence),
+        new Account(userKeypair.publicKey(), accountInfo.sequenceNumber),
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
         .addOperation(Operation.createAccount({ destination: Keypair.random().publicKey(), startingBalance: '1' }))
@@ -146,7 +140,7 @@ describe('Grat Relay Integration Tests', () => {
 
   describe('Rate Limiting', () => {
     it('returns 429 when minute limit is exceeded', async () => {
-      // Rate limiting test omitted to avoid hitting Horizon limits
+      // Rate limiting test omitted to avoid hitting network limits
     });
   });
 });

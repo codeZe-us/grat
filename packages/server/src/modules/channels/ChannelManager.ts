@@ -1,10 +1,11 @@
-import { Keypair, Horizon } from '@stellar/stellar-sdk';
+import { Keypair } from '@stellar/stellar-sdk';
 import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
 import { Redis } from 'ioredis';
 import { Logger } from 'pino';
 import { SequenceManager } from './SequenceManager';
 import { getErrorMessage } from '../../utils/error-guards';
+import { StellarClient } from '../../stellar/stellar-client';
 
 export interface ChannelAccount {
   keypair: Keypair;
@@ -23,7 +24,7 @@ export class ChannelManager {
 
   constructor(
     private readonly redis: Redis,
-    private readonly horizon: Horizon.Server,
+    private readonly stellarClient: StellarClient,
     private readonly sequenceManager: SequenceManager,
     private readonly config: any,
     private readonly logger: Logger
@@ -70,7 +71,7 @@ export class ChannelManager {
     for (const publicKey of this.publicKeys) {
       const channel = this.channels.get(publicKey)!;
       try {
-        const account = await this.horizon.loadAccount(publicKey);
+        const account = await this.stellarClient.getAccount(publicKey);
         const nativeBalance = account.balances.find(b => b.asset_type === 'native');
         const balance = nativeBalance ? nativeBalance.balance : '0';
         channel.balance = balance;

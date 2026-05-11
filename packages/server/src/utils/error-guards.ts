@@ -1,20 +1,16 @@
 import { RelayError } from './errors';
 
-export interface HorizonError {
+export interface StellarSubmissionError {
   response?: {
     data?: {
       extras?: {
         result_codes?: any;
       };
+      errorResultXdr?: string;
+      diagnosticEventsXdr?: string[];
     };
   };
   message: string;
-}
-
-export interface SorobanError {
-  code?: number;
-  message: string;
-  data?: any;
 }
 
 export interface RedisError {
@@ -35,26 +31,15 @@ export function isRelayError(err: unknown): err is RelayError {
   return err instanceof RelayError;
 }
 
-export function isStellarHorizonError(err: unknown): err is HorizonError {
+export function isStellarSubmissionError(err: unknown): err is StellarSubmissionError {
   const e = err as any;
   return (
     e &&
     typeof e === 'object' &&
-    e.response &&
-    e.response.data &&
-    e.response.data.extras &&
-    e.response.data.extras.result_codes
-  );
-}
-
-export function isSorobanRpcError(err: unknown): err is SorobanError {
-  const e = err as any;
-  // Soroban RPC errors often follow JSON-RPC 2.0 error shape
-  return (
-    e &&
-    typeof e === 'object' &&
-    (typeof e.code === 'number' || e.message) &&
-    !isStellarHorizonError(err)
+    (
+      (e.response && e.response.data && e.response.data.extras && e.response.data.extras.result_codes) ||
+      (e.response && e.response.data && (e.response.data.errorResultXdr || e.response.data.diagnosticEventsXdr))
+    )
   );
 }
 
@@ -69,11 +54,10 @@ export function isRedisError(err: unknown): err is RedisError {
 
 export function isDatabaseError(err: unknown): err is DatabaseError {
   const e = err as any;
-  // Common Knex/node-pg error shape
   return (
     e &&
     typeof e === 'object' &&
-    (typeof e.code === 'string' && /^[0-9A-Z]{5}$/.test(e.code)) // PostgreSQL error codes are 5 chars
+    (typeof e.code === 'string' && /^[0-9A-Z]{5}$/.test(e.code))
   );
 }
 

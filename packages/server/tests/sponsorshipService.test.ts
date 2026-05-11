@@ -44,16 +44,26 @@ const mockRedis: any = {
   set: vi.fn().mockResolvedValue('OK'),
 };
 
-const mockHorizon: any = {
-  feeStats: vi.fn().mockResolvedValue({ fee_charged: { p70: '100' } }),
-  submitTransaction: vi.fn().mockResolvedValue({ hash: 'testhash', ledger: 123 }),
+const mockStellarClient: any = {
+  estimateFee: vi.fn().mockResolvedValue({ baseFee: '100', recommendedFee: '150' }),
+  submitTransaction: vi.fn().mockResolvedValue({ 
+    hash: 'testhash', 
+    ledger: 123, 
+    status: 'SUCCESS' 
+  }),
+  simulateTransaction: vi.fn().mockResolvedValue({
+    resourceFee: '0',
+    transactionData: '',
+    auth: [],
+    events: []
+  }),
 };
 
 const mockConfig = {
   ...config,
   network: 'testnet',
   maxSponsorFeeStroops: '10000000',
-  sorobanRpcUrl: 'https://soroban-testnet.stellar.org',
+  rpcUrl: 'https://soroban-testnet.stellar.org',
 };
 
 const mockSequenceManager: Partial<SequenceManager> = {
@@ -62,7 +72,7 @@ const mockSequenceManager: Partial<SequenceManager> = {
 };
 
 const makeService = () => new SponsorshipService(
-  mockHorizon,
+  mockStellarClient,
   mockChannelManager as ChannelManager,
   mockSequenceManager as SequenceManager,
   mockCreditService as CreditService,
@@ -103,8 +113,12 @@ describe('SponsorshipService Unit Tests', () => {
     (mockChannelManager.acquire as any).mockResolvedValue(mockChannel);
     (mockChannelManager.isChannelAccount as any).mockImplementation((pk: string) => pk === mockChannel.publicKey);
     (mockCircuitBreaker.check as any).mockResolvedValue(undefined);
-    mockHorizon.feeStats.mockResolvedValue({ fee_charged: { p70: '100' } });
-    mockHorizon.submitTransaction.mockResolvedValue({ hash: 'testhash', ledger: 123 });
+    mockStellarClient.estimateFee.mockResolvedValue({ baseFee: '100', recommendedFee: '150' });
+    mockStellarClient.submitTransaction.mockResolvedValue({ 
+      hash: 'testhash', 
+      ledger: 123, 
+      status: 'SUCCESS' 
+    });
     mockRedis.get.mockResolvedValue(null);
   });
 
@@ -184,7 +198,7 @@ describe('SponsorshipService Unit Tests', () => {
     });
 
     it('always releases channel even if submission fails', async () => {
-      mockHorizon.submitTransaction.mockRejectedValue(new Error('Network error'));
+      mockStellarClient.submitTransaction.mockRejectedValue(new Error('Network error'));
       const svc = makeService();
       const tx = buildSignedTx(userKeypair);
 

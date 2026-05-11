@@ -1,4 +1,3 @@
-import { Horizon } from '@stellar/stellar-sdk';
 import { Redis } from 'ioredis';
 import { config } from './config';
 import { logger } from './utils/logger';
@@ -13,19 +12,24 @@ import { SponsorshipService } from './modules/sponsorship/SponsorshipService';
 import { KeysService } from './modules/keys/keys.service';
 import { RateLimiter } from './middleware/rateLimiter';
 import { HealthCheckService } from './modules/health/HealthCheckService';
+import { StellarClient } from './stellar/stellar-client';
+import { RpcClient } from './stellar/rpc-client';
+import { DepositPoller } from './workers/deposit-poller';
 
 export function createContainer() {
-  const horizon = new Horizon.Server(config.horizonUrl);
+  const stellarClient: StellarClient = new RpcClient(config.rpcUrl, config.networkPassphrase, config, logger);
   
-  const sequenceManager = new SequenceManager(redis, horizon, logger);
-  const channelManager = new ChannelManager(redis, horizon, sequenceManager, config, logger);
+  const sequenceManager = new SequenceManager(redis, stellarClient, logger);
+  const channelManager = new ChannelManager(redis, stellarClient, sequenceManager, config, logger);
   const creditService = new CreditService(db, redis, logger);
   const circuitBreaker = new CircuitBreaker(redis, config, logger);
   const transactionLogger = new TransactionLogger(db, logger);
   const keysService = new KeysService(db, logger);
   
+  const depositPoller = new DepositPoller(stellarClient, db, redis, config, logger);
+  
   const healthCheckService = new HealthCheckService(
-    horizon,
+    stellarClient,
     redis,
     db,
     channelManager,
@@ -35,7 +39,7 @@ export function createContainer() {
   );
 
   const sponsorshipService = new SponsorshipService(
-    horizon,
+    stellarClient,
     channelManager,
     sequenceManager,
     creditService,
@@ -56,6 +60,8 @@ export function createContainer() {
     keysService,
     rateLimiter,
     healthCheckService,
+    depositPoller,
+    stellarClient,
     db,
     redis,
     logger

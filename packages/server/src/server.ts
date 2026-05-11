@@ -15,6 +15,7 @@ const start = async () => {
     await container.healthCheckService.runStartupChecks();
     
     keysWorker.start();
+    container.depositPoller.start();
     
     const server = app.listen(port, () => {
       logger.info(`Server listening on port ${port} in ${config.network} mode`);
@@ -28,6 +29,7 @@ const start = async () => {
         
         try {
           container.channelManager.stop();
+          container.depositPoller.stop();
           keysWorker.stop();
           await closeDatabase();
           logger.info('Graceful shutdown completed');
