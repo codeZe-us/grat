@@ -9,11 +9,8 @@ import {
 import { GratError, handleResponseError, NetworkError } from './errors';
 
 // Package version for headers
-const SDK_VERSION = '0.2.0';
+const SDK_VERSION = '0.3.2';
 
-/**
- * Main client for interacting with the Grat Relay Server.
- */
 export class Grat {
   private config: Required<GratConfig>;
   private static testnetLogged = false;
@@ -35,10 +32,6 @@ export class Grat {
     return new Grat({ apiKey, relayUrl, network: 'mainnet' });
   }
 
-  /**
-   * Initialize a new Grat client.
-   * @param config Configuration options for the relay client.
-   */
   constructor(config: GratConfig) {
     const network = config.network || 'testnet';
     const relayUrl = config.relayUrl || (network === 'testnet' ? 'http://127.0.0.1:3000' : '');
@@ -70,12 +63,6 @@ export class Grat {
     };
   }
 
-  /**
-   * Sponsor a transaction by wrapping it in a fee-bump envelope.
-   * @param transaction The signed transaction or fee-bump transaction to sponsor.
-   * @returns The result of the transaction submission.
-   * @throws {GratError} If the relay server returns an error.
-   */
   async sponsor(transaction: Transaction | FeeBumpTransaction): Promise<SponsorResult> {
     const xdr = transaction.toXDR();
     const idempotencyKey = crypto.randomUUID();
@@ -92,18 +79,10 @@ export class Grat {
     });
   }
 
-  /**
-   * Alias for sponsor, specifically for Soroban transactions.
-   * @param transaction The Soroban transaction to sponsor.
-   */
   async sponsorContract(transaction: Transaction): Promise<SponsorResult> {
     return this.sponsor(transaction);
   }
 
-  /**
-   * Simulate a Soroban transaction to get resource estimates.
-   * @param transaction The Soroban transaction to simulate.
-   */
   async simulate(transaction: Transaction): Promise<SimulationResult> {
     return this.request<SimulationResult>('/v1/simulate', {
       method: 'POST',
@@ -113,10 +92,6 @@ export class Grat {
     });
   }
 
-  /**
-   * Get fee estimates for a transaction.
-   * @param transaction The transaction to estimate fees for.
-   */
   async estimate(transaction: Transaction | FeeBumpTransaction): Promise<EstimateResult> {
     return this.request<EstimateResult>('/v1/estimate', {
       method: 'POST',

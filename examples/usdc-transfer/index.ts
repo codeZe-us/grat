@@ -11,17 +11,13 @@ async function run() {
   const alice = Keypair.random();
   const bob = Keypair.random();
 
-  console.log(`\n1. Creating test accounts...`);
-  console.log(`   Alice: ${alice.publicKey()}`);
-  console.log(`   Bob:   ${bob.publicKey()}`);
+  console.log(`\nAccounts:\n  Alice: ${alice.publicKey()}\n  Bob:   ${bob.publicKey()}`);
 
   await Promise.all([
     fetch(`https://friendbot.stellar.org/?addr=${alice.publicKey()}`),
     fetch(`https://friendbot.stellar.org/?addr=${bob.publicKey()}`),
     fetch(`https://friendbot.stellar.org/?addr=${issuer.publicKey()}`)
   ]);
-  console.log('   ✅ Accounts funded with XLM for base reserve (via Friendbot)');
-  console.log('   Waiting for network sync (polling Horizon)...');
   
   async function getAccountInfo(publicKey: string): Promise<any> {
     for (let i = 0; i < 10; i++) {
@@ -44,9 +40,8 @@ async function run() {
 
   trustlineTx.sign(alice);
 
-  console.log('   Sponsoring trustline fee...');
   const trustlineResult = await grat.sponsor(trustlineTx);
-  console.log(`   ✅ Trustline established! Hash: ${trustlineResult.hash}`);
+  console.log(`✅ Alice Trustline: ${trustlineResult.hash}`);
 
   console.log('\n--- BOB TRUSTLINE SETUP ---');
   const bobInfo = await getAccountInfo(bob.publicKey());

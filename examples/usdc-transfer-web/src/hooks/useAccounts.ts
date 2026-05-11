@@ -14,15 +14,12 @@ export function useAccounts() {
 
   const setup = useCallback(async () => {
     try {
-      console.log('[Grat Demo] Setting up testnet accounts...');
-
       const aliceKp = Keypair.random();
       const bobKp = Keypair.random();
       const charlieKp = Keypair.random();
       const issuerKp = Keypair.random();
       setIssuer(issuerKp);
 
-      console.log('[Grat Demo] Initializing secure connection...');
       await fundWithFriendbot(issuerKp.publicKey());
 
       const usdcAsset = new Asset(USDC_CODE, issuerKp.publicKey());
@@ -32,9 +29,15 @@ export function useAccounts() {
         fee: BASE_FEE,
         networkPassphrase: NETWORK_PASSPHRASE,
       })
-        .addOperation(Operation.createAccount({ destination: aliceKp.publicKey(), startingBalance: '2.0' }))
-        .addOperation(Operation.createAccount({ destination: bobKp.publicKey(), startingBalance: '2.0' }))
-        .addOperation(Operation.createAccount({ destination: charlieKp.publicKey(), startingBalance: '2.0' }))
+        .addOperation(
+          Operation.createAccount({ destination: aliceKp.publicKey(), startingBalance: '2.0' }),
+        )
+        .addOperation(
+          Operation.createAccount({ destination: bobKp.publicKey(), startingBalance: '2.0' }),
+        )
+        .addOperation(
+          Operation.createAccount({ destination: charlieKp.publicKey(), startingBalance: '2.0' }),
+        )
         .setTimeout(300)
         .build();
 
@@ -54,7 +57,13 @@ export function useAccounts() {
         fee: BASE_FEE,
         networkPassphrase: NETWORK_PASSPHRASE,
       })
-        .addOperation(Operation.payment({ destination: aliceKp.publicKey(), asset: usdcAsset, amount: '1000.00' }))
+        .addOperation(
+          Operation.payment({
+            destination: aliceKp.publicKey(),
+            asset: usdcAsset,
+            amount: '1000.00',
+          }),
+        )
         .setTimeout(300)
         .build();
 
