@@ -77,7 +77,11 @@ export class SponsorshipService {
     const heldAmount = BigInt(estimation.estimatedFee);
     const apiKeyId = (request as any).apiKeyId;
     
-    await this.creditService.placeHold(apiKeyId, heldAmount);
+    if (apiKeyId) {
+      await this.creditService.placeHold(apiKeyId, heldAmount);
+    } else if (this.config.network !== 'testnet') {
+      throw new ValidationError('API key is required for mainnet sponsorship');
+    }
 
     let channel: any = null;
     try {
@@ -113,20 +117,19 @@ export class SponsorshipService {
           status: 'success',
         });
 
-        await this.creditService.confirmDeduction(apiKeyId, heldAmount, actualFee);
-        
-        const idempotencyKey = (request as any).idempotencyKey;
-        if (idempotencyKey) {
-          await this.redis.set(`idempotency:${idempotencyKey}`, JSON.stringify(response), 'EX', 3600);
+        if (apiKeyId) {
+          await this.creditService.confirmDeduction(apiKeyId, heldAmount, actualFee);
         }
-
+        
         return response;
       } else {
         throw new SubmissionFailedError(result.errorMessage || 'Unknown submission error', result.errorCode);
       }
     } catch (err: any) {
       this.logger.error({ err: getErrorMessage(err), requestId }, 'Sponsorship failed');
-      await this.creditService.releaseHold(apiKeyId, heldAmount);
+      if (apiKeyId) {
+        await this.creditService.releaseHold(apiKeyId, heldAmount);
+      }
 
       if (innerTx) {
         await this.transactionLogger.log({
@@ -218,19 +221,27 @@ export class SponsorshipService {
 
     const fee = (BigInt(feeStats.recommendedFee) + BigInt(resourceFee)).toString();
 
-    return TransactionBuilder.buildFeeBumpTransaction(
+    const feeBumpTx = TransactionBuilder.buildFeeBumpTransaction(
       channel.keypair,
       fee,
       tx,
       this.config.networkPassphrase
     );
+    feeBumpTx.sign(channel.keypair);
+    return feeBumpTx;
   }
 
-  async checkIdempotency(key: string, apiKeyId: string): Promise<SponsorResponse | null> {
-    const cached = await this.redis.get(`idempotency:${key}`);
+  async checkIdempotency(key: string, apiKeyId?: string): Promise<SponsorResponse | null> {
+    const redisKey = apiKeyId ? `idempotency:${apiKeyId}:${key}` : `idempotency:anon:${key}`;
+    const cached = await this.redis.get(redisKey);
     if (cached) {
       return JSON.parse(cached);
     }
     return null;
+  }
+
+  async setIdempotency(key: string, result: SponsorResponse, apiKeyId?: string): Promise<void> {
+    const redisKey = apiKeyId ? `idempotency:${apiKeyId}:${key}` : `idempotency:anon:${key}`;
+    await this.redis.set(redisKey, JSON.stringify(result), 'EX', 3600); // Cache for 1 hour
   }
 }
