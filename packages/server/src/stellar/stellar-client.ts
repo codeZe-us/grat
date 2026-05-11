@@ -28,11 +28,8 @@ export interface FeeEstimate {
 }
 
 export interface SimulationResult {
-  cost: {
-    cpuInstructions: string;
-    memoryBytes: string;
-  };
   resourceFee: string;
+  latestLedger: number;
   transactionData: string;
   auth: any[];
   events: any[];

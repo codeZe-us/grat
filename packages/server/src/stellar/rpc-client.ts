@@ -102,7 +102,6 @@ export class RpcClient implements StellarClient {
       
       let balances = account.balances || [];
       
-      // If balances are missing (common in Soroban RPC), fetch the AccountEntry from the ledger
       if (balances.length === 0) {
         try {
           const ledgerKey = xdr.LedgerKey.account(new xdr.LedgerKeyAccount({
@@ -113,7 +112,6 @@ export class RpcClient implements StellarClient {
           if (entries.entries && entries.entries.length > 0) {
             const entry = entries.entries[0];
             const accountEntry = entry.val.account();
-            // Balance is in stroops in the ledger entry
             const balanceStroops = accountEntry.balance().toString();
             const balanceXlm = (BigInt(balanceStroops) / 10_000_000n).toString();
             
@@ -188,13 +186,20 @@ export class RpcClient implements StellarClient {
       throw new Error(`Simulation failed: ${response.error}`);
     }
 
+    let transactionData = '';
+    const td = response.transactionData;
+    if (typeof td === 'string') {
+      transactionData = td;
+    } else if (td?.build) {
+      transactionData = td.build().toXDR('base64');
+    } else if (td?.toXDR) {
+      transactionData = td.toXDR('base64');
+    }
+
     return {
-      cost: {
-        cpuInstructions: response.cost?.cpuIns || '0',
-        memoryBytes: response.cost?.memBytes || '0',
-      },
       resourceFee: response.minResourceFee || '0',
-      transactionData: response.transactionData?.toXDR ? response.transactionData.toXDR('base64') : (response.transactionData || ''),
+      latestLedger: response.latestLedger || 0,
+      transactionData,
       auth: response.result?.auth || response.auth || [],
       events: response.events || [],
     };

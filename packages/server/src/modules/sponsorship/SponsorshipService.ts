@@ -58,9 +58,13 @@ export class SponsorshipService {
       throw new ValidationError('Transaction XDR is required');
     }
 
+    const networkPassphrase = request.network === 'testnet' 
+      ? Networks.TESTNET 
+      : (request.network === 'public' ? Networks.PUBLIC : (request.network || Networks.TESTNET));
+
     let tx: Transaction | FeeBumpTransaction;
     try {
-      tx = TransactionBuilder.fromXDR(request.transaction, request.network || Networks.TESTNET);
+      tx = TransactionBuilder.fromXDR(request.transaction, networkPassphrase);
     } catch (err) {
       throw new ValidationError('Invalid transaction XDR');
     }
@@ -162,14 +166,34 @@ export class SponsorshipService {
   }
 
   async simulate(request: SponsorRequest): Promise<any> {
-    const tx = TransactionBuilder.fromXDR(request.transaction, request.network || Networks.TESTNET);
+    const networkPassphrase = request.network === 'testnet' 
+      ? Networks.TESTNET 
+      : (request.network === 'public' ? Networks.PUBLIC : (request.network || Networks.TESTNET));
+
+    const tx = TransactionBuilder.fromXDR(request.transaction, networkPassphrase);
     if (!(tx instanceof Transaction)) throw new ValidationError('Only classic transactions can be simulated');
     
+    const isSoroban = tx.operations.some(op => op.type === 'invokeHostFunction' || op.type === 'extendFootprintTtl' || op.type === 'restoreFootprint');
+    
+    if (!isSoroban) {
+      return {
+        resourceFee: '0',
+        latestLedger: 0,
+        transactionData: '',
+        auth: [],
+        events: [],
+      };
+    }
+
     return this.stellarClient.simulateTransaction(tx);
   }
 
   async estimate(request: SponsorRequest): Promise<any> {
-    const tx = TransactionBuilder.fromXDR(request.transaction, request.network || Networks.TESTNET);
+    const networkPassphrase = request.network === 'testnet' 
+      ? Networks.TESTNET 
+      : (request.network === 'public' ? Networks.PUBLIC : (request.network || Networks.TESTNET));
+
+    const tx = TransactionBuilder.fromXDR(request.transaction, networkPassphrase);
     if (!(tx instanceof Transaction)) throw new ValidationError('Only classic transactions can be estimated');
 
     const feeStats = await this.stellarClient.estimateFee(tx);
@@ -184,7 +208,9 @@ export class SponsorshipService {
     const estimatedFee = (BigInt(feeStats.recommendedFee) + BigInt(resourceFee)).toString();
 
     return {
+      baseFee: feeStats.baseFee,
       estimatedFee,
+      type: isSoroban ? 'soroban' : 'classic',
       breakdown: {
         inclusionFee: feeStats.recommendedFee,
         resourceFee,
@@ -242,6 +268,6 @@ export class SponsorshipService {
 
   async setIdempotency(key: string, result: SponsorResponse, apiKeyId?: string): Promise<void> {
     const redisKey = apiKeyId ? `idempotency:${apiKeyId}:${key}` : `idempotency:anon:${key}`;
-    await this.redis.set(redisKey, JSON.stringify(result), 'EX', 3600); // Cache for 1 hour
+    await this.redis.set(redisKey, JSON.stringify(result), 'EX', 3600);
   }
 }
