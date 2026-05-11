@@ -1,61 +1,97 @@
 ---
-title: Quickstart
-description: "Get started with Grat in under 5 minutes."
+title: "Quickstart"
+description: "Sponsor your first transaction in under 10 minutes."
 ---
 
-import installSdk from '/snippets/install-sdk.mdx'
+Get started with Grat by setting up a local relay and sponsoring a testnet transaction.
 
-## 1. Start the Relay
+### Prerequisites
 
-The easiest way to start Grat is using Docker. This will spin up the Relay Server, a Redis instance for sequence management, and a pool of testnet channel accounts.
+* [Docker](https://docs.docker.com/get-docker/) installed and running.
+* [Node.js 20+](https://nodejs.org/) and a package manager (npm, yarn, or pnpm).
 
-```bash
-git clone https://github.com/gratnetwork/grat.git
-cd grat
-cp .env.example .env
-# Add your STELLAR_FUNDING_SECRET to .env
-docker-compose up -d
-```
+<Steps>
+  <Step title="Start the Relay">
+    Clone the Grat repository and start the relay server using Docker Compose.
 
-## 2. Install the SDK
+    ```bash
+    git clone https://github.com/gratnetwork/grat.git
+    cd grat
+    docker-compose up -d
+    ```
 
-Add the Grat SDK to your project:
+    This starts the relay, a PostgreSQL database, and a Redis instance. The relay will automatically fund its internal channel accounts using the Stellar Friendbot.
+  </Step>
 
-<installSdk />
+  <Step title="Install the SDK">
+    In your project directory, install the official TypeScript SDK.
 
-## 3. Sponsor your first transaction
+    <CodeGroup>
+    ```bash npm
+    npm install @grat-official-sdk/sdk
+    ```
+    ```bash yarn
+    yarn add @grat-official-sdk/sdk
+    ```
+    ```bash pnpm
+    pnpm add @grat-official-sdk/sdk
+    ```
+    </CodeGroup>
+  </Step>
 
-Use the following snippet to sponsor a simple payment on the testnet.
+  <Step title="Sponsor your first Transaction">
+    Create a file named `sponsor.ts` and add the following code. This script builds a simple XLM payment on the testnet and sends it to the Grat relay for sponsorship.
 
-```typescript
-import { Keypair, Asset, Operation, TransactionBuilder, Networks } from '@stellar/stellar-sdk';
-import { Grat } from '@grat-official-sdk/sdk';
+    ```typescript
+    import { Grat } from '@grat-official-sdk/sdk';
+    import { Keypair, Asset, TransactionBuilder, Networks, Operation } from '@stellar/stellar-sdk';
 
-async function main() {
-  const grat = Grat.testnet(); // Connects to http://localhost:3000
-  const user = Keypair.random();
+    async function main() {
+      // 1. Initialize the Grat client for testnet
+      const grat = Grat.testnet();
 
-  // 1. Build a transaction (signed by the user)
-  const tx = new TransactionBuilder(await grat.getSourceAccount(user), {
-    fee: '100',
-    networkPassphrase: Networks.TESTNET
-  })
-  .addOperation(Operation.payment({
-    destination: 'GD...ADDRESS',
-    asset: Asset.native(),
-    amount: '1'
-  }))
-  .setTimeout(30)
-  .build();
+      // 2. Create a test account (the user)
+      const userKp = Keypair.random();
+      
+      // 3. Build a simple XLM payment transaction
+      // Note: In a real app, you would load the account to get the current sequence number
+      const tx = new TransactionBuilder(
+        { publicKey: userKp.publicKey(), sequence: "1" },
+        { fee: "100", networkPassphrase: Networks.TESTNET }
+      )
+      .addOperation(Operation.payment({
+        destination: "GDQP237HAYA6AK3AOTK2S3SFSBCS3KZ766XJH5Y6S6TORYS6A7XNQLS6",
+        asset: Asset.native(),
+        amount: "10"
+      }))
+      .setTimeout(30)
+      .build();
 
-  tx.sign(user);
+      // 4. Sign the transaction with the user's keypair
+      tx.sign(userKp);
 
-  // 2. Sponsor it!
-  const result = await grat.sponsor(tx);
-  console.log(`✅ Success! Hash: ${result.hash}`);
-}
-```
+      // 5. Sponsor and submit via Grat
+      console.log("Sponsoring transaction...");
+      const result = await grat.sponsor(tx);
+
+      console.log("Success! Transaction hash:", result.hash);
+    }
+
+    main();
+    ```
+  </Step>
+
+  <Step title="Verify it Worked">
+    Copy the transaction hash from your console and search for it on [Stellar Expert (Testnet)](https://stellar.expert/explorer/testnet). You will see that the transaction was successful and that a fee-bump envelope was used to pay the network fee.
+  </Step>
+</Steps>
 
 <Tip>
-  Check out our [Example Projects](https://github.com/gratnetwork/grat/tree/main/examples) for full working blueprints of USDC transfers and Soroban contract calls.
+Ready for something more realistic? Check out our guide on [Sponsoring USDC Payments](/guides/sponsor-usdc-payments) to see how to handle trustlines and asset transfers.
 </Tip>
+
+<Info>
+Managed cloud hosting is currently under development. For now, self-hosting via Docker is the best way to get started with Grat.
+</Info>
+
+[View on GitHub](https://github.com/gratnetwork/grat)

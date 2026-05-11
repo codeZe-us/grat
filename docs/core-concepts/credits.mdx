@@ -1,19 +1,24 @@
 ---
-title: Credits
-description: "Managing your sponsorship balance."
+title: "Credits"
+description: "The economic model of sponsored transactions."
 ---
 
-Grat uses a simple credit-based system to track and manage your sponsorship costs.
+<Info>
+The Credit System is a Phase 2 feature and is currently in active development for mainnet deployments.
+</Info>
 
-### How it works
-1. **Deposit**: You deposit XLM into your Grat account via the dashboard or CLI.
-2. **Convert**: XLM is tracked as **Credits** measured in **Stroops** (1 XLM = 10,000,000 Credits).
-3. **Deduct**: When you sponsor a transaction, the exact fee paid to the Stellar network is deducted from your credit balance in real-time.
+Grat uses a credit-based model to manage the costs of sponsoring transactions on the mainnet. This system ensures that your relay has the funds needed to pay for user fees while giving you full control over your spending.
 
-### Why Credits?
-- **Predictability**: Set low-balance alerts so you never run out of sponsorship capacity.
-- **Transparency**: Every credit deduction is linked to a specific transaction hash and requestId.
-- **Fairness**: You only pay for the exact fees the network charges; Grat does not add "gas markups."
+### How it Works
 
-> [!NOTE]
-> Detailed credit tracking and dashboard features are currently part of the **Phase 2** roadmap and will be enabled for Mainnet integrations.
+1. **Deposit XLM**: You deposit XLM into your project's managed account.
+2. **Deduction per TX**: For every transaction successfully sponsored, Grat deducts the exact network fee from your balance.
+3. **Stroops**: Internally, all balances are tracked in "stroops" (the smallest unit of XLM) to ensure absolute precision. 1 XLM equals 10,000,000 stroops.
+
+### Spending Controls
+
+The credit system allows you to set spending limits at the project or API key level. You can configure alerts to notify you when your balance is running low, ensuring that your users never experience a service interruption due to a lack of funds.
+
+By using a centralized credit balance, you can fund a single pool and use it across multiple applications, environments, and team members.
+
+[View on GitHub](https://github.com/gratnetwork/grat)

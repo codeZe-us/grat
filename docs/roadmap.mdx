@@ -1,119 +1,46 @@
 ---
 title: "Roadmap"
-description: "What's available now, what's coming next, and where Grat is heading"
-icon: "map"
+description: "The future of gasless interactions on Stellar."
 ---
 
-Grat is being built in the open. Here's what's available today and what's coming. We ship in phases - each one adds real, usable functionality.
-
-<Tip>
-  Everything on this roadmap is being built in the open. Watch the GitHub repo to follow along.
-</Tip>
-
-## Available Now
+Grat is developed in phases to ensure a stable and secure foundation for the ecosystem. We build based on the feedback and needs of the developers using Grat in production.
 
 <CardGroup cols={2}>
-  <Card title="Core Relay Server" icon="circle-check" color="#22c55e">
-    Self-host via Docker to sponsor Stellar and Soroban transactions on the testnet.
+  <Card title="Available Now" icon="circle-check" color="#22c55e">
+    * Core relay server architecture
+    * TypeScript SDK for Node and Web
+    * Native Soroban resource fee support
+    * Docker-based self-hosting
+    * Automated testnet channel funding
   </Card>
-  <Card title="TypeScript SDK" icon="circle-check" color="#22c55e">
-    Install from npm and integrate with your project in under 10 lines of code.
+  
+  <Card title="In Progress" icon="hammer" color="#f59e0b">
+    * Mainnet deployment support
+    * Multi-user API key authentication
+    * Credit deposit and balance system
+    * Rate limiting and usage quotas
+    * Launchtube migration tooling
   </Card>
-  <Card title="Soroban Support" icon="circle-check" color="#22c55e">
-    Simulate contract calls, estimate resource fees, and sponsor invocations natively.
-  </Card>
-  <Card title="Docker Self-Hosting" icon="circle-check" color="#22c55e">
-    One-command deployment with docker-compose and Redis-backed channel management.
-  </Card>
-  <Card title="Fee Channel Manager" icon="circle-check" color="#22c55e">
-    HD-derived channel pool with locking, auto-release, and round-robin selection.
-  </Card>
-</CardGroup>
 
-## In Progress
+  <Card title="Planned" icon="compass" color="#818CF8">
+    * Advanced policy engine
+    * Real-time monitoring dashboard
+    * Official React SDK and hooks
+    * Command Line Interface (CLI)
+    * Webhook notifications for tx events
+  </Card>
 
-<CardGroup cols={2}>
-  <Card title="Mainnet Deployment" icon="hammer" color="#f59e0b">
-    Sponsor real transactions with funded channel accounts on the Stellar mainnet.
-  </Card>
-  <Card title="API Key Authentication" icon="hammer" color="#f59e0b">
-    Scoped keys for mainnet and testnet with support for rotation and revocation.
-  </Card>
-  <Card title="Credit System" icon="hammer" color="#f59e0b">
-    Deposit XLM, track your balance, and enable automatic fee deduction per transaction.
-  </Card>
-  <Card title="Rate Limiting" icon="hammer" color="#f59e0b">
-    Per-key and per-account limits implemented with Redis-backed sliding windows.
-  </Card>
-  <Card title="Launchtube Migration" icon="hammer" color="#f59e0b">
-    Drop-in replacement with a two-line code change for projects moving from Launchtube.
-  </Card>
-</CardGroup>
-
-## Planned
-
-<CardGroup cols={2}>
-  <Card title="Policy Engine" icon="compass" color="#818CF8">
-    Define rules for sponsorship filtered by asset, contract, amount, or account.
-  </Card>
-  <Card title="Spending Controls" icon="compass" color="#818CF8">
-    Set hourly, daily, and monthly budgets with hard and soft caps.
-  </Card>
-  <Card title="Monitoring Dashboard" icon="compass" color="#818CF8">
-    Real-time transaction feed, cost analytics, credit tracking, and policy hit rates.
-  </Card>
-  <Card title="Webhook System" icon="compass" color="#818CF8">
-    Notifications for sponsored transactions, low credits, and budget exhaustion.
-  </Card>
-  <Card title="React SDK (Phase 4)" icon="compass" color="#818CF8">
-    Hooks for useSponsor, useRelayStatus, and useCreditBalance for React frontends.
-  </Card>
-  <Card title="CLI Tool" icon="compass" color="#818CF8">
-    Manage keys, channels, policies, credits, and webhooks from the terminal.
-  </Card>
-</CardGroup>
-
-## Exploring
-
-<CardGroup cols={2}>
-  <Card title="Managed Cloud" icon="telescope" color="#64748b">
-    Hosted relay with sign-up, billing, and zero infrastructure management.
-  </Card>
-  <Card title="Fee Token Abstraction" icon="telescope" color="#64748b">
-    The ability to pay fees in USDC or other assets instead of XLM.
-  </Card>
-  <Card title="Batch Sponsorship" icon="telescope" color="#64748b">
-    Sponsor up to 20 transactions in a single API call for better efficiency.
-  </Card>
-  <Card title="Enterprise Multi-Tenancy" icon="telescope" color="#64748b">
-    Isolated relay instances per product or team within a single organization.
-  </Card>
-  <Card title="OFAC Screening" icon="telescope" color="#64748b">
-    Compliance-grade destination account screening for all sponsored transactions.
-  </Card>
-  <Card title="Plugin Marketplace" icon="telescope" color="#64748b">
-    A ecosystem for community-built policy modules and extensions.
-  </Card>
-  <Card title="Conditional Sponsorship" icon="telescope" color="#64748b">
-    On-chain condition checks that must pass before the relay sponsors a transaction.
-  </Card>
-  <Card title="High-Availability Deployment" icon="telescope" color="#64748b">
-    Active-active relay clusters with automatic failover and load balancing.
-  </Card>
-  <Card title="Python SDK" icon="telescope" color="#64748b">
-    Sync and async client for backend services. Will build if demand warrants.
-  </Card>
-  <Card title="Flutter / Dart SDK" icon="telescope" color="#64748b">
-    Mobile wallet integration for iOS and Android. Will build if demand warrants.
-  </Card>
-  <Card title="React Native SDK" icon="telescope" color="#64748b">
-    Mobile hooks with offline support and secure key storage. Will build if demand warrants.
-  </Card>
-  <Card title="Next.js Middleware" icon="telescope" color="#64748b">
-    Server-side sponsorship wrapper to keep API keys off the client. Will build if demand warrants.
+  <Card title="Exploring" icon="telescope" color="#64748b">
+    * Managed cloud hosting service
+    * Fees paid in USDC (Asset-based fees)
+    * Atomic batch sponsorship
+    * Native Python and Flutter SDKs
+    * Enterprise access control
   </Card>
 </CardGroup>
 
 <Info>
-  We build based on what developers actually need. Open a feature request on [GitHub](https://github.com/gratnetwork/grat/issues) or tell us in [Telegram](https://t.me/+c_v7590Y4a5lY2U0) what would make Grat more useful for your project.
+The roadmap is a living document. If you have a specific requirement or feature request, please [open an issue on GitHub](https://github.com/gratnetwork/grat) to discuss it with the core team.
 </Info>
+
+[View on GitHub](https://github.com/gratnetwork/grat)

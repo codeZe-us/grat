@@ -1,19 +1,22 @@
 ---
-title: Channel Accounts
-description: "How Grat achieves high-concurrency transaction submission."
+title: "Channel Accounts"
+description: "Achieving high throughput and sequence parallelism."
 ---
 
-On the Stellar network, every transaction must have a sequence number exactly one greater than the previous one. This creates a bottleneck: you cannot submit multiple transactions from the same account in parallel without risking "sequence already used" errors.
+Stellar requires that transactions from a single account be submitted with sequential sequence numbers. If an application tries to submit multiple transactions from the same account at the same time, it will hit "bad sequence" errors. Channel accounts are Grat's solution to this problem.
 
-### The Solution: Managed Account Pools
-Grat solves this by maintaining a pool of **Channel Accounts**.
+### The Channel Pool
 
-- **Parallelism**: Each channel account has its own independent sequence number. If you have 50 channels, you can submit 50 transactions simultaneously.
-- **Dynamic Selection**: The Relay automatically selects an available, funded channel for every sponsorship request.
-- **Self-Healing**: If a channel hits a sequence error, the Relay automatically re-synchronizes that specific account with the network.
+Grat maintains a pool of dedicated "channel accounts" that it uses exclusively for paying transaction fees. When a sponsorship request arrives, Grat pulls an available channel from the pool, uses it to sign the fee-bump envelope, and then releases it back to the pool once the transaction is submitted.
 
-### Security
-Channel accounts are derived from a single BIP-39 seed phrase (`CHANNEL_SEED_PHRASE`). 
+### Automatic Management
 
-> [!CAUTION]
-> Your seed phrase is the key to your entire fee pool. If it is compromised, an attacker can drain all the XLM used for sponsorship. Always store it in a secure environment variable or vault.
+The relay automatically manages the entire lifecycle of these accounts:
+* **Derivation**: Channels are derived from a single seed phrase using standard BIP39 paths.
+* **Locking**: Redis ensures that no two threads or instances ever try to use the same channel account at the same time.
+* **Round-Robin**: Grat uses a round-robin strategy to distribute load across all available channels.
+* **Auto-Release**: If a transaction takes too long to submit, the relay automatically releases the channel lock to prevent system bottlenecks.
+
+By using a pool of channels, Grat can process many transactions in parallel, allowing your application to scale to thousands of users without hitting network bottlenecks.
+
+[View on GitHub](https://github.com/gratnetwork/grat)

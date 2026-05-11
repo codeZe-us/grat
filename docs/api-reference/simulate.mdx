@@ -1,41 +1,50 @@
 ---
-title: Simulate Transaction
-api: POST /v1/simulate
-description: "Perform a dry-run simulation of a Soroban transaction."
+title: "Simulate Transaction"
+api: "POST /v1/simulate"
+description: "Simulate a Soroban transaction for resource estimates."
 ---
 
-Simulation is a required step for all Soroban transactions. It allows you to determine the footprint (ledger entries) and the resource fees (CPU/Memory) required for execution.
+Interacts with the Soroban RPC to simulate the execution of a transaction. This is required for smart contract calls to determine resource fees and footprints.
 
 ### Request Body
 
 <ParamField body="transaction" type="string" required>
-  The Base64-encoded XDR of the transaction to simulate.
+  The base64-encoded XDR of the transaction to simulate.
 </ParamField>
 
-### Response
-
-<ResponseField name="cost" type="object">
-  <Expandable title="properties">
-    <ResponseField name="cpuInstructions" type="string">
-      CPU instructions required for execution.
-    </ResponseField>
-    <ResponseField name="memoryBytes" type="string">
-      RAM required for execution.
-    </ResponseField>
-  </Expandable>
-</ResponseField>
+### Response Fields
 
 <ResponseField name="resourceFee" type="string">
-  The minimum resource fee (in stroops) required.
+  The estimated Soroban resource fee in stroops.
+</ResponseField>
+
+<ResponseField name="latestLedger" type="number">
+  The ledger number used for the simulation.
+</ResponseField>
+
+<ResponseField name="transactionData" type="string">
+  The base64-encoded `SorobanTransactionData` containing the required footprints.
 </ResponseField>
 
 <ResponseField name="events" type="array">
-  Diagnostic events emitted during simulation.
+  A list of diagnostic events emitted during the simulation.
 </ResponseField>
+
+### Error Codes
+
+| Code | Description |
+| :--- | :--- |
+| `VALIDATION_ERROR` | The provided XDR is not a valid Soroban transaction. |
+| `SIMULATION_FAILED` | The smart contract execution failed or panicked. |
 
 ### SDK Example
 
 ```typescript
-const sim = await grat.simulate(unsignedTx);
-console.log(`Instructions: ${sim.cost.cpuInstructions}`);
+import { Grat } from '@grat-official-sdk/sdk';
+const grat = Grat.testnet();
+
+const simulation = await grat.simulate(sorobanTx);
+console.log(simulation.resourceFee);
 ```
+
+[View on GitHub](https://github.com/gratnetwork/grat)

@@ -1,34 +1,43 @@
 ---
-title: Estimate Fee
-api: POST /v1/estimate
-description: "Predict the total cost of a transaction without submitting it."
+title: "Estimate Fee"
+api: "POST /v1/estimate"
+description: "Retrieve fee estimates for any transaction type."
 ---
 
-Use this endpoint to provide users with a "gas estimate" before they sign a transaction. It combines Horizon fee stats and Soroban simulation (if applicable) to give a complete cost breakdown.
+Provides a breakdown of the estimated network fees required to sponsor the provided transaction, including both Classic and Soroban components.
 
 ### Request Body
+
 <ParamField body="transaction" type="string" required>
-  The Base64-encoded XDR of the transaction.
+  The base64-encoded XDR of the transaction to estimate.
 </ParamField>
 
-### Response
+### Response Fields
+
 <ResponseField name="estimatedFee" type="string">
-  The total suggested fee in stroops.
+  The total estimated fee in stroops.
 </ResponseField>
 
 <ResponseField name="breakdown" type="object">
+  A detailed breakdown of the fee components.
   <Expandable title="properties">
     <ResponseField name="baseFee" type="string">
-      The network inclusion fee.
+      The Classic Stellar inclusion fee.
     </ResponseField>
     <ResponseField name="resourceFee" type="string">
-      The Soroban resource fee (if Soroban).
+      The Soroban-specific resource fee (if applicable).
     </ResponseField>
   </Expandable>
 </ResponseField>
 
 ### SDK Example
+
 ```typescript
-const estimate = await grat.estimate(tx);
-console.log(`Expected cost: ${estimate.estimatedFee} stroops`);
+import { Grat } from '@grat-official-sdk/sdk';
+const grat = Grat.testnet();
+
+const result = await grat.estimate(transaction);
+console.log(result.estimatedFee);
 ```
+
+[View on GitHub](https://github.com/gratnetwork/grat)

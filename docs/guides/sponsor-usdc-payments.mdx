@@ -1,62 +1,84 @@
 ---
-title: Sponsor USDC Payments
-description: "How to onboard users to USDC with zero XLM fees."
+title: "Sponsor USDC Payments"
+description: "Enable zero-gas USDC transfers for your users."
 ---
 
-This guide demonstrates the complete lifecycle of a sponsored USDC payment: creating a trustline and sending a payment without the user needing XLM.
+Your user wants to send USDC to a friend. They do not have XLM, and they should not need it to move their digital dollars. This guide shows you how to build, sign, and sponsor a USDC payment using Grat.
 
-## Prerequisites
-- A running Grat Relay
-- The `@grat-official-sdk/sdk` and `@stellar/stellar-sdk` installed
+### Prerequisites
 
-## Steps
+* A running Grat relay (see the [Quickstart](/quickstart)).
+* The Grat TypeScript SDK installed.
 
 <Steps>
-  <Step title="Initialize Assets">
-    Define the USDC asset you want to sponsor.
+  <Step title="Initialize the SDK">
+    Connect to your local relay.
+
     ```typescript
-    const usdc = new Asset('USDC', 'ISSUER_ADDRESS');
+    import { Grat } from '@grat-official-sdk/sdk';
     const grat = Grat.testnet();
     ```
   </Step>
 
-  <Step title="Establish Trustline">
-    The user needs a trustline for USDC. Usually, this costs a fee, but Grat will pay it.
+  <Step title="Establish a USDC Trustline">
+    Before a user can receive USDC on Stellar, they must establish a trustline. You can sponsor this setup transaction as well.
+
     ```typescript
-    const tx = new TransactionBuilder(await grat.getSourceAccount(user), {
-      fee: '100',
-      networkPassphrase: Networks.TESTNET
-    })
+    import { Asset, TransactionBuilder, Networks, Operation } from '@stellar/stellar-sdk';
+
+    const usdc = new Asset("USDC", "GBBD67IFX53O3S6ZDHAYQ4M6Z67G4C3K6G5Y6S6TORYS6A7XNQLS6");
+
+    const trustTx = new TransactionBuilder(
+      { publicKey: userKp.publicKey(), sequence: "123" },
+      { fee: "100", networkPassphrase: Networks.TESTNET }
+    )
     .addOperation(Operation.changeTrust({ asset: usdc }))
     .setTimeout(30)
     .build();
 
-    tx.sign(user);
-    await grat.sponsor(tx);
+    trustTx.sign(userKp);
+    await grat.sponsor(trustTx);
     ```
   </Step>
 
-  <Step title="Send Payment">
-    Now Alice can send USDC to Bob. Again, the fee is sponsored.
+  <Step title="Build a USDC Payment">
+    Build a standard payment transaction. Note that you don't need to worry about Alice having XLM for the fee, as Grat will cover it.
+
     ```typescript
-    const paymentTx = new TransactionBuilder(await grat.getSourceAccount(user), {
-      fee: '100',
-      networkPassphrase: Networks.TESTNET
-    })
+    const paymentTx = new TransactionBuilder(
+      { publicKey: senderKp.publicKey(), sequence: "124" },
+      { fee: "100", networkPassphrase: Networks.TESTNET }
+    )
     .addOperation(Operation.payment({
-      destination: 'BOB_ADDRESS',
+      destination: receiverPublicKey,
       asset: usdc,
-      amount: '50'
+      amount: "10.00"
     }))
     .setTimeout(30)
     .build();
-
-    paymentTx.sign(user);
-    const result = await grat.sponsor(paymentTx);
     ```
+  </Step>
+
+  <Step title="Sign and Sponsor">
+    Alice signs the transaction to authorize the payment, then your app sends it to Grat for sponsorship.
+
+    ```typescript
+    paymentTx.sign(senderKp);
+
+    console.log("Sponsoring USDC payment...");
+    const result = await grat.sponsor(paymentTx);
+    
+    console.log("Success! Hash:", result.hash);
+    ```
+  </Step>
+
+  <Step title="Verify the Payment">
+    Verify the transaction hash on [Stellar Expert](https://stellar.expert/explorer/testnet). The record will show that Alice's balance decreased by 10 USDC, while Grat's channel account paid the native XLM fee.
   </Step>
 </Steps>
 
-<Info>
-  By following this pattern, your users never need to hold XLM in their wallets. They can exist entirely in the USDC ecosystem.
-</Info>
+<Note>
+This guide uses the Testnet USDC issuer address. For Mainnet, you must use the official [Circle USDC issuer address](https://stellar.expert/explorer/public/asset/USDC-GA5ZSEJYB37JRC5AVCIA5MOP4RA57M773HIK7F64OXOBH3C326YF352H-1).
+</Note>
+
+[View on GitHub](https://github.com/gratnetwork/grat)

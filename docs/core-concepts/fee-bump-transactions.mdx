@@ -1,30 +1,20 @@
 ---
-title: Fee-Bump Transactions
-description: "The protocol-level mechanism that makes gas abstraction possible."
+title: "Fee-Bump Transactions"
+description: "The Stellar-native standard for gas abstraction."
 ---
 
-Stellar introduced **Fee-Bump Transactions** (CAP-0015) to allow one account to pay the transaction fee for another. This is the foundational technology that powers Grat.
+Fee-bump transactions (introduced in CAP-0015) are a native feature of the Stellar network that allow one account to pay the transaction fee for another. This is the foundational technology that enables Grat to provide gasless experiences.
 
-### Structure
-A Fee-Bump transaction consists of two parts:
-1. **Inner Transaction**: The original transaction signed by the user. This contains the operations (like `payment` or `invokeHostFunction`).
-2. **Outer Envelope**: A wrapper signed by the **Fee Source** (the Grat Relay). This envelope specifies the `fee` and the `feeSource` account.
+### How they work
 
-### Why use them?
-- **Zero Friction**: The inner source account (your user) does not need to hold any XLM to pay for the transaction.
-- **Security**: The Relay cannot modify the operations inside the inner transaction because any change would invalidate the user's original signature.
-- **Atomicity**: The transaction either succeeds entirely (including the fee payment) or fails entirely.
+A fee-bump transaction is a special envelope that contains an "inner" transaction. The inner transaction contains the user's intended logic (e.g., a payment or contract call) and is signed by the user. The outer fee-bump envelope is signed by a "sponsor" account, which agrees to pay the network fee.
 
-```typescript
-// Conceptual structure (XDR)
-FeeBumpTransaction {
-  feeSource: "G-RELAY...",
-  fee: 100,
-  innerTx: {
-    sourceAccount: "G-USER...",
-    operations: [ ... ],
-    signatures: [ "USER_SIG" ]
-  },
-  signatures: [ "RELAY_SIG" ]
-}
-```
+### Native Security
+
+Because fee-bumps are a native protocol feature, they are extremely secure. The sponsor only authorizes the payment of the fee and has no power to modify the inner transaction or access the user's private keys. If the inner transaction is invalid or its signatures are missing, the entire fee-bump is rejected.
+
+### Grat's Role
+
+Grat automates the creation and submission of these envelopes. When your app sends an XDR to Grat, the relay handles the wrapping, signing with its own channel accounts, and submission to the network in a single atomic step.
+
+[View on GitHub](https://github.com/gratnetwork/grat)

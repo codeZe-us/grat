@@ -1,39 +1,86 @@
 ---
-title: Sponsor Soroban Contracts
-description: "How to pay for smart contract resource fees with Grat."
+title: "Sponsor Soroban Contracts"
+description: "Zero-gas interactions for smart contracts on Stellar."
 ---
 
-Soroban transactions introduce **Resource Fees** (CPU/Memory). Grat can sponsor both the network inclusion fee AND the resource fees.
+Soroban smart contracts involve complex resource fees for CPU, memory, and ledger footprints. Grat simplifies this by providing built-in simulation and sponsorship for all Soroban fees.
 
-## Workflow
+### Prerequisites
+
+* A running Grat relay.
+* A deployed Soroban contract on Testnet.
 
 <Steps>
-  <Step title="Simulate first">
-    Soroban transactions **must** be simulated to determine their footprint. 
-    ```typescript
-    const tx = new TransactionBuilder(...)
-      .addOperation(contract.call('hello', ...))
-      .build();
+  <Step title="Connect to the Contract">
+    Initialize the Grat client and your contract object.
 
-    const sim = await grat.simulate(tx);
+    ```typescript
+    import { Grat } from '@grat-official-sdk/sdk';
+    import { Contract, Networks } from '@stellar/stellar-sdk';
+
+    const grat = Grat.testnet();
+    const contract = new Contract("CA...");
     ```
   </Step>
 
-  <Step title="Sign">
-    The user signs the transaction as normal.
+  <Step title="Build the Invocation">
+    Build a transaction that calls a function on your contract.
+
     ```typescript
-    tx.sign(user);
+    const tx = new TransactionBuilder(
+      { publicKey: userKp.publicKey(), sequence: "123" },
+      { fee: "100", networkPassphrase: Networks.TESTNET }
+    )
+    .addOperation(contract.call("hello", "world"))
+    .setTimeout(30)
+    .build();
     ```
   </Step>
 
-  <Step title="Sponsor">
-    Grat will automatically handle the resource fee based on the previous simulation results.
+  <Step title="Simulate the Transaction">
+    Soroban transactions require resource estimates before they can be submitted. Use Grat to simulate the call and retrieve the necessary footprint data.
+
     ```typescript
-    const result = await grat.sponsor(tx);
+    console.log("Simulating contract call...");
+    const simulation = await grat.simulate(tx);
+    
+    // The simulation returns the transaction with 
+    // appropriate footprints and resource fees attached.
+    const readyTx = TransactionBuilder.fromXDR(
+      simulation.transactionData, 
+      Networks.TESTNET
+    );
     ```
+  </Step>
+
+  <Step title="Sponsor the Call">
+    Sign the transaction with the user's keypair and send it to Grat for sponsorship. Grat will pay both the base fee and the resource fees.
+
+    ```typescript
+    readyTx.sign(userKp);
+    
+    console.log("Sponsoring Soroban call...");
+    const result = await grat.sponsorContract(readyTx);
+    
+    console.log("Success! Hash:", result.hash);
+    ```
+  </Step>
+
+  <Step title="Read the Result">
+    After the transaction is included in a ledger, you can parse the result XDR to read the return value of your contract function.
   </Step>
 </Steps>
 
-## Key Concepts
-- **Footprints**: Soroban needs to know which ledger entries you will read/write.
-- **Resource Limits**: The Relay will check your policies to ensure the requested CPU/Memory is within your allowed sponsorship limits.
+### Resource Fees vs Base Fees
+
+In Soroban, every transaction has two fee components:
+* **Base Fee**: The cost of including the transaction in a ledger (Classic).
+* **Resource Fee**: The cost of the computation and storage used by the contract.
+
+Grat automatically handles the calculation and payment of both components during the sponsorship process.
+
+<Tip>
+Use the `estimate()` method before sponsoring if you want to show the user exactly how much the application is paying to cover their transaction.
+</Tip>
+
+[View on GitHub](https://github.com/gratnetwork/grat)

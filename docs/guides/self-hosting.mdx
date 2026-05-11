@@ -1,62 +1,119 @@
 ---
-title: Self-Hosting
-description: "Run Grat on your own infrastructure."
+title: "Self-Hosting"
+description: "Deploy and manage your own Grat relay instance."
 ---
 
-Grat is designed to be fully self-hostable. Hosting your own relay gives you full control over your keys, privacy, and sponsorship policies.
+Grat is designed to be self-hostable, giving you full control over your sponsorship infrastructure, channel accounts, and security policies.
 
-## Docker Setup (Recommended)
+### Prerequisites
 
-The easiest way to run Grat in production is using our official Docker image.
+* **Node.js 20+**: The relay is built with TypeScript and Node.js.
+* **Docker & Docker Compose**: Recommended for production deployments.
+* **Redis**: Used for channel locking and sequence number management.
+* **PostgreSQL**: Used for persistent storage of API keys and logs.
+* **Stellar Account**: At least one funded Stellar account to act as a fee channel.
+
+### Deployment with Docker
+
+The fastest way to deploy Grat is using the provided Docker Compose configuration.
 
 <Steps>
-  <Step title="Configuration">
-    Create a `.env` file with your configuration:
-    ```env
-    STELLAR_FUNDING_SECRET=SD...
-    CHANNEL_COUNT=10
-    REDIS_URL=redis://localhost:6379
-    NETWORK=mainnet
-    ```
-  </Step>
+  <Step title="Clone and Configure">
+    Clone the repository and create your environment file.
 
-  <Step title="Deployment">
-    Run the container:
     ```bash
-    docker run -p 3000:3000 --env-file .env ghcr.io/gratnetwork/grat-relay:latest
+    git clone https://github.com/gratnetwork/grat.git
+    cd grat
+    cp .env.example .env
     ```
   </Step>
 
-  <Step title="Verification">
-    Check the health endpoint:
+  <Step title="Update Environment Variables">
+    Edit the `.env` file to include your database credentials, Redis URL, and Stellar configurations. See the variables table below for details.
+  </Step>
+
+  <Step title="Start the Services">
+    Launch the relay and its dependencies.
+
+    ```bash
+    docker-compose up -d
+    ```
+  </Step>
+
+  <Step title="Create Channels">
+    Generate and fund your internal channel accounts.
+
+    ```bash
+    npm run create-channels
+    ```
+  </Step>
+
+  <Step title="Verify Health">
+    Check that the relay is running correctly.
+
     ```bash
     curl http://localhost:3000/health
     ```
   </Step>
 </Steps>
 
-## Environment Variables
+### Environment Variables
 
-| Variable | Description | Required |
+| Variable | Description | Default |
 | :--- | :--- | :--- |
-| `STELLAR_FUNDING_SECRET` | The master secret used to fund the channel pool. | Yes |
-| `CHANNEL_SEED_PHRASE` | 12/24 words to derive channel keys. | Yes |
-| `REDIS_URL` | Redis connection string for locking. | Yes |
-| `NETWORK` | `testnet` or `mainnet`. | No (Default: testnet) |
-| `PORT` | The port the server listens on. | No (Default: 3000) |
+| `PORT` | The port the relay server listens on. | `3000` |
+| `NETWORK` | `testnet` or `mainnet`. | `testnet` |
+| `DATABASE_URL` | PostgreSQL connection string. | `postgresql://...` |
+| `REDIS_URL` | Redis connection string. | `redis://...` |
+| `CHANNEL_COUNT` | Number of parallel fee channels to maintain. | `10` |
+| `CHANNEL_SEED_PHRASE` | Mnemonic for deriving channel accounts. | Required |
+| `ADMIN_TOKEN` | Token for administrative API access. | Required |
 
-## Cloud Deployment
+### Channel Account Management
+
+Channels are the backbone of the relay. They provide the sequence numbers and XLM needed to pay for sponsored transactions.
+
+* **Creation**: Grat derives channel accounts from a single seed phrase using BIP39.
+* **Funding**: In production, you must fund these accounts with enough XLM to cover your expected transaction volume.
+* **Monitoring**: The `/health` endpoint provides data on individual channel balances and availability.
+
+### Cloud Platforms
 
 <AccordionGroup>
-  <Accordion title="Deploy to Railway">
-    1. Fork the Grat repository.
-    2. Create a new project in Railway.
-    3. Add a Redis service.
-    4. Connect the repository and add your `.env` variables.
+  <Accordion title="Railway">
+    1. Connect your GitHub repo.
+    2. Add PostgreSQL and Redis plugins.
+    3. Configure environment variables in the Railway dashboard.
+    4. Deploy.
   </Accordion>
-  <Accordion title="Deploy to Render">
-    1. Create a "Web Service".
-    2. Choose the "Docker" runtime.
-    3. Add the required environment variables in the "Environment" tab.
+  <Accordion title="Render">
+    1. Create a "Web Service" from your repo.
+    2. Create managed PostgreSQL and Redis instances.
+    3. Link environment variables.
+    4. Set the build command to `npm run build` and start command to `npm start`.
+  </Accordion>
+  <Accordion title="Fly.io">
+    1. Run `fly launch` to initialize the project.
+    2. Provisions DB and Redis via Fly's extensions.
+    3. Set secrets using `fly secrets set`.
+    4. Deploy using the included Dockerfile.
   </Accordion>
 </AccordionGroup>
+
+### Monitoring and Metrics
+
+Grat exposes a `/metrics` endpoint compatible with Prometheus. You can monitor:
+* Request counts and latency.
+* Active vs locked channel accounts.
+* Success vs failure rates for sponsored submissions.
+* Total XLM spent across all channels.
+
+<Warning>
+Never share your `CHANNEL_SEED_PHRASE` or `ADMIN_TOKEN`. These provide full control over your fee accounts and relay configuration.
+</Warning>
+
+<Info>
+Managed cloud hosting is coming soon for teams who prefer zero infrastructure overhead. Join our newsletter to be notified when we launch.
+</Info>
+
+[View on GitHub](https://github.com/gratnetwork/grat)

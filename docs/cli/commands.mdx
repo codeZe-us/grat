@@ -1,29 +1,58 @@
 ---
-title: CLI Commands
-description: "Manage your relay, channels, and policies from the terminal."
+title: "CLI Commands"
+description: "Managing your Grat relay from the terminal."
 ---
 
-The Grat CLI is the easiest way to interact with your relay server and manage your infrastructure.
+<Info>
+The Grat CLI is a Phase 4 feature and is currently in the design phase. The commands listed below represent the planned command structure and functionality.
+</Info>
+
+The Grat CLI provides a powerful way to manage your relay, configure policies, fund channels, and monitor transactions directly from your terminal.
+
+### Usage
+
+```bash
+grat [command] [options]
+```
+
+### Planned Commands
 
 <AccordionGroup>
-  <Accordion title="Setup">
-    - `grat init`: Walk through the initial configuration.
-    - `grat config set`: Update specific configuration values.
+  <Accordion title="Setup and Configuration">
+    * `grat init`: Initialize a new Grat project and generate a `.env` file.
+    * `grat login`: Authenticate with your managed cloud account.
+    * `grat status`: Check the health and version of your relay.
   </Accordion>
-  <Accordion title="Fee Channels">
-    - `grat channels list`: Show the health and balance of all channels.
-    - `grat channels fund`: Send XLM from a source account to all channels.
-    - `grat channels health`: Verify network status for every channel.
+
+  <Accordion title="API Keys">
+    * `grat keys list`: List all API keys for the current project.
+    * `grat keys create`: Generate a new API key (test or live).
+    * `grat keys revoke [key]`: Deactivate an existing API key.
   </Accordion>
+
+  <Accordion title="Channel Management">
+    * `grat channels list`: Show the status and balance of all fee channels.
+    * `grat channels fund [amount]`: Send XLM to top up channel balances.
+    * `grat channels rotate`: Manually trigger a rotation of the channel seed.
+  </Accordion>
+
   <Accordion title="Policies">
-    - `grat policy list`: View active sponsorship rules.
-    - `grat policy test <XDR>`: Test an XDR against your rules without submitting.
+    * `grat policies list`: List all active sponsorship policies.
+    * `grat policies create`: Add a new policy via an interactive prompt.
+    * `grat policies delete [id]`: Remove a policy.
   </Accordion>
-  <Accordion title="Monitoring">
-    - `grat status`: General relay and network health.
-    - `grat logs --follow`: Stream real-time relay logs to your terminal.
+
+  <Accordion title="Credits">
+    * `grat balance`: Show the remaining XLM credit balance.
+    * `grat deposit`: Get the deposit address for project top-ups.
+    * `grat usage`: Show historical credit spending by asset and contract.
+  </Accordion>
+
+  <Accordion title="Monitoring and Debugging">
+    * `grat logs`: Stream real-time logs from your relay instance.
+    * `grat tx get [hash]`: Inspect the sponsorship details of a specific hash.
+    * `grat events`: Listen for Soroban diagnostic events emitted by the relay.
   </Accordion>
 </AccordionGroup>
 
-> [!TIP]
-> Run `grat --help` to see all available commands and flags.
+[View on GitHub](https://github.com/gratnetwork/grat)

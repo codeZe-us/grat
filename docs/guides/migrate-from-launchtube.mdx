@@ -1,51 +1,99 @@
 ---
-title: Migrate from Launchtube
-description: "How to move your gas abstraction from Launchtube to Grat."
+title: "Migrate from Launchtube"
+description: "Switch your sponsorship infrastructure to Grat."
 ---
 
-Launchtube has been a pioneer in Stellar sponsorship, but with the advent of Soroban and the need for higher concurrency, **Grat** offers a modern, high-performance alternative.
+Launchtube was a valuable service for the Stellar ecosystem, but its deprecation by the Stellar Development Foundation has left a gap for developers who need reliable gas abstraction. Grat is the open-source, self-hostable replacement designed to fill that gap.
 
-## Why Migrate?
-- **Soroban Native**: Full support for smart contract simulations and resource fees.
-- **High Concurrency**: Advanced Redis-backed channel management prevents sequence collisions.
-- **Deep Diagnostics**: Never guess why a sponsored transaction failed again.
+### Why Migrate?
 
-## Migration Guide
+While Launchtube is no longer supported, Grat offers a modern architecture with native Soroban support and a permissive Apache 2.0 license. Migrating to Grat allows you to regain control over your sponsorship infrastructure and continue providing zero-gas experiences for your users.
 
-### 1. The SDK Switch
-Migrating your code is a drop-in replacement.
+### Code Comparison
+
+The integration logic remains very similar. Most changes involve updating the initialization and error handling.
 
 <CodeGroup>
 ```typescript Launchtube (Old)
-import { Launchtube } from 'launchtube-sdk';
-const lt = new Launchtube(url);
-const result = await lt.submit(tx);
+import { Launchtube } from '@stellar/launchtube-sdk';
+
+const tube = new Launchtube({
+  network: 'testnet',
+  user: 'your-project-id'
+});
+
+const result = await tube.sponsor(transaction);
 ```
 
 ```typescript Grat (New)
 import { Grat } from '@grat-official-sdk/sdk';
-const grat = Grat.testnet(url);
-const result = await grat.sponsor(tx);
+
+const grat = Grat.testnet();
+
+// Most methods map directly
+const result = await grat.sponsor(transaction);
 ```
 </CodeGroup>
 
-### 2. Feature Comparison
+### Feature Comparison
 
 | Feature | Launchtube | Grat |
 | :--- | :--- | :--- |
-| **Stellar Classic** | ✅ | ✅ |
-| **Soroban Support** | ❌ | ✅ |
-| **Channel Management** | Static | Dynamic/Pool |
-| **Distributed Locking** | ❌ | ✅ (Redis) |
-| **Deep Error Drilling** | ❌ | ✅ |
+| **Classic Payments** | Yes | Yes |
+| **Soroban Support** | Limited | Native & Full |
+| **Self-Hosting** | No | Yes (Docker) |
+| **License** | Proprietary | Apache 2.0 |
+| **Credit System** | Managed | Flexible |
 
-## FAQ
+### Migration Steps
+
+<Steps>
+  <Step title="Install the Grat SDK">
+    Replace the Launchtube SDK with the official Grat client.
+
+    ```bash
+    npm uninstall @stellar/launchtube-sdk
+    npm install @grat-official-sdk/sdk
+    ```
+  </Step>
+
+  <Step title="Update Imports and Constructor">
+    Change your imports and initialize the `Grat` client. On testnet, you no longer need a project ID or secret to get started.
+
+    ```typescript
+    import { Grat } from '@grat-official-sdk/sdk';
+    const grat = Grat.testnet();
+    ```
+  </Step>
+
+  <Step title="Update Method Calls">
+    The core `sponsor()` method remains the same. If you were using Launchtube's custom simulation logic, replace it with `grat.simulate()`.
+  </Step>
+
+  <Step title="Test on Testnet">
+    Run your existing test suite against a local Grat relay to ensure that sequence management and sponsorship are working as expected.
+  </Step>
+
+  <Step title="Switch to Mainnet">
+    When ready, deploy your own Grat relay to production and update the SDK configuration to use your mainnet URL and API key.
+  </Step>
+</Steps>
+
+### FAQ
 
 <AccordionGroup>
   <Accordion title="Do I need to change my transaction building code?">
-    No. Grat works with standard Stellar SDK `Transaction` objects. You only change the submission line.
+    No. Grat works with standard Stellar transactions and fee-bump envelopes. Your existing logic for building and signing transactions with user keypairs remains exactly the same.
   </Accordion>
-  <Accordion title="Can I keep my existing channel accounts?">
-    Yes, but we recommend letting Grat manage its own pool via a BIP-39 seed phrase for optimal concurrency.
+  <Accordion title="Is the API compatible?">
+    While the REST endpoints are different, the core data structures (XDR strings, transaction results) are standard Stellar formats. The Grat SDK is designed to be a drop-in replacement for the most common Launchtube use cases.
+  </Accordion>
+  <Accordion title="Can I self-host?">
+    Yes. Unlike Launchtube, Grat is fully open-source. You can run your own relay instance on your own infrastructure, giving you total control over costs and uptime.
+  </Accordion>
+  <Accordion title="What about Soroban?">
+    Grat was built with Soroban in mind from day one. It handles resource fee estimation, simulation, and sponsorship natively, something Launchtube only partially supported.
   </Accordion>
 </AccordionGroup>
+
+[View on GitHub](https://github.com/gratnetwork/grat)

@@ -1,30 +1,39 @@
 ---
-title: How it Works
-description: "Understanding the architecture behind gas abstraction on Stellar."
+title: "How it Works"
+description: "The technical architecture of gas abstraction on Stellar."
 ---
 
-Grat handles the complexity of fee sponsorship so you don't have to. It is built on three core pillars: **Fee-Bump Transactions**, **Channel Pools**, and **Atomic Sequence Tracking**.
+Grat eliminates gas friction by acting as a trusted intermediary that pays network fees on behalf of your users. It uses a Stellar-native feature called Fee-Bump Transactions (CAP-0015) to achieve this without requiring access to user private keys or complicated smart contract wrappers.
 
-## Fee-Bump Transactions (CAP-0015)
+### The Problem: Fees and Sequences
 
-At the heart of Grat is a native Stellar feature called **Fee-Bump Transactions**. 
+In a standard Stellar transaction, the account that initiates the transaction must pay the fee in XLM. This account must also have the correct sequence number. This creates two hurdles: users need XLM, and your app must manage sequence numbers for every user in real-time.
 
-A standard transaction has one signer who pays the fee. A Fee-Bump transaction wraps that transaction in an outer envelope. The outer signer (the Grat Relay) pays the transaction fee, while the inner transaction retains its original sequence number and source account signatures.
+### The Solution: Fee-Bump Transactions
 
-## Channel Pools
+A fee-bump transaction allows a separate "sponsor" account to pay the fee for an "inner" transaction. Grat takes your user's signed transaction, wraps it in a fee-bump envelope, and signs it with a relay-controlled account. The network deducts the XLM from Grat, while the inner transaction logic executes as if the user had paid for it.
 
-Submitting many transactions in parallel from a single account on Stellar is difficult because of strict sequence number increments. 
+### The Transaction Flow
 
-Grat solves this by maintaining a **pool of Channel Accounts**. When a request comes in, the relay:
-1. Picks an available account from the pool.
-2. Uses that account as the fee-payer for the Fee-Bump.
-3. Automatically increments and manages the sequence numbers for that specific channel.
+1. **User Signs**: Your user signs a transaction that performs the desired action (e.g., sending USDC).
+2. **App Sends to Grat**: Your app sends the XDR to the Grat relay server.
+3. **Grat Acquires Channel**: Grat pulls an available "channel account" from its internal pool.
+4. **Builds Fee-Bump**: Grat builds the fee-bump envelope using the channel account as the fee-paying source.
+5. **Signs and Submits**: Grat signs the outer envelope and submits it to a Horizon node or Soroban RPC.
+6. **Result Returned**: The relay returns the transaction hash and result back to your app.
 
-## Atomic Sequence Tracking
+### Channel Accounts and Parallelism
 
+To handle many transactions simultaneously, Grat maintains a pool of channel accounts. Stellar requires transactions from the same account to be submitted sequentially. By using multiple channels, Grat can submit transactions in parallel, significantly increasing throughput and preventing sequence number bottlenecks.
 
-## Protocol 26 Support
+### Classic vs Soroban
 
-Grat tracks Stellar protocol upgrades and handles protocol-specific transaction behavior. With Protocol 26 (Yardstick), the relay correctly processes transactions using new Soroban host functions (checked integer arithmetic, BN254 cryptographic operations, precise TTL extensions) and handles frozen ledger entry rejections (CAP-0077) with a distinct error response rather than a generic failure.
+Grat provides unified support for both Stellar Classic and Soroban Smart Contracts.
+* **Classic**: Sponsoring simple payments, trustline creation, and account configuration.
+* **Soroban**: Sponsoring host function invocations, including the complex resource fees (CPU, Memory, and Storage) required by smart contracts.
 
+### Performance and Reliability
 
+Grat uses Redis to manage its channel pool and track sequence numbers across distributed instances. This ensures that even if you run multiple relay nodes, channel accounts are locked and released atomically, preventing "bad sequence" errors. The relay also implements intelligent retry logic and idempotency checks to ensure that transactions are never submitted twice.
+
+[View on GitHub](https://github.com/gratnetwork/grat)

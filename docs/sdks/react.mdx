@@ -1,132 +1,83 @@
 ---
 title: "React SDK"
-description: "React hooks and components for Grat. Planned for Phase 4."
-icon: "react"
+description: "React hooks and components for Grat integration."
 ---
 
 <Info>
-  The React SDK is planned for Phase 4. In the meantime, use the TypeScript SDK directly in your React components. It works perfectly with React. You just manage loading and error states yourself.
+The React SDK is currently planned for Phase 4. You can use the TypeScript SDK directly within your React components today to build zero-gas experiences.
 </Info>
 
-## Using the TypeScript SDK in React Today
+### Using the TypeScript SDK in React Today
 
-The `@grat-official-sdk/sdk` package is framework-agnostic. You can use it directly in any React component. Here is a complete example:
+You can easily integrate Grat by initializing the client in a configuration file and using it within your event handlers or custom hooks.
 
 ```tsx
 import { useState } from 'react';
 import { Grat } from '@grat-official-sdk/sdk';
-import { Transaction } from '@stellar/stellar-sdk';
+import { buildPaymentTx } from './stellar-utils'; // Your tx builder
 
-const grat = new Grat({ relayUrl: 'https://your-relay.example.com' });
+const grat = Grat.testnet();
 
-export function SendButton({ signedXdr }: { signedXdr: string }) {
+export function SendButton({ userKp }) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hash, setHash] = useState<string | null>(null);
 
   const handleSend = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const tx = new Transaction(signedXdr, 'Test SDF Network ; September 2015');
+      // 1. Build and sign your transaction
+      const tx = await buildPaymentTx(userKp);
+      tx.sign(userKp);
+
+      // 2. Sponsor via Grat
       const result = await grat.sponsor(tx);
-      setHash(result.hash);
+      alert(`Sent! Hash: ${result.hash}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Transaction failed');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <button onClick={handleSend} disabled={loading}>
-        {loading ? 'Sending...' : 'Send'}
-      </button>
-      {hash && <p>Confirmed: {hash}</p>}
-      {error && <p>Error: {error}</p>}
-    </div>
-  );
-}
-```
-
-Install the SDK:
-
-```bash
-npm install @grat-official-sdk/sdk @stellar/stellar-sdk
-```
-
-That is everything you need to sponsor transactions from React today.
-
----
-
-## React SDK (Phase 4)
-
-The hooks-based React SDK will ship in Phase 4. The planned API is documented below. This is not available yet.
-
-### Planned Hooks
-
-#### `useSponsor`
-
-```tsx
-const { sponsor, loading, error, result } = useSponsor();
-```
-
-Wraps `grat.sponsor()` with React state management. Handles loading and error states automatically.
-
-```tsx
-function SendButton({ tx }) {
-  const { sponsor, loading, error, result } = useSponsor();
-
-  return (
-    <button onClick={() => sponsor(tx)} disabled={loading}>
-      {loading ? 'Sending...' : 'Send'}
-      {result && <span>Hash: {result.hash}</span>}
-      {error && <span>Error: {error.message}</span>}
+    <button onClick={handleSend} disabled={loading}>
+      {loading ? 'Sponsoring...' : 'Send USDC'}
     </button>
   );
 }
 ```
 
-#### `useRelayStatus`
+### Planned Hooks API
 
-```tsx
-const { status, loading } = useRelayStatus();
+The future React SDK will provide a collection of hooks to handle state management, loading indicators, and error states automatically.
+
+#### `useSponsor()`
+Returns a function to sponsor transactions and the current execution state.
+```typescript
+const { sponsor, data, error, isLoading } = useSponsor();
 ```
 
-Polls the `/health` endpoint and returns the current relay status.
-
-```tsx
-function RelayBadge() {
-  const { status } = useRelayStatus();
-  return <span>{status?.status === 'ok' ? 'Online' : 'Offline'}</span>;
-}
+#### `useSimulate()`
+Calculates Soroban resource fees and diagnostic events for a transaction.
+```typescript
+const { simulate, data: simulation } = useSimulate(tx);
 ```
 
-#### `useCreditBalance`
-
-```tsx
-const { balance, refresh } = useCreditBalance();
+#### `useRelayStatus()`
+Polls the health and metadata of the configured relay server.
+```typescript
+const { status, isOnline } = useRelayStatus();
 ```
 
-Returns the current credit balance for the authenticated API key and a `refresh` function to re-fetch it.
-
-### Planned Provider
-
-All hooks will require a `GratProvider` at the root of your app:
-
-```tsx
-import { GratProvider } from '@grat-official-sdk/react';
-
-function App() {
-  return (
-    <GratProvider relayUrl="https://your-relay.example.com" apiKey="grat_your_key">
-      <YourApp />
-    </GratProvider>
-  );
-}
+#### `useCreditBalance()`
+Fetches and updates the remaining credit balance for the project API key.
+```typescript
+const { balance } = useCreditBalance();
 ```
 
-<Info>
-  Star the [GitHub repo](https://github.com/gratnetwork/grat) or join the [Telegram](https://t.me/+c_v7590Y4a5lY2U0) to get notified when the React SDK ships.
-</Info>
+#### `useGrat()`
+Provides access to the raw Grat client instance via React Context.
+```typescript
+const grat = useGrat();
+```
+
+[View on GitHub](https://github.com/gratnetwork/grat)

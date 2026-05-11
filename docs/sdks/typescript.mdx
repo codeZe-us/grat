@@ -1,77 +1,194 @@
 ---
-title: TypeScript SDK
-description: "The official JavaScript/TypeScript client for the Grat Relay."
+title: "TypeScript SDK"
+description: "Full reference for the official Grat TypeScript and JavaScript client."
 ---
 
-import installSdk from '/snippets/install-sdk.mdx'
-import errorExample from '/snippets/error-handling-example.mdx'
+The TypeScript SDK is the primary way to interact with the Grat relay. It provides a type-safe interface for sponsoring transactions, simulating Soroban contract calls, and monitoring relay health.
 
-## Installation
+### Installation
 
-<installSdk />
+<CodeGroup>
+```bash npm
+npm install @grat-official-sdk/sdk
+```
+```bash yarn
+yarn add @grat-official-sdk/sdk
+```
+```bash pnpm
+pnpm add @grat-official-sdk/sdk
+```
+</CodeGroup>
 
-## Initialization
+### Client Setup
 
-You can initialize the client using the constructor or the static shortcuts.
+Initialize the Grat client based on your target environment.
 
 <CodeGroup>
 ```typescript Testnet
 import { Grat } from '@grat-official-sdk/sdk';
 
-const grat = Grat.testnet(); 
-// or custom URL
-// const grat = Grat.testnet('https://my-relay.com');
+// Uses the default local relay at http://localhost:3000
+const grat = Grat.testnet();
+
+// Or specify a custom relay URL
+const gratCustom = Grat.testnet('https://relay-testnet.yourdomain.com');
 ```
 
 ```typescript Mainnet
 import { Grat } from '@grat-official-sdk/sdk';
 
-const grat = Grat.mainnet('sr_live_...', 'https://api.grat.network');
+// API Key and Relay URL are required for mainnet
+const grat = Grat.mainnet('your-api-key', 'https://relay.yourdomain.com');
 ```
 </CodeGroup>
 
-## Methods
+### Constructor Configuration
 
-### `sponsor(transaction)`
+If you need more control, you can use the standard constructor.
 
-Wraps a signed transaction in a fee-bump envelope and submits it.
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `relayUrl` | `string` | `""` | The full URL of your Grat relay server. |
+| `network` | `"testnet" \| "mainnet"` | `"testnet"` | The Stellar network passphrase to use. |
+| `apiKey` | `string` | `""` | Your project's API key (required for mainnet). |
+| `maxRetries` | `number` | `3` | Maximum number of retries for failed requests. |
+| `timeout` | `number` | `30000` | Request timeout in milliseconds. |
 
-| Param | Type | Description |
-| :--- | :--- | :--- |
-| `transaction` | `Transaction \| FeeBumpTransaction` | A signed Stellar transaction object. |
+### Methods
 
-**Returns**: `Promise<SponsorResult>`
+#### `sponsor(transaction)`
 
-### `simulate(transaction)`
+Wraps a signed transaction in a fee-bump envelope and submits it to the network.
 
-Simulates a Soroban transaction to get resource estimates.
+* **Parameters**: `transaction: Transaction | FeeBumpTransaction`
+* **Returns**: `Promise<SponsorResult>`
 
-| Param | Type | Description |
-| :--- | :--- | :--- |
-| `transaction` | `Transaction` | An unsigned or signed Stellar transaction. |
+```typescript
+const result = await grat.sponsor(tx);
+console.log(result.hash);
+```
 
-**Returns**: `Promise<SimulationResult>`
+#### `sponsorContract(transaction)`
 
-### `estimate(transaction)`
+An alias for `sponsor`, specifically labeled for Soroban smart contract transactions.
 
-Predicts the total fee cost for a transaction without submitting it.
+* **Parameters**: `transaction: Transaction`
+* **Returns**: `Promise<SponsorResult>`
 
-**Returns**: `Promise<EstimateResult>`
+```typescript
+const result = await grat.sponsorContract(sorobanTx);
+```
 
-### `status()`
+#### `simulate(transaction)`
 
-Checks the health of the relay server.
+Simulates a Soroban transaction to get resource fee estimates and diagnostic events.
 
-**Returns**: `Promise<HealthStatus>`
+* **Parameters**: `transaction: Transaction`
+* **Returns**: `Promise<SimulationResult>`
 
-## Error Handling
+```typescript
+const simulation = await grat.simulate(tx);
+console.log(simulation.resourceFee);
+```
 
-The SDK throws typed errors that you can catch to handle specific scenarios:
+#### `estimate(transaction)`
 
-- **FrozenEntryError** (422) - Thrown when the sponsored transaction references a ledger entry that has been frozen by network consensus (Protocol 26, CAP-0077). This is a network-level security measure, not a problem with the transaction itself.
-- **InsufficientCreditsError** (402) - The project has run out of gas credits.
-- **RateLimitError** (429) - You have exceeded the relay's rate limit.
-- **SubmissionFailedError** (400) - The transaction was rejected by the Stellar network (e.g., bad sequence, op_failed).
-- **ValidationError** (400) - The XDR or request parameters are invalid.
+Returns estimated network fees (Classic and Soroban) for a given transaction.
 
-<errorExample />
+* **Parameters**: `transaction: Transaction | FeeBumpTransaction`
+* **Returns**: `Promise<EstimateResult>`
+
+```typescript
+const fees = await grat.estimate(tx);
+```
+
+#### `status()`
+
+Returns the health status and metadata of the connected relay server.
+
+* **Returns**: `Promise<HealthStatus>`
+
+```typescript
+const health = await grat.status();
+console.log(health.status); // "ok"
+```
+
+### Phase 2 Methods
+
+<Info>
+The following methods are part of the Phase 2 Credit System and are currently under development.
+</Info>
+
+* **`credits.balance()`**: Get the current credit balance for your API key.
+* **`credits.history()`**: Retrieve a list of recent credit deposits and spend events.
+* **`credits.depositInfo()`**: Get instructions for depositing XLM to top up your credits.
+* **`transactions.list()`**: List all transactions sponsored by your API key.
+* **`transactions.get(hash)`**: Get detailed sponsorship metadata for a specific hash.
+
+### Response Types
+
+#### `SponsorResult`
+```typescript
+interface SponsorResult {
+  hash: string;        // Transaction hash
+  feePaid: string;     // Total fee paid in stroops
+  ledger: number;      // Ledger number where tx was included
+  resultXdr: string;   // Stellar result XDR
+}
+```
+
+### Error Handling
+
+The SDK throws descriptive errors that can be caught and handled.
+
+```typescript
+try {
+  await grat.sponsor(tx);
+} catch (error) {
+  if (error instanceof GratError) {
+    // Relay returned an error (e.g., 400, 429, 500)
+    console.error(error.code, error.message);
+  } else if (error instanceof NetworkError) {
+    // Communication failure with the relay
+    console.error("Network issue:", error.message);
+  }
+}
+```
+
+### Automatic Retries
+
+The SDK automatically retries requests that fail due to rate limiting (429) or temporary server issues (503). It uses exponential backoff to avoid overwhelming the relay. You can customize this behavior using the `maxRetries` option in the client configuration.
+
+### End-to-End Example: USDC Payment
+
+```typescript
+import { Grat } from '@grat-official-sdk/sdk';
+import { Keypair, Asset, TransactionBuilder, Networks, Operation } from '@stellar/stellar-sdk';
+
+async function sendUSDC() {
+  const grat = Grat.testnet();
+  const senderKp = Keypair.fromSecret("SD...");
+  const usdc = new Asset("USDC", "GB...");
+
+  // 1. Build payment
+  const tx = new TransactionBuilder(
+    { publicKey: senderKp.publicKey(), sequence: "123" },
+    { fee: "100", networkPassphrase: Networks.TESTNET }
+  )
+  .addOperation(Operation.payment({
+    destination: "GC...",
+    asset: usdc,
+    amount: "50.00"
+  }))
+  .setTimeout(30)
+  .build();
+
+  // 2. Sign and Sponsor
+  tx.sign(senderKp);
+  const result = await grat.sponsor(tx);
+  
+  console.log("USDC Sent! Hash:", result.hash);
+}
+```
+
+[View on GitHub](https://github.com/gratnetwork/grat)

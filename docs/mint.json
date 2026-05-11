@@ -1,68 +1,19 @@
 {
   "name": "Grat",
-  "openapi": "openapi.json",
-  "favicon": "favicon.png",
   "logo": {
-    "light": "/assets/logo.png",
-    "dark": "/assets/logo.png"
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png"
   },
+  "favicon": "/favicon.png",
   "colors": {
     "primary": "#4F46E5",
     "light": "#818CF8",
-    "dark": "#312E81",
-    "anchors": {
-      "from": "#4F46E5",
-      "to": "#8B5CF6"
-    }
+    "dark": "#312E81"
   },
-  "topbarLinks": [
-    {
-      "name": "Dashboard",
-      "url": "https://grat.network/dashboard"
-    }
-  ],
-  "topbarCta": {
-    "type": "link",
-    "name": "Get API Key",
-    "url": "https://grat.network/signup"
-  },
-  "tabs": [
-    {
-      "name": "API Reference",
-      "url": "api-reference"
-    },
-    {
-      "name": "SDKs",
-      "url": "sdks"
-    }
-  ],
-  "anchors": [
-    {
-      "name": "GitHub",
-      "icon": "github",
-      "url": "https://github.com/gratnetwork/grat"
-    },
-    {
-      "name": "Telegram",
-      "icon": "telegram",
-      "url": "https://t.me/+c_v7590Y4a5lY2U0"
-    },
-    {
-      "name": "Status",
-      "icon": "signal",
-      "url": "https://status.grat.network"
-    }
-  ],
   "navigation": [
     {
       "group": "Getting Started",
-      "pages": [
-        "introduction",
-        "quickstart",
-        "how-it-works",
-        "roadmap",
-        "pricing"
-      ]
+      "pages": ["introduction", "quickstart", "how-it-works", "roadmap", "pricing", "about"]
     },
     {
       "group": "Core Concepts",
@@ -93,25 +44,16 @@
     },
     {
       "group": "SDKs",
-      "pages": [
-        "sdks/typescript",
-        "sdks/react",
-        "sdks/nextjs",
-        "sdks/python",
-        "sdks/flutter",
-        "sdks/react-native"
-      ]
+      "pages": ["sdks/typescript", "sdks/react", "sdks/rest-api"]
     },
     {
       "group": "CLI",
-      "pages": [
-        "cli/commands"
-      ]
+      "pages": ["cli/commands"]
     }
   ],
   "footerSocials": {
-    "twitter": "https://x.com/gratnetworkHq",
+    "twitter": "https://twitter.com/gratnetwork",
     "github": "https://github.com/gratnetwork/grat",
-    "telegram": "https://t.me/+c_v7590Y4a5lY2U0"
+    "discord": "https://discord.gg/grat"
   }
 }

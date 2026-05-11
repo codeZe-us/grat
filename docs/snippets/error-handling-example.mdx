@@ -1,19 +1,12 @@
 ```typescript
-import { SubmissionFailedError, RateLimitError, FrozenEntryError } from '@grat-official-sdk/sdk';
-
 try {
-  const result = await grat.sponsor(tx);
+  const result = await grat.sponsor(transaction);
+  console.log("Sponsored hash:", result.hash);
 } catch (error) {
-  if (error instanceof SubmissionFailedError) {
-    // Transaction rejected by Stellar network
-    console.error("Stellar Error:", error.message);
-    console.debug("Result Codes:", error.details);
-  } else if (error instanceof RateLimitError) {
-    // Relay rate limit exceeded
-    console.log(`Retrying in ${error.retryAfter} seconds...`);
-  } else if (error instanceof FrozenEntryError) {
-    // Network-level block on this ledger entry (Protocol 26)
-    console.warn("Action restricted: one or more ledger entries are frozen.");
+  if (error instanceof GratError) {
+    console.error(`Relay error [${error.code}]: ${error.message}`);
+  } else {
+    console.error("Unexpected error:", error);
   }
 }
 ```

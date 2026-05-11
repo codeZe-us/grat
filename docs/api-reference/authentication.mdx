@@ -1,26 +1,32 @@
 ---
-title: Authentication
-description: "How to authenticate your requests to the Grat Relay."
+title: "Authentication"
+description: "Securing your requests to the Grat relay."
 ---
 
-Grat uses API keys to secure requests on the Mainnet. Testnet relays are generally open but may apply IP-based rate limits.
+Grat uses API keys to authenticate requests and track usage. Authenticated requests ensure that your transactions are sponsored from the correct project balance and are subject to your specific policy rules.
 
-### API Keys
-Requests to a secure relay must include the `X-API-Key` header.
+### API Key Header
+
+Include your API key in every request using the `X-API-Key` header.
 
 ```bash
-curl -H "X-API-Key: sr_live_your_key_here" ...
+curl -X POST https://relay.yourdomain.com/v1/sponsor \
+  -H "X-API-Key: sr_live_..." \
+  -H "Content-Type: application/json"
 ```
 
 ### Key Prefixes
-- `sr_test_`: Used for sandbox environments.
-- `sr_live_`: Used for production (Mainnet) environments.
 
-### Rate Limits
-| Environment | Auth Required | Rate Limit |
-| :--- | :--- | :--- |
-| **Testnet** | No | 1,000 tx/day |
-| **Mainnet** | Yes | Custom (based on plan) |
+Grat uses prefixes to distinguish between environments:
+* `sr_test_`: Used for testnet integrations. No credits are required.
+* `sr_live_`: Used for mainnet production integrations. Requires a credit balance.
 
-> [!NOTE]
-> If you are self-hosting Grat, you can configure your own authentication middleware or disable it for private VPC usage.
+<Note>
+During the current development phase (Phase 1), the testnet relay is open and does not require an API key or authentication header.
+</Note>
+
+### Administrative Access
+
+Some endpoints, such as channel management and project configuration, require an `ADMIN_TOKEN`. This token should be kept strictly confidential and only used from secure server-side environments.
+
+[View on GitHub](https://github.com/gratnetwork/grat)

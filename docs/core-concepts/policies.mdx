@@ -1,28 +1,28 @@
 ---
-title: Policies
-description: "Control exactly what your relay sponsors."
+title: "Policies"
+description: "Fine-grained control over which transactions you sponsor."
 ---
 
-Policies are rules that define whether a transaction should be sponsored by your relay. They prevent your fee pool from being abused by unauthorized transactions.
+<Info>
+The Policy Engine is a Phase 3 feature and is currently in the design and prototyping stage.
+</Info>
 
-### Rule Types
-You can configure policies to filter by:
-- **Operation Type**: Only sponsor `payment` or `invokeHostFunction`.
-- **Assets**: Only sponsor transactions involving specific assets (e.g., your own USDC issuer).
-- **Contracts**: Only sponsor calls to your verified Soroban smart contracts.
-- **Accounts**: Only sponsor transactions from a list of allowlisted user accounts.
+In a production environment, you don't want to sponsor every transaction that comes your way. Policies allow you to define strict rules about which transactions your Grat relay will accept and pay for.
 
-### Example Policy
-```json
-{
-  "name": "USDC Onboarding",
-  "conditions": {
-    "operation": "changeTrust",
-    "asset": "USDC:G...ISSUER"
-  },
-  "action": "sponsor"
-}
-```
+### Flexible Rule Engine
 
-> [!TIP]
-> Use the Grat CLI to test your policies against sample XDRs before deploying them to production.
+You will be able to filter transactions based on several criteria:
+* **Asset Filters**: Only sponsor transactions involving specific assets (e.g., your own loyalty token or USDC).
+* **Contract Filters**: Only sponsor calls to specific Soroban smart contracts.
+* **Amount Limits**: Set a maximum amount for transactions you are willing to sponsor.
+* **Account Whitelists**: Only sponsor transactions initiated by registered users of your application.
+
+### Example Policies
+
+* "Only sponsor USDC payments of less than $100."
+* "Only sponsor interactions with the official Governance contract."
+* "Sponsor up to 5 transactions per user per day."
+
+By implementing these policies, you can protect your relay from abuse and ensure that your sponsorship budget is spent on the activities that matter most to your project.
+
+[View on GitHub](https://github.com/gratnetwork/grat)
