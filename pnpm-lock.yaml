@@ -12,8 +12,8 @@ importers:
         specifier: ^9.2.0
         version: 9.39.4
       '@grat-official-sdk/sdk':
-        specifier: workspace:*
-        version: link:packages/sdk
+        specifier: 0.3.2
+        version: 0.3.2
       '@stellar/stellar-sdk':
         specifier: ^15.1.0
         version: 15.1.0
@@ -51,8 +51,8 @@ importers:
   examples/soroban-contract-call:
     dependencies:
       '@grat-official-sdk/sdk':
-        specifier: ^0.3.1
-        version: 0.3.1
+        specifier: 0.3.2
+        version: 0.3.2
       '@stellar/stellar-sdk':
         specifier: ^15.1.0
         version: 15.1.0
@@ -67,8 +67,8 @@ importers:
   examples/trustline-setup:
     dependencies:
       '@grat-official-sdk/sdk':
-        specifier: ^0.3.1
-        version: 0.3.1
+        specifier: 0.3.2
+        version: 0.3.2
       '@stellar/stellar-sdk':
         specifier: ^15.1.0
         version: 15.1.0
@@ -83,8 +83,8 @@ importers:
   examples/usdc-transfer:
     dependencies:
       '@grat-official-sdk/sdk':
-        specifier: ^0.3.1
-        version: 0.3.1
+        specifier: 0.3.2
+        version: 0.3.2
       '@stellar/stellar-sdk':
         specifier: ^15.1.0
         version: 15.1.0
@@ -99,8 +99,8 @@ importers:
   examples/usdc-transfer-web:
     dependencies:
       '@grat-official-sdk/sdk':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.3.2
+        version: 0.3.2
       '@stellar/stellar-sdk':
         specifier: ^15.1.0
         version: 15.1.0
@@ -680,8 +680,8 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@grat-official-sdk/sdk@0.3.1':
-    resolution: {integrity: sha512-Jk0t3xZVaDWg4poUat8S2xTSAHtqafSlXcVyzOs/4JFOX0htxL5CRHs4cnNHRgVlmOUM/7RLPXrLRfKA+6P3RA==}
+  '@grat-official-sdk/sdk@0.3.2':
+    resolution: {integrity: sha512-Osw7hNjB7H0m1icxfMkxdwLkayeDjXuHyhIlZeg+lLkMF//6H2o7Q1DuqYLCmjnl29JyBfGFBNShpow96f1AkA==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -3677,7 +3677,7 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@grat-official-sdk/sdk@0.3.1':
+  '@grat-official-sdk/sdk@0.3.2':
     dependencies:
       '@stellar/stellar-sdk': 15.1.0
     transitivePeerDependencies:
