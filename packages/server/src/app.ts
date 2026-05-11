@@ -9,10 +9,10 @@ import { config } from './config';
 import { sponsorHandler } from './controllers/sponsorshipController';
 import { simulateHandler, estimateHandler } from './controllers/sorobanController';
 import keysRoutes from './modules/keys/keys.routes';
-
-import { testnetRateLimiter } from './middleware/rateLimiter';
+import { container } from './container';
 import { adminAuth } from './middleware/auth';
 import * as adminController from './controllers/adminController';
+import { getErrorMessage } from './utils/error-guards';
 
 const app: Express = express();
 
@@ -39,17 +39,28 @@ app.use(
 );
 
 
-app.use(testnetRateLimiter);
+app.use(container.rateLimiter.handle);
 
 
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    uptime: process.uptime(),
-    network: config.network,
-    timestamp: new Date().toISOString(),
-    requestId: req.id as string,
-  });
+app.get('/health', async (req, res) => {
+  try {
+    const health = await container.healthCheckService.getHealthStatus();
+    const statusCode = health.status === 'ok' ? 200 : 503;
+    res.status(statusCode).json({
+      ...health,
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+      requestId: req.id as string,
+    });
+  } catch (err: unknown) {
+    logger.error({ msg: 'Health check failed', err: getErrorMessage(err) });
+    res.status(500).json({
+      status: 'error',
+      message: 'Health check failed',
+      timestamp: new Date().toISOString(),
+      requestId: req.id as string,
+    });
+  }
 });
 
 

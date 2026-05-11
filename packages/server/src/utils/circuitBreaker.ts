@@ -1,7 +1,7 @@
-import { redis } from './redis';
-import { config } from '../config';
-import { logger } from './logger';
+import { Redis } from 'ioredis';
+import { Logger } from 'pino';
 import { RelayError } from './errors';
+import { getErrorMessage } from './error-guards';
 
 export class CircuitBreakerError extends RelayError {
   constructor(message: string, retryAfter: number) {
@@ -12,39 +12,50 @@ export class CircuitBreakerError extends RelayError {
 export class CircuitBreaker {
   private static readonly HOURLY_KEY = 'circuit:spending:hour';
   private static readonly MINUTE_KEY = 'circuit:spending:minute';
-  private static readonly TRACKING_KEY = 'circuit:spending:keys'; // For top 5 API keys
+  private static readonly TRACKING_KEY = 'circuit:spending:keys';
+
+  constructor(
+    private readonly redis: Redis,
+    private readonly config: any,
+    private readonly logger: Logger
+  ) {}
 
   async check() {
-    if (!config.circuitBreakerEnabled) return;
+    if (!this.config.circuitBreakerEnabled) return;
 
-    const [hourVal, minuteVal] = await Promise.all([
-      redis.get(CircuitBreaker.HOURLY_KEY),
-      redis.get(CircuitBreaker.MINUTE_KEY),
-    ]);
+    try {
+      const [hourVal, minuteVal] = await Promise.all([
+        this.redis.get(CircuitBreaker.HOURLY_KEY),
+        this.redis.get(CircuitBreaker.MINUTE_KEY),
+      ]);
 
-    const hourSpent = BigInt(hourVal || '0');
-    const minuteSpent = BigInt(minuteVal || '0');
+      const hourSpent = BigInt(hourVal || '0');
+      const minuteSpent = BigInt(minuteVal || '0');
 
-    const hourlyLimit = BigInt(config.circuitBreakerHourlyLimit);
-    const minuteLimit = BigInt(config.circuitBreakerMinuteLimit);
+      const hourlyLimit = BigInt(this.config.circuitBreakerHourlyLimit);
+      const minuteLimit = BigInt(this.config.circuitBreakerMinuteLimit);
 
-    if (hourSpent >= hourlyLimit) {
-      await this.trip('hourly', hourSpent, hourlyLimit);
-    }
+      if (hourSpent >= hourlyLimit) {
+        await this.trip('hourly', hourSpent, hourlyLimit);
+      }
 
-    if (minuteSpent >= minuteLimit) {
-      await this.trip('minute', minuteSpent, minuteLimit);
+      if (minuteSpent >= minuteLimit) {
+        await this.trip('minute', minuteSpent, minuteLimit);
+      }
+    } catch (err: unknown) {
+      if (err instanceof CircuitBreakerError) throw err;
+      this.logger.error({ msg: 'Redis error in circuit breaker check', err: getErrorMessage(err) });
     }
   }
 
   private async trip(window: string, spent: bigint, limit: bigint) {
     const ttl = window === 'hourly' 
-      ? await redis.ttl(CircuitBreaker.HOURLY_KEY) 
-      : await redis.ttl(CircuitBreaker.MINUTE_KEY);
+      ? await this.redis.ttl(CircuitBreaker.HOURLY_KEY) 
+      : await this.redis.ttl(CircuitBreaker.MINUTE_KEY);
 
-    const topKeys = await redis.zrevrange(CircuitBreaker.TRACKING_KEY, 0, 4, 'WITHSCORES');
+    const topKeys = await this.redis.zrevrange(CircuitBreaker.TRACKING_KEY, 0, 4, 'WITHSCORES');
     
-    logger.error({
+    this.logger.error({
       msg: 'CIRCUIT BREAKER TRIPPED',
       window,
       spent: spent.toString(),
@@ -59,24 +70,28 @@ export class CircuitBreaker {
   }
 
   async record(amountStroops: bigint, apiKeyPrefix: string) {
-    if (!config.circuitBreakerEnabled) return;
+    if (!this.config.circuitBreakerEnabled) return;
 
-    const amount = amountStroops.toString();
-    
-    await redis.multi()
-      .incrby(CircuitBreaker.HOURLY_KEY, amount)
-      .expire(CircuitBreaker.HOURLY_KEY, 3600, 'NX')
-      .incrby(CircuitBreaker.MINUTE_KEY, amount)
-      .expire(CircuitBreaker.MINUTE_KEY, 60, 'NX')
-      .zincrby(CircuitBreaker.TRACKING_KEY, amount, apiKeyPrefix)
-      .expire(CircuitBreaker.TRACKING_KEY, 3600, 'NX')
-      .exec();
+    try {
+      const amount = amountStroops.toString();
+      
+      await this.redis.multi()
+        .incrby(CircuitBreaker.HOURLY_KEY, amount)
+        .expire(CircuitBreaker.HOURLY_KEY, 3600, 'NX')
+        .incrby(CircuitBreaker.MINUTE_KEY, amount)
+        .expire(CircuitBreaker.MINUTE_KEY, 60, 'NX')
+        .zincrby(CircuitBreaker.TRACKING_KEY, amount, apiKeyPrefix)
+        .expire(CircuitBreaker.TRACKING_KEY, 3600, 'NX')
+        .exec();
+    } catch (err: unknown) {
+      this.logger.error({ msg: 'Redis error in circuit breaker record', err: getErrorMessage(err) });
+    }
   }
 
   async getStatus() {
     const [hourVal, minuteVal] = await Promise.all([
-      redis.get(CircuitBreaker.HOURLY_KEY),
-      redis.get(CircuitBreaker.MINUTE_KEY),
+      this.redis.get(CircuitBreaker.HOURLY_KEY),
+      this.redis.get(CircuitBreaker.MINUTE_KEY),
     ]);
 
     const hourSpent = BigInt(hourVal || '0');
@@ -85,16 +100,14 @@ export class CircuitBreaker {
     return {
       hourSpent: hourSpent.toString(),
       minuteSpent: minuteSpent.toString(),
-      hourLimit: config.circuitBreakerHourlyLimit,
-      minuteLimit: config.circuitBreakerMinuteLimit,
-      isOpen: hourSpent >= BigInt(config.circuitBreakerHourlyLimit) || minuteSpent >= BigInt(config.circuitBreakerMinuteLimit),
+      hourLimit: this.config.circuitBreakerHourlyLimit,
+      minuteLimit: this.config.circuitBreakerMinuteLimit,
+      isOpen: hourSpent >= BigInt(this.config.circuitBreakerHourlyLimit) || minuteSpent >= BigInt(this.config.circuitBreakerMinuteLimit),
     };
   }
 
   async reset() {
-    await redis.del(CircuitBreaker.HOURLY_KEY, CircuitBreaker.MINUTE_KEY, CircuitBreaker.TRACKING_KEY);
-    logger.info('Circuit breaker manually reset');
+    await this.redis.del(CircuitBreaker.HOURLY_KEY, CircuitBreaker.MINUTE_KEY, CircuitBreaker.TRACKING_KEY);
+    this.logger.info('Circuit breaker manually reset');
   }
 }
-
-export const circuitBreaker = new CircuitBreaker();

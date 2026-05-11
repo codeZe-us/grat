@@ -3,8 +3,7 @@ import request from 'supertest';
 import { Keypair, TransactionBuilder, Networks, Asset, Operation, Account } from '@stellar/stellar-sdk';
 import { app } from '../src/app';
 import { redis } from '../src/utils/redis';
-import { channelManager } from '../src/modules/channels/ChannelManager';
-
+import { container } from '../src/container';
 import { config } from '../src/config';
 
 describe('Grat Relay Integration Tests', () => {
@@ -13,7 +12,6 @@ describe('Grat Relay Integration Tests', () => {
   beforeAll(async () => {
 
     process.env.NETWORK = 'testnet';
-    process.env.REDIS_URL = 'redis://127.0.0.1:6379';
     
 
     if (!config.channelSeedPhrase) {
@@ -21,7 +19,7 @@ describe('Grat Relay Integration Tests', () => {
     }
 
 
-    await channelManager.initialize();
+    await container.channelManager.initialize();
     
 
     userKeypair = Keypair.random();
@@ -30,10 +28,10 @@ describe('Grat Relay Integration Tests', () => {
     if (!fbRes.ok) {
       throw new Error(`Friendbot funding failed for test user: ${fbRes.status}`);
     }
-  }, 90000); // Increased timeout for Friendbot/Horizon
+  }, 90000);
 
   afterAll(async () => {
-    await channelManager.stop();
+    await container.channelManager.stop();
     await redis.quit();
   }, 20000);
 
@@ -45,7 +43,7 @@ describe('Grat Relay Integration Tests', () => {
         status: 'ok',
         network: 'testnet'
       });
-    });
+    }, 15000);
   });
 
   describe('POST /v1/sponsor', () => {

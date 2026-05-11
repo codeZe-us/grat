@@ -11,7 +11,7 @@ import {
 import { Grat, FrozenEntryError } from '@grat-official-sdk/sdk';
 
 async function run() {
-  console.log('🚀 Starting Soroban Contract Call Example with Fee Sponsorship');
+  console.log('Starting Soroban Contract Call Example with Fee Sponsorship');
 
   const grat = Grat.testnet();
   // We use the Native XLM Soroban contract for this example to ensure it survives Testnet resets

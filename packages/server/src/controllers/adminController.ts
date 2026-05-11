@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { circuitBreaker } from '../utils/circuitBreaker';
+import { container } from '../container';
+
+const { circuitBreaker } = container;
 
 export const getCircuitBreakerStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {

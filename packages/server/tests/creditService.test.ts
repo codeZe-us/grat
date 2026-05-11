@@ -1,8 +1,13 @@
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
-import { creditService } from '../src/modules/sponsorship/CreditService';
+import { CreditService } from '../src/modules/sponsorship/CreditService';
 import db from '../src/database/knex';
 import { resetDatabase, createTestData } from './db-helper';
 import { InsufficientCreditsError, PolicyDeniedError } from '../src/utils/errors';
+import pino from 'pino';
+
+const mockLogger = pino({ level: 'silent' });
+const mockRedis: any = { get: () => null, set: () => null };
+const creditService = new CreditService(db, mockRedis, mockLogger);
 
 describe('CreditService Unit Tests', () => {
   beforeEach(async () => {
