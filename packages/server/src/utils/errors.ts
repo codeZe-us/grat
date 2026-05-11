@@ -77,8 +77,8 @@ export class SimulationFailedError extends RelayError {
 }
 
 export class SubmissionFailedError extends RelayError {
-  constructor(message: string, horizonResultCodes: unknown = {}) {
-    super(message, 'SUBMISSION_FAILED', 502, horizonResultCodes);
+  constructor(message: string, resultCodes: unknown = {}) {
+    super(message, 'SUBMISSION_FAILED', 502, resultCodes);
   }
 }
 

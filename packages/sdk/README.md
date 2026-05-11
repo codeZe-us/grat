@@ -63,7 +63,7 @@ try {
 } catch (error) {
   if (error instanceof SubmissionFailedError) {
     console.log(`Stellar Error: ${error.message}`); // e.g., "Transaction Failed: op_low_reserve"
-    console.log(error.details); // Full Horizon result codes
+    console.log(error.details); // Full transaction result codes
   } else if (error instanceof RateLimitError) {
     console.log(`Retry after ${error.retryAfter} seconds`);
   }

@@ -1,7 +1,6 @@
 import {
   TransactionBuilder,
   Networks,
-  Horizon,
   Transaction,
   rpc,
   FeeBumpTransaction,
@@ -16,21 +15,19 @@ import { TransactionLogger } from './TransactionLogger';
 import {
   ValidationError,
   ChannelExhaustedError,
-  SimulationFailedError,
   SubmissionFailedError,
   FrozenEntryError,
-  RelayError,
 } from '../../utils/errors';
 import { 
   getErrorMessage, 
-  isStellarHorizonError, 
+  isStellarSubmissionError, 
   isRelayError 
 } from '../../utils/error-guards';
+import { StellarClient } from '../../stellar/stellar-client';
 
 export interface SponsorRequest {
   transaction: string;
   network?: string;
-  idempotencyKey?: string;
 }
 
 export interface SponsorResponse {
@@ -41,34 +38,9 @@ export interface SponsorResponse {
   channelAccount: string;
 }
 
-export interface SimulationResult {
-  resourceFee: string;
-  latestLedger: number;
-  transactionData: string;
-  auth: unknown[];
-  events: unknown[];
-}
-
-export interface EstimateResponse {
-  estimatedFee: string;
-  breakdown: {
-    baseFee: string;
-    resourceFee: string;
-  };
-  network: string;
-  note: string;
-}
-
-export interface CreditHold {
-  confirm(actualFee: bigint): Promise<void>;
-  release(): Promise<void>;
-}
-
 export class SponsorshipService {
-  private rpc: rpc.Server;
-
   constructor(
-    private readonly horizon: Horizon.Server,
+    private readonly stellarClient: StellarClient,
     private readonly channelManager: ChannelManager,
     private readonly sequenceManager: SequenceManager,
     private readonly creditService: CreditService,
@@ -77,322 +49,188 @@ export class SponsorshipService {
     private readonly redis: Redis,
     private readonly config: any,
     private readonly logger: Logger
-  ) {
-    this.rpc = new rpc.Server(config.sorobanRpcUrl);
-  }
+  ) {}
 
-  async sponsor(req: SponsorRequest, requestId: string): Promise<SponsorResponse> {
+  async sponsor(request: SponsorRequest, requestId: string): Promise<SponsorResponse> {
+    this.logger.info({ requestId, network: request.network }, 'Sponsorship request received');
+
+    if (!request.transaction) {
+      throw new ValidationError('Transaction XDR is required');
+    }
+
+    let tx: Transaction | FeeBumpTransaction;
     try {
-      // 1. Validate
-      const transaction = this.validateTransaction(req.transaction, req.network);
+      tx = TransactionBuilder.fromXDR(request.transaction, request.network || Networks.TESTNET);
+    } catch (err) {
+      throw new ValidationError('Invalid transaction XDR');
+    }
 
-      // 2. Estimate Fee
-      const estimatedFee = await this.estimateFee(transaction);
+    if (tx instanceof FeeBumpTransaction) {
+      throw new ValidationError('Transaction is already fee-bumped');
+    }
 
-      // 3. Safety Check
-      await this.circuitBreaker.check();
+    const innerTx = tx as Transaction;
+    this.validateTransaction(innerTx);
+    await this.circuitBreaker.check();
 
-      // 4. Reserve Credits
-      const apiKey = (req as any).apiKey;
-      const creditHold = await this.reserveCredits(apiKey?.id, estimatedFee);
+    const estimation = await this.estimate(request);
+    const heldAmount = BigInt(estimation.estimatedFee);
+    const apiKeyId = (request as any).apiKeyId;
+    
+    await this.creditService.placeHold(apiKeyId, heldAmount);
 
-      try {
-        // 5. Submit
-        const result = await this.acquireChannelAndSubmit(transaction, estimatedFee, requestId);
+    let channel: any = null;
+    try {
+      channel = await this.channelManager.acquire();
+      if (!channel) {
+        throw new ChannelExhaustedError();
+      }
 
-        // 6. Finalize
-        return await this.finalizeTransaction(apiKey?.id, creditHold, result, transaction);
-      } catch (err: unknown) {
-        await creditHold.release();
-        throw err;
+      const feeBumpTx = await this.buildFeeBump(innerTx, channel);
+
+      this.logger.info({ requestId, hash: innerTx.hash().toString('hex'), channel: channel.publicKey }, 'Submitting sponsored transaction');
+      const result = await this.stellarClient.submitTransaction(feeBumpTx);
+
+      if (result.status === 'SUCCESS') {
+        const actualFee = BigInt(result.feePaid || '0');
+        const response: SponsorResponse = {
+          hash: result.hash,
+          ledger: result.ledger || 0,
+          feePaid: actualFee.toString(),
+          network: request.network || 'testnet',
+          channelAccount: channel.publicKey,
+        };
+
+        await this.transactionLogger.log({
+          apiKeyId,
+          transactionHash: result.hash,
+          channelAccount: channel.publicKey,
+          innerSourceAccount: innerTx.source,
+          feePaidStroops: response.feePaid,
+          network: response.network,
+          operationsCount: innerTx.operations.length,
+          isSoroban: innerTx.operations.some(op => op.type === 'invokeHostFunction'),
+          status: 'success',
+        });
+
+        await this.creditService.confirmDeduction(apiKeyId, heldAmount, actualFee);
+        
+        const idempotencyKey = (request as any).idempotencyKey;
+        if (idempotencyKey) {
+          await this.redis.set(`idempotency:${idempotencyKey}`, JSON.stringify(response), 'EX', 3600);
+        }
+
+        return response;
+      } else {
+        throw new SubmissionFailedError(result.errorMessage || 'Unknown submission error', result.errorCode);
       }
     } catch (err: any) {
+      this.logger.error({ err: getErrorMessage(err), requestId }, 'Sponsorship failed');
+      await this.creditService.releaseHold(apiKeyId, heldAmount);
+
+      if (innerTx) {
+        await this.transactionLogger.log({
+          apiKeyId,
+          transactionHash: innerTx.hash().toString('hex'),
+          channelAccount: channel?.publicKey || 'none',
+          innerSourceAccount: innerTx.source,
+          feePaidStroops: '0',
+          network: request.network || 'testnet',
+          operationsCount: innerTx.operations.length,
+          isSoroban: innerTx.operations.some(op => op.type === 'invokeHostFunction'),
+          status: 'failed',
+          errorMessage: getErrorMessage(err),
+        });
+      }
+
+      if (isStellarSubmissionError(err)) {
+        if (getErrorMessage(err).includes('FROZEN_ENTRY')) {
+          throw new FrozenEntryError();
+        }
+      }
+
       if (isRelayError(err)) throw err;
-      
-      const errorMsg = getErrorMessage(err);
-      const errorDetails = err.response?.data?.extras?.result_codes || err.response?.data || {};
-      
-      this.logger.error({ 
-        requestId, 
-        err: errorMsg,
-        details: errorDetails
-      }, 'Unexpected error in sponsor flow');
-      
-      throw new RelayError('Transaction submission failed: ' + errorMsg, 'SUBMISSION_FAILED', 502, errorDetails);
+      throw new SubmissionFailedError(getErrorMessage(err));
+    } finally {
+      if (channel) {
+        await this.channelManager.release(channel.publicKey);
+      }
     }
   }
 
-  private validateTransaction(xdr: string, network?: string): Transaction {
-    const networkPassphrase = network === 'mainnet' ? Networks.PUBLIC : Networks.TESTNET;
+  async simulate(request: SponsorRequest): Promise<any> {
+    const tx = TransactionBuilder.fromXDR(request.transaction, request.network || Networks.TESTNET);
+    if (!(tx instanceof Transaction)) throw new ValidationError('Only classic transactions can be simulated');
     
-    let tx: Transaction;
-    try {
-      const txEnvelope = TransactionBuilder.fromXDR(xdr, networkPassphrase);
-      if (!(txEnvelope instanceof Transaction)) {
-        throw new ValidationError('Fee-bump transactions cannot be sponsored');
+    return this.stellarClient.simulateTransaction(tx);
+  }
+
+  async estimate(request: SponsorRequest): Promise<any> {
+    const tx = TransactionBuilder.fromXDR(request.transaction, request.network || Networks.TESTNET);
+    if (!(tx instanceof Transaction)) throw new ValidationError('Only classic transactions can be estimated');
+
+    const feeStats = await this.stellarClient.estimateFee(tx);
+    const isSoroban = tx.operations.some(op => op.type === 'invokeHostFunction');
+    
+    let resourceFee = '0';
+    if (isSoroban) {
+      const sim = await this.stellarClient.simulateTransaction(tx);
+      resourceFee = sim.resourceFee;
+    }
+
+    const estimatedFee = (BigInt(feeStats.recommendedFee) + BigInt(resourceFee)).toString();
+
+    return {
+      estimatedFee,
+      breakdown: {
+        inclusionFee: feeStats.recommendedFee,
+        resourceFee,
+        baseFee: feeStats.baseFee,
       }
-      tx = txEnvelope;
-    } catch (err: unknown) {
-      throw new ValidationError(getErrorMessage(err));
-    }
+    };
+  }
 
-    if (tx.signatures.length === 0) {
-      throw new ValidationError('Transaction must be signed by the source account');
-    }
-
+  private validateTransaction(tx: Transaction) {
     if (this.channelManager.isChannelAccount(tx.source)) {
       throw new ValidationError('Channel accounts cannot be used as inner transaction sources');
     }
 
     for (const op of tx.operations) {
-      if (op.source && this.channelManager.isChannelAccount(op.source)) {
-        throw new ValidationError('Channel accounts cannot be used as operation source accounts');
-      }
       if (op.type === 'accountMerge' && this.channelManager.isChannelAccount(op.destination)) {
         throw new ValidationError('Channel accounts cannot be merged into other accounts');
       }
     }
 
-    const now = Math.floor(Date.now() / 1000);
-    const maxAllowedTime = now + 600; 
+    if (tx.signatures.length === 0) {
+      throw new ValidationError('Transaction must be signed by the source account');
+    }
+  }
+
+  private async buildFeeBump(tx: Transaction, channel: any): Promise<FeeBumpTransaction> {
+    const feeStats = await this.stellarClient.estimateFee(tx);
+    const isSoroban = tx.operations.some(op => op.type === 'invokeHostFunction');
     
-    if (!tx.timeBounds) {
-      throw new ValidationError('Transaction must have time bounds set');
+    let resourceFee = '0';
+    if (isSoroban) {
+      const sim = await this.stellarClient.simulateTransaction(tx);
+      resourceFee = sim.resourceFee;
     }
 
-    const maxTime = parseInt(tx.timeBounds.maxTime);
-    if (maxTime === 0 || maxTime > maxAllowedTime) {
-      throw new ValidationError('Transaction expiration (maxTime) is too far in the future or infinite');
-    }
+    const fee = (BigInt(feeStats.recommendedFee) + BigInt(resourceFee)).toString();
 
-    return tx;
-  }
-
-  private async estimateFee(transaction: Transaction): Promise<bigint> {
-    try {
-      const feeStats = await this.horizon.feeStats();
-      const baseFee = feeStats.fee_charged.p70 || '100';
-
-      const innerFee = BigInt(transaction.fee);
-      const numOps = BigInt(transaction.operations.length);
-      const estimatedFee = innerFee + (numOps + 1n) * BigInt(baseFee);
-
-      if (estimatedFee > BigInt(this.config.maxSponsorFeeStroops)) {
-        throw new ValidationError(`Transaction fee (${estimatedFee} stroops) exceeds maximum allowed (${this.config.maxSponsorFeeStroops} stroops)`);
-      }
-
-      return estimatedFee;
-    } catch (err: unknown) {
-      if (isRelayError(err)) throw err;
-      throw new SubmissionFailedError(`Fee estimation failed: ${getErrorMessage(err)}`);
-    }
-  }
-
-  private async reserveCredits(apiKeyId: string | undefined, estimatedFee: bigint): Promise<CreditHold> {
-    if (!apiKeyId || this.config.network !== 'mainnet') {
-      return { confirm: async () => {}, release: async () => {} };
-    }
-
-    await this.creditService.placeHold(apiKeyId, estimatedFee);
-
-    return {
-      confirm: (actual) => this.creditService.confirmDeduction(apiKeyId, estimatedFee, actual),
-      release: () => this.creditService.releaseHold(apiKeyId, estimatedFee)
-    };
-  }
-
-  private async acquireChannelAndSubmit(
-    transaction: Transaction, 
-    estimatedFee: bigint, 
-    requestId: string
-  ): Promise<{ hash: string; ledger: number; feePaid: string; channelPublicKey: string }> {
-    let retries = 0;
-    const maxRetries = 3;
-    const networkPassphrase = this.config.network === 'mainnet' ? Networks.PUBLIC : Networks.TESTNET;
-
-    while (retries <= maxRetries) {
-      const channel = await this.channelManager.acquire();
-      if (!channel) throw new ChannelExhaustedError();
-
-      try {
-        const feeBump = TransactionBuilder.buildFeeBumpTransaction(
-          channel.publicKey,
-          estimatedFee.toString(),
-          transaction,
-          networkPassphrase
-        );
-
-        feeBump.sign(channel.keypair);
-
-        const result = await Promise.race([
-          this.horizon.submitTransaction(feeBump),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Horizon submission timeout')), 25000))
-        ]) as any;
-
-        return {
-          hash: result.hash,
-          ledger: result.ledger,
-          feePaid: feeBump.fee,
-          channelPublicKey: channel.publicKey
-        };
-
-      } catch (err: unknown) {
-        if (isStellarHorizonError(err)) {
-          const resultCodes = err.response?.data?.extras?.result_codes;
-          
-          if (resultCodes?.transaction === 'tx_frozen' || resultCodes?.inner_transaction?.transaction === 'tx_frozen') {
-            const frozenKeys = (err as any).response?.data?.extras?.frozen_keys || [];
-            throw new FrozenEntryError(undefined, frozenKeys);
-          }
-
-          if (resultCodes?.transaction === 'tx_bad_seq' || (err as any).response?.status === 503) {
-            if (resultCodes?.transaction === 'tx_bad_seq') {
-              await this.sequenceManager.sync(channel.publicKey);
-            }
-            if (retries < maxRetries) {
-              retries++;
-              await new Promise(r => setTimeout(r, Math.pow(2, retries) * 1000));
-              continue;
-            }
-          }
-        }
-
-        if (getErrorMessage(err) === 'Horizon submission timeout' && retries < maxRetries) {
-          retries++;
-          continue;
-        }
-
-        throw err;
-      } finally {
-        await this.channelManager.release(channel.publicKey);
-      }
-    }
-
-    throw new SubmissionFailedError('Max retries exceeded during submission');
-  }
-
-  private async finalizeTransaction(
-    apiKeyId: string | undefined,
-    creditHold: CreditHold,
-    result: { hash: string; ledger: number; feePaid: string; channelPublicKey: string },
-    innerTx: Transaction
-  ): Promise<SponsorResponse> {
-    const feePaid = BigInt(result.feePaid);
-    
-    // 1. Confirm Credits
-    await creditHold.confirm(feePaid);
-
-    // 2. Record in Circuit Breaker
-    const apiKeyPrefix = (apiKeyId ? 'api-key' : 'anonymous'); // Ideally we'd have the prefix here
-    await this.circuitBreaker.record(feePaid, apiKeyPrefix);
-
-    // 3. Log to DB
-    await this.transactionLogger.log({
-      apiKeyId,
-      transactionHash: result.hash,
-      channelAccount: result.channelPublicKey,
-      innerSourceAccount: innerTx.source,
-      feePaidStroops: result.feePaid,
-      network: this.config.network,
-      operationsCount: innerTx.operations.length,
-      isSoroban: this.isSorobanTransaction(innerTx),
-      status: 'success'
-    });
-
-    return {
-      hash: result.hash,
-      ledger: result.ledger,
-      feePaid: result.feePaid,
-      network: this.config.network,
-      channelAccount: result.channelPublicKey,
-    };
-  }
-
-  private isSorobanTransaction(tx: Transaction): boolean {
-    return tx.operations.some(op => 
-      op.type === 'invokeHostFunction' || 
-      op.type === 'extendFootprintTtl' || 
-      op.type === 'restoreFootprint'
+    return TransactionBuilder.buildFeeBumpTransaction(
+      channel.keypair,
+      fee,
+      tx,
+      this.config.networkPassphrase
     );
   }
 
-  async checkIdempotency(key: string, apiKeyId?: string): Promise<SponsorResponse | null> {
-    const scope = apiKeyId || 'public';
-    try {
-      const cached = await this.redis.get(`idempotency:${scope}:${key}`);
-      return cached ? JSON.parse(cached) : null;
-    } catch (err: unknown) {
-      this.logger.error({ msg: 'Redis error in checkIdempotency', err: getErrorMessage(err) });
-      return null;
+  async checkIdempotency(key: string, apiKeyId: string): Promise<SponsorResponse | null> {
+    const cached = await this.redis.get(`idempotency:${key}`);
+    if (cached) {
+      return JSON.parse(cached);
     }
-  }
-
-  async setIdempotency(key: string, result: SponsorResponse, apiKeyId?: string) {
-    const scope = apiKeyId || 'public';
-    try {
-      await this.redis.set(`idempotency:${scope}:${key}`, JSON.stringify(result), 'EX', 86400);
-    } catch (err: unknown) {
-      this.logger.error({ msg: 'Redis error in setIdempotency', err: getErrorMessage(err) });
-    }
-  }
-
-  async simulate(xdr: string): Promise<SimulationResult> {
-    try {
-      const tx = TransactionBuilder.fromXDR(xdr, Networks.TESTNET) as Transaction;
-      if (!this.isSorobanTransaction(tx)) {
-        return { resourceFee: '0', latestLedger: 0, transactionData: xdr, auth: [], events: [] };
-      }
-
-      const result = await this.rpc.simulateTransaction(tx);
-
-      if (rpc.Api.isSimulationError(result)) {
-        throw new SimulationFailedError('Simulation failed', result.events);
-      }
-
-      if (rpc.Api.isSimulationSuccess(result)) {
-        return {
-          resourceFee: result.minResourceFee,
-          latestLedger: result.latestLedger,
-          transactionData: result.transactionData.build().toXDR().toString('base64'),
-          auth: result.result?.auth || [],
-          events: result.events || [],
-        };
-      }
-
-      throw new Error('Unexpected simulation result type');
-    } catch (err: unknown) {
-      this.logger.error({ err: getErrorMessage(err) }, 'Transaction simulation failed');
-      throw err;
-    }
-  }
-
-  async estimate(xdr: string): Promise<EstimateResponse> {
-    const networkPassphrase = this.config.network === 'mainnet' ? Networks.PUBLIC : Networks.TESTNET;
-    let tx: Transaction;
-    try {
-      tx = TransactionBuilder.fromXDR(xdr, networkPassphrase) as Transaction;
-    } catch (err: unknown) {
-      throw new ValidationError('Invalid transaction XDR');
-    }
-
-    try {
-      const feeStats = await this.horizon.feeStats();
-      const baseInclusionFee = (parseInt(feeStats.fee_charged.p70 || '100') * tx.operations.length).toString();
-
-      let resourceFee = '0';
-      if (this.isSorobanTransaction(tx)) {
-        const sim = await this.simulate(xdr);
-        resourceFee = ((BigInt(sim.resourceFee) * 115n) / 100n).toString();
-      }
-
-      return {
-        estimatedFee: (BigInt(baseInclusionFee) + BigInt(resourceFee)).toString(),
-        breakdown: { baseFee: baseInclusionFee, resourceFee },
-        network: this.config.network,
-        note: 'Actual fee may vary based on network conditions at submission time',
-      };
-    } catch (err: unknown) {
-      throw new SubmissionFailedError(`Fee estimation failed: ${getErrorMessage(err)}`);
-    }
+    return null;
   }
 }

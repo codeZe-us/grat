@@ -19,8 +19,8 @@ A fee-bump transaction allows a separate "sponsor" account to pay the fee for an
 2. **App Sends to Grat**: Your app sends the XDR to the Grat relay server.
 3. **Grat Acquires Channel**: Grat pulls an available "channel account" from its internal pool.
 4. **Builds Fee-Bump**: Grat builds the fee-bump envelope using the channel account as the fee-paying source.
-5. **Signs and Submits**: Grat signs the outer envelope and submits it to a Horizon node or Soroban RPC.
-6. **Result Returned**: The relay returns the transaction hash and result back to your app.
+5. **Signs and Submits**: Grat signs the outer envelope and submits it to the Stellar RPC.
+6. **Result Returned**: The relay polls for confirmation and returns the transaction hash and final result back to your app.
 
 ### Channel Accounts and Parallelism
 

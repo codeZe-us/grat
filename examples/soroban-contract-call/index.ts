@@ -7,13 +7,16 @@ import {
   Contract,
   Asset,
   nativeToScVal,
+  rpc,
 } from '@stellar/stellar-sdk';
 import { Grat, FrozenEntryError } from '@grat-official-sdk/sdk';
 
 async function run() {
-  console.log('Starting Soroban Contract Call Example with Fee Sponsorship');
+  console.log('Starting Soroban Contract Call Example with Fee Sponsorship (RPC Mode)');
 
   const grat = Grat.testnet();
+  const rpcServer = new rpc.Server('https://soroban-testnet.stellar.org');
+  
   // We use the Native XLM Soroban contract for this example to ensure it survives Testnet resets
   const contractId = Asset.native().contractId(Networks.TESTNET);
   const contract = new Contract(contractId);
@@ -22,23 +25,26 @@ async function run() {
   console.log(`\nCreating test account: ${user.publicKey()}`);
   await fetch(`https://friendbot.stellar.org/?addr=${user.publicKey()}`);
   console.log('✅ Account funded via Friendbot');
-  console.log('Waiting for network sync (polling Horizon)...');
+  console.log('Waiting for network sync (polling RPC)...');
 
   async function getAccountInfo(publicKey: string): Promise<any> {
     for (let i = 0; i < 10; i++) {
-      const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${publicKey}`);
-      if (res.ok) return res.json();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      try {
+        const acc = await rpcServer.getAccount(publicKey);
+        return acc;
+      } catch (e) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     }
     throw new Error(`Failed to fetch account info for ${publicKey} after 10 attempts`);
   }
 
-  console.log('\nBuilding contract invocation (hello method)...');
+  console.log('\nBuilding contract invocation (balance method)...');
   const userInfo = await getAccountInfo(user.publicKey());
 
   const op = contract.call('balance', nativeToScVal(user.publicKey(), { type: 'address' }));
   
-  const tx = new TransactionBuilder(new Account(user.publicKey(), userInfo.sequence), {
+  const tx = new TransactionBuilder(new Account(user.publicKey(), userInfo.sequenceNumber()), {
     fee: '100',
     networkPassphrase: Networks.TESTNET,
   })
@@ -52,7 +58,7 @@ async function run() {
   console.log(`Resource Fee:     ${simulation.resourceFee} stroops`);
 
   // For Soroban, you must rebuild the transaction with the simulation data (footprint) attached
-  const finalTx = new TransactionBuilder(new Account(user.publicKey(), userInfo.sequence), {
+  const finalTx = new TransactionBuilder(new Account(user.publicKey(), userInfo.sequenceNumber()), {
     fee: '100',
     networkPassphrase: Networks.TESTNET,
   })

@@ -1,4 +1,4 @@
-import { Keypair, Asset, Operation, TransactionBuilder, Networks, Horizon } from '@stellar/stellar-sdk';
+import { Keypair, Asset, Operation, TransactionBuilder, Networks, rpc } from '@stellar/stellar-sdk';
 import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
 import dotenv from 'dotenv';
@@ -18,7 +18,7 @@ async function run() {
   }
 
   const fundingKeypair = Keypair.fromSecret(fundingSecret);
-  const horizon = new Horizon.Server('https://horizon-testnet.stellar.org');
+  const rpcServer = new rpc.Server('https://soroban-testnet.stellar.org');
   const seed = await bip39.mnemonicToSeed(seedPhrase);
 
   console.log(`Creating ${count} channels on testnet...`);
@@ -33,7 +33,7 @@ async function run() {
   }
 
   try {
-    const fundingAccount = await horizon.loadAccount(fundingKeypair.publicKey());
+    const fundingAccount = await rpcServer.getAccount(fundingKeypair.publicKey());
     const transaction = new TransactionBuilder(fundingAccount, {
       fee: '10000', // Higher fee for batch creation
       networkPassphrase: Networks.TESTNET,
@@ -52,14 +52,15 @@ async function run() {
     tx.sign(fundingKeypair);
 
     console.log('Submitting transaction...');
-    const result = await horizon.submitTransaction(tx);
-    console.log(`Successfully created ${count} channels! Hash: ${result.hash}`);
-  } catch (err: any) {
-    console.error('Error creating channels:', err.response?.data || err.message);
+    const result = await rpcServer.sendTransaction(tx);
     
-    if (err.response?.data?.extras?.result_codes?.op_res_codes) {
-        console.error('Operation result codes:', err.response.data.extras.result_codes.op_res_codes);
+    if (result.status !== 'ERROR') {
+      console.log(`Successfully created ${count} channels! Hash: ${result.hash}`);
+    } else {
+      console.error('Error creating channels:', result.errorResultXdr);
     }
+  } catch (err: any) {
+    console.error('Error creating channels:', err.message);
   }
 }
 

@@ -1,4 +1,4 @@
-import { Horizon, rpc } from '@stellar/stellar-sdk';
+import { StellarClient } from '../../stellar/stellar-client';
 import { Redis } from 'ioredis';
 import { Knex } from 'knex';
 import { Logger } from 'pino';
@@ -9,8 +9,7 @@ import { getErrorMessage } from '../../utils/error-guards';
 export interface HealthStatus {
   status: 'ok' | 'error';
   checks: {
-    horizon: { reachable: boolean; url: string; error?: string };
-    sorobanRpc: { reachable: boolean; url: string; error?: string; optional: boolean };
+    stellar: { reachable: boolean; url: string; error?: string; clientType: string };
     redis: { reachable: boolean; error?: string };
     postgresql: { reachable: boolean; error?: string };
     channels: { fundedCount: number; totalCount: number; totalXlm: string };
@@ -20,40 +19,25 @@ export interface HealthStatus {
 }
 
 export class HealthCheckService {
-  private sorobanRpc: rpc.Server;
-
   constructor(
-    private readonly horizon: Horizon.Server,
+    private readonly stellarClient: StellarClient,
     private readonly redis: Redis,
     private readonly db: Knex,
     private readonly channelManager: ChannelManager,
     private readonly circuitBreaker: CircuitBreaker,
     private readonly config: any,
     private readonly logger: Logger
-  ) {
-    this.sorobanRpc = new rpc.Server(config.sorobanRpcUrl);
-  }
+  ) {}
 
   async runStartupChecks(): Promise<void> {
     this.logger.info('Running startup health checks...');
 
-    const horizonStatus = await this.retry(() => this.checkHorizonStatus(), 3, 2000);
-    if (!horizonStatus?.reachable) {
-      this.logger.error(`[ERROR] Horizon: ${horizonStatus?.error || 'unreachable'} (${this.config.horizonUrl})`);
+    const stellarStatus = await this.retry(() => this.checkStellarStatus(), 3, 2000);
+    if (!stellarStatus?.reachable) {
+      this.logger.error(`[ERROR] Stellar RPC: ${stellarStatus?.error || 'unreachable'} (${this.config.rpcUrl})`);
       process.exit(1);
     }
-    this.logger.info(`[INFO] Horizon: connected (${this.config.horizonUrl})`);
-
-    const sorobanRpcStatus = await this.checkSorobanRpcStatus();
-    const sorobanRequired = !!process.env.SOROBAN_RPC_URL;
-    if (!sorobanRpcStatus.reachable && sorobanRequired) {
-      this.logger.error(`[ERROR] Soroban RPC: ${sorobanRpcStatus.error || 'unreachable'} (${this.config.sorobanRpcUrl})`);
-      process.exit(1);
-    } else if (!sorobanRpcStatus.reachable) {
-      this.logger.warn(`[WARN] Soroban RPC: unreachable (${this.config.sorobanRpcUrl})`);
-    } else {
-      this.logger.info(`[INFO] Soroban RPC: connected (${this.config.sorobanRpcUrl})`);
-    }
+    this.logger.info(`[INFO] Stellar RPC: connected (${this.config.rpcUrl})`);
 
     const redisStatus = await this.checkRedisStatus();
     if (!redisStatus.reachable) {
@@ -89,22 +73,20 @@ export class HealthCheckService {
   }
 
   async getHealthStatus(): Promise<HealthStatus> {
-    const [horizon, sorobanRpc, redis, postgresql, cbStatus, channels] = await Promise.all([
-      this.checkHorizonStatus(),
-      this.checkSorobanRpcStatus(),
+    const [stellar, redis, postgresql, cbStatus, channels] = await Promise.all([
+      this.checkStellarStatus(),
       this.checkRedisStatus(),
       this.checkPostgresStatus(),
       this.circuitBreaker.getStatus(),
       this.channelManager.getPoolHealth()
     ]);
 
-    const isOk = horizon.reachable && (sorobanRpc.reachable || sorobanRpc.optional) && redis.reachable && postgresql.reachable && channels.funded > 0;
+    const isOk = stellar.reachable && redis.reachable && postgresql.reachable && channels.funded > 0;
 
     return {
       status: isOk ? 'ok' : 'error',
       checks: {
-        horizon,
-        sorobanRpc,
+        stellar,
         redis,
         postgresql,
         channels: {
@@ -122,40 +104,22 @@ export class HealthCheckService {
     };
   }
 
-  private async checkHorizon(): Promise<boolean> {
+  private async checkStellarStatus() {
     try {
-      await this.horizon.root();
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  private async checkHorizonStatus() {
-    try {
-      await this.horizon.root();
-      return { reachable: true, url: this.config.horizonUrl };
+      const reachable = await this.stellarClient.checkHealth();
+      return { 
+        reachable, 
+        url: this.config.rpcUrl, 
+        clientType: 'rpc',
+        error: reachable ? undefined : 'Unreachable'
+      };
     } catch (err: unknown) {
-      return { reachable: false, url: this.config.horizonUrl, error: getErrorMessage(err) };
-    }
-  }
-
-  private async checkSorobanRpc(): Promise<boolean> {
-    try {
-      const health = await this.sorobanRpc.getHealth();
-      return health.status === 'healthy';
-    } catch {
-      return false;
-    }
-  }
-
-  private async checkSorobanRpcStatus() {
-    const optional = !process.env.SOROBAN_RPC_URL;
-    try {
-      const health = await this.sorobanRpc.getHealth();
-      return { reachable: health.status === 'healthy', url: this.config.sorobanRpcUrl, optional };
-    } catch (err: unknown) {
-      return { reachable: false, url: this.config.sorobanRpcUrl, error: getErrorMessage(err), optional };
+      return { 
+        reachable: false, 
+        url: this.config.rpcUrl, 
+        clientType: 'rpc',
+        error: getErrorMessage(err) 
+      };
     }
   }
 

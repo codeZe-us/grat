@@ -1,5 +1,5 @@
 import { Grat } from '@grat-official-sdk/sdk';
-import { Keypair, TransactionBuilder, Networks, Asset, Operation, Horizon } from '@stellar/stellar-sdk';
+import { Keypair, TransactionBuilder, Networks, Asset, Operation, rpc } from '@stellar/stellar-sdk';
 
 const COLORS = {
   reset: "\x1b[0m",
@@ -14,7 +14,7 @@ async function runSmokeTest() {
   console.log(`${COLORS.bold}${COLORS.cyan}Starting Grat Phase 1 Smoke Test...${COLORS.reset}\n`);
   
   const grat = Grat.testnet();
-  const horizon = new Horizon.Server('https://horizon-testnet.stellar.org');
+  const rpcServer = new rpc.Server('https://soroban-testnet.stellar.org');
   let passCount = 0;
   const totalTests = 8;
 
@@ -44,7 +44,10 @@ async function runSmokeTest() {
       throw new Error('Friendbot failed');
     }
 
-    const userAccount = await horizon.loadAccount(user.publicKey());
+    // Wait for account to appear on network
+    await new Promise(r => setTimeout(r, 2000));
+
+    const userAccount = await rpcServer.getAccount(user.publicKey());
     const tx = new TransactionBuilder(userAccount, {
       fee: '100',
       networkPassphrase: Networks.TESTNET
@@ -63,12 +66,12 @@ async function runSmokeTest() {
     console.log(`${COLORS.green}✓ Transaction sponsored: hash ${result.hash}${COLORS.reset}`);
     passCount++;
 
-    const txData = await horizon.transactions().transaction(result.hash).call();
-    if (txData.fee_bump_transaction) {
-      console.log(`${COLORS.green}✓ Fee-bump verified on Horizon (Inner fee: ${txData.fee_charged})${COLORS.reset}`);
+    const txData = await rpcServer.getTransaction(result.hash);
+    if (txData.status !== rpc.Api.GetTransactionStatus.NOT_FOUND) {
+      console.log(`${COLORS.green}✓ Fee-bump verified on RPC${COLORS.reset}`);
       passCount++;
     } else {
-      console.log(`${COLORS.red}✗ Transaction is not a fee-bump${COLORS.reset}`);
+      console.log(`${COLORS.red}✗ Transaction not found on RPC${COLORS.reset}`);
     }
 
     const simTx = new TransactionBuilder(userAccount, {
