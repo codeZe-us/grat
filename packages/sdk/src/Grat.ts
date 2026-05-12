@@ -16,7 +16,6 @@ export class Grat {
   
   /**
    * Shorthand to create a testnet-configured client.
-   * @param relayUrl Optional relay URL (defaults to http://localhost:3000).
    */
   static testnet(relayUrl?: string): Grat {
     return new Grat({ relayUrl: relayUrl || 'http://127.0.0.1:3000', network: 'testnet' });
@@ -24,8 +23,6 @@ export class Grat {
 
   /**
    * Shorthand to create a mainnet-configured client.
-   * @param apiKey Required API key for mainnet.
-   * @param relayUrl Required relay URL for mainnet.
    */
   static mainnet(apiKey: string, relayUrl: string): Grat {
     return new Grat({ apiKey, relayUrl, network: 'mainnet' });
@@ -33,16 +30,10 @@ export class Grat {
 
   /**
    * Create a new Grat SDK client.
-   * @param config Configuration options.
-   * @param config.relayUrl The URL of the Grat relay server.
-   * @param config.network The Stellar network ('testnet' or 'mainnet'). Defaults to 'testnet'.
-   * @param config.apiKey Required for mainnet. Get one at https://grat.network.
-   * @param config.fetch Optional custom fetch implementation (useful for serverless or older Node).
    */
   constructor(config: GratConfig) {
     const network = config.network || 'testnet';
     const relayUrl = config.relayUrl || (network === 'testnet' ? 'http://127.0.0.1:3000' : '');
-
 
     if (network === 'mainnet') {
       if (!config.apiKey) {
@@ -148,13 +139,11 @@ export class Grat {
 
       clearTimeout(timeoutId);
 
-
       if (response.status === 429 && retryCount < this.config.maxRetries) {
         const retryAfter = parseInt(response.headers.get('Retry-After') || '1') * 1000;
         await this.delay(retryAfter);
         return this.request<T>(path, options, retryCount + 1);
       }
-
 
       if ((response.status === 503 || response.status >= 500) && retryCount < this.config.maxRetries) {
         const backoff = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
@@ -177,7 +166,6 @@ export class Grat {
 
       if (error instanceof GratError) throw error;
       if (error instanceof NetworkError) throw error;
-
 
       if (retryCount < this.config.maxRetries) {
         const backoff = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;

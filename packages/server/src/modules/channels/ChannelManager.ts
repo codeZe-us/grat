@@ -48,7 +48,7 @@ export class ChannelManager {
       this.channels.set(publicKey, {
         keypair,
         publicKey,
-        status: 'available',
+        status: 'error',
       });
       this.publicKeys.push(publicKey);
     }
@@ -84,6 +84,7 @@ export class ChannelManager {
         const nativeBalance = account.balances.find(b => b.asset_type === 'native');
         const balance = nativeBalance ? nativeBalance.balance : '0';
         channel.balance = balance;
+        channel.status = 'available';
 
         if (parseFloat(balance) < minBalance) {
           this.logger.warn({ msg: 'Low channel balance', publicKey, balance, minBalance });
@@ -116,6 +117,7 @@ export class ChannelManager {
             this.logger.error({ msg: 'Channel account not found on network', publicKey });
           }
         } else {
+          channel.status = 'error';
           this.logger.error({ msg: 'Error verifying channel', publicKey, err: errorMessage });
         }
       }
