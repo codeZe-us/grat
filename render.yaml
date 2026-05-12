@@ -5,7 +5,7 @@ services:
     runtime: docker
     dockerContext: .
     dockerfilePath: packages/server/Dockerfile
-    plan: free # Use the free tier
+    plan: free
     envVars:
       - key: PORT
         value: 3000
@@ -23,18 +23,17 @@ services:
           name: grat-redis
           property: connectionString
       - key: CHANNEL_SEED_PHRASE
-        generateValue: true # You will need to replace this with a real testnet seed phrase in the Render UI
+        generateValue: true
       - key: ADMIN_TOKEN
         generateValue: true
+
+  # The Redis Instance
+  - type: redis
+    name: grat-redis
+    plan: free
+    ipAllowList: []
 
 # The PostgreSQL Database
 databases:
   - name: grat-db
     plan: free
-
-# The Redis Instance
-interfaces:
-  - type: redis
-    name: grat-redis
-    plan: free
-    ipAllowList: [] # Only allow internal connections
