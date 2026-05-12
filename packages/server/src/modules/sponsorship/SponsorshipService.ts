@@ -6,7 +6,7 @@ import {
 } from '@stellar/stellar-sdk';
 import { Redis } from 'ioredis';
 import { Logger } from 'pino';
-import { ChannelManager } from '../channels/ChannelManager';
+import { ChannelManager, ChannelAccount } from '../channels/ChannelManager';
 import { SequenceManager } from '../channels/SequenceManager';
 import { CreditService } from './CreditService';
 import { CircuitBreaker } from '../../utils/circuitBreaker';
@@ -27,6 +27,8 @@ import { StellarClient } from '../../stellar/stellar-client';
 export interface SponsorRequest {
   transaction: string;
   network?: string;
+  idempotencyKey?: string;
+  apiKeyId?: string;
 }
 
 export interface SponsorResponse {
@@ -35,6 +37,11 @@ export interface SponsorResponse {
   feePaid: string;
   network: string;
   channelAccount: string;
+}
+
+export interface SponsorshipConfig {
+  network: string;
+  networkPassphrase: string;
 }
 
 export class SponsorshipService {
@@ -46,7 +53,7 @@ export class SponsorshipService {
     private readonly transactionLogger: TransactionLogger,
     private readonly circuitBreaker: CircuitBreaker,
     private readonly redis: Redis,
-    private readonly config: any,
+    private readonly config: SponsorshipConfig,
     private readonly logger: Logger
   ) {}
 
@@ -78,7 +85,7 @@ export class SponsorshipService {
 
     const estimation = await this.estimate(request);
     const heldAmount = BigInt(estimation.estimatedFee);
-    const apiKeyId = (request as any).apiKeyId;
+    const apiKeyId = request.apiKeyId;
     
     if (apiKeyId) {
       await this.creditService.placeHold(apiKeyId, heldAmount);
@@ -86,7 +93,7 @@ export class SponsorshipService {
       throw new ValidationError('API key is required for mainnet sponsorship');
     }
 
-    let channel: any = null;
+    let channel: ChannelAccount | null = null;
     try {
       channel = await this.channelManager.acquire();
       if (!channel) {
@@ -128,7 +135,7 @@ export class SponsorshipService {
       } else {
         throw new SubmissionFailedError(result.errorMessage || 'Unknown submission error', result.errorCode);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.logger.error({ err: getErrorMessage(err), requestId }, 'Sponsorship failed');
       if (apiKeyId) {
         await this.creditService.releaseHold(apiKeyId, heldAmount);
@@ -164,7 +171,7 @@ export class SponsorshipService {
     }
   }
 
-  async simulate(request: SponsorRequest): Promise<any> {
+  async simulate(request: SponsorRequest): Promise<unknown> {
     const networkPassphrase = request.network === 'testnet' 
       ? Networks.TESTNET 
       : (request.network === 'public' ? Networks.PUBLIC : (request.network || Networks.TESTNET));
@@ -187,7 +194,16 @@ export class SponsorshipService {
     return this.stellarClient.simulateTransaction(tx);
   }
 
-  async estimate(request: SponsorRequest): Promise<any> {
+  async estimate(request: SponsorRequest): Promise<{
+    baseFee: string;
+    estimatedFee: string;
+    type: 'soroban' | 'classic';
+    breakdown: {
+      inclusionFee: string;
+      resourceFee: string;
+      baseFee: string;
+    }
+  }> {
     const networkPassphrase = request.network === 'testnet' 
       ? Networks.TESTNET 
       : (request.network === 'public' ? Networks.PUBLIC : (request.network || Networks.TESTNET));
@@ -234,7 +250,7 @@ export class SponsorshipService {
     }
   }
 
-  private async buildFeeBump(tx: Transaction, channel: any): Promise<FeeBumpTransaction> {
+  private async buildFeeBump(tx: Transaction, channel: ChannelAccount): Promise<FeeBumpTransaction> {
     const feeStats = await this.stellarClient.estimateFee(tx);
     const isSoroban = tx.operations.some(op => op.type === 'invokeHostFunction');
     

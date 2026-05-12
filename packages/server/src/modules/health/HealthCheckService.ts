@@ -23,6 +23,17 @@ export interface HealthStatus {
   network: string;
 }
 
+export interface HealthCheckConfig {
+  rpcUrl: string;
+  redisUrl: string;
+  databaseUrl: string;
+  network: string;
+  port: number | string;
+  circuitBreakerEnabled: boolean;
+  circuitBreakerHourlyLimit: string;
+  circuitBreakerMinuteLimit: string;
+}
+
 export class HealthCheckService {
   constructor(
     private readonly stellarClient: StellarClient,
@@ -30,7 +41,7 @@ export class HealthCheckService {
     private readonly db: Knex,
     private readonly channelManager: ChannelManager,
     private readonly circuitBreaker: CircuitBreaker,
-    private readonly config: any,
+    private readonly config: HealthCheckConfig,
     private readonly logger: Logger
   ) {}
 

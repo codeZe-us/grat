@@ -1,3 +1,3 @@
 export * from './Grat.js';
-export * from './types.js';
+export type * from './types.js';
 export * from './errors.js';

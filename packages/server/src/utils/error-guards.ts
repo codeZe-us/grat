@@ -4,7 +4,7 @@ export interface StellarSubmissionError {
   response?: {
     data?: {
       extras?: {
-        result_codes?: any;
+        result_codes?: Record<string, unknown>;
       };
       errorResultXdr?: string;
       diagnosticEventsXdr?: string[];
@@ -16,7 +16,7 @@ export interface StellarSubmissionError {
 export interface RedisError {
   name: string;
   message: string;
-  command?: any;
+  command?: unknown;
 }
 
 export interface DatabaseError {
@@ -32,42 +32,43 @@ export function isRelayError(err: unknown): err is RelayError {
 }
 
 export function isStellarSubmissionError(err: unknown): err is StellarSubmissionError {
-  const e = err as any;
-  return (
-    e &&
-    typeof e === 'object' &&
-    (
-      (e.response && e.response.data && e.response.data.extras && e.response.data.extras.result_codes) ||
-      (e.response && e.response.data && (e.response.data.errorResultXdr || e.response.data.diagnosticEventsXdr))
-    )
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as Record<string, unknown>;
+  const response = e.response as Record<string, unknown> | undefined;
+  if (!response) return false;
+  const data = response.data as Record<string, unknown> | undefined;
+  if (!data) return false;
+  
+  const extras = data.extras as Record<string, unknown> | undefined;
+  return !!(
+    (extras && extras.result_codes) ||
+    data.errorResultXdr ||
+    data.diagnosticEventsXdr
   );
 }
 
 export function isRedisError(err: unknown): err is RedisError {
-  const e = err as any;
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as Record<string, unknown>;
   return (
-    e &&
-    typeof e === 'object' &&
-    (e.name === 'RedisError' || e.name === 'ReplyError' || e.name === 'MaxRetriesPerRequestError')
+    e.name === 'RedisError' || e.name === 'ReplyError' || e.name === 'MaxRetriesPerRequestError'
   );
 }
 
 export function isDatabaseError(err: unknown): err is DatabaseError {
-  const e = err as any;
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as Record<string, unknown>;
   return (
-    e &&
-    typeof e === 'object' &&
-    (typeof e.code === 'string' && /^[0-9A-Z]{5}$/.test(e.code))
+    typeof e.code === 'string' && /^[0-9A-Z]{5}$/.test(e.code)
   );
 }
 
 export function isNetworkError(err: unknown): err is Error {
-  const e = err as any;
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as Record<string, unknown>;
   const networkCodes = ['ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'EAI_AGAIN', 'ECONNRESET'];
   return (
-    e &&
-    typeof e === 'object' &&
-    (networkCodes.includes(e.code) || e.message?.includes('fetch failed'))
+    networkCodes.includes(e.code as string) || (e.message as string)?.includes('fetch failed')
   );
 }
 

@@ -9,6 +9,12 @@ export class CircuitBreakerError extends RelayError {
   }
 }
 
+export interface CircuitBreakerConfig {
+  circuitBreakerEnabled: boolean;
+  circuitBreakerHourlyLimit: string;
+  circuitBreakerMinuteLimit: string;
+}
+
 export class CircuitBreaker {
   private static readonly HOURLY_KEY = 'circuit:spending:hour';
   private static readonly MINUTE_KEY = 'circuit:spending:minute';
@@ -16,7 +22,7 @@ export class CircuitBreaker {
 
   constructor(
     private readonly redis: Redis,
-    private readonly config: any,
+    private readonly config: CircuitBreakerConfig,
     private readonly logger: Logger
   ) {}
 

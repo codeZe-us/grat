@@ -5,11 +5,25 @@ import { RateLimitError, AuthenticationError } from '../utils/errors';
 import { KeysService } from '../modules/keys/keys.service';
 import { getErrorMessage } from '../utils/error-guards';
 
+export interface RateLimiterConfig {
+  network: string;
+}
+
+// Extend Express Request to carry the validated API key
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Request {
+      apiKey?: Record<string, unknown>;
+    }
+  }
+}
+
 export class RateLimiter {
   constructor(
     private readonly redis: Redis,
     private readonly keysService: KeysService,
-    private readonly config: any,
+    private readonly config: RateLimiterConfig,
     private readonly logger: Logger
   ) {}
 
@@ -29,7 +43,7 @@ export class RateLimiter {
           return next(new AuthenticationError('Testnet API key cannot be used on mainnet relay'));
         }
 
-        (req as any).apiKey = validatedKey;
+        req.apiKey = validatedKey as unknown as Record<string, unknown>;
         return next();
       } catch (err: unknown) {
         this.logger.error({ msg: 'API key validation failed', err: getErrorMessage(err) });

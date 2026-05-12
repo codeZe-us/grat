@@ -16,6 +16,12 @@ export interface ChannelAccount {
   balance?: string;
 }
 
+export interface ChannelConfig {
+  channelSeedPhrase?: string;
+  channelCount: number;
+  network: string;
+}
+
 export class ChannelManager {
   private channels: Map<string, ChannelAccount> = new Map();
   private publicKeys: string[] = [];
@@ -26,7 +32,7 @@ export class ChannelManager {
     private readonly redis: Redis,
     private readonly stellarClient: StellarClient,
     private readonly sequenceManager: SequenceManager,
-    private readonly config: any,
+    private readonly config: ChannelConfig,
     private readonly logger: Logger
   ) {}
 
@@ -91,9 +97,11 @@ export class ChannelManager {
         }
       } catch (err: unknown) {
         const errorMessage = getErrorMessage(err);
-        const isNotFound = (err as any).response?.status === 404 || 
-                           (err as any).status === 404 || 
-                           (err as any).name === 'NotFoundError';
+        const e = err as Record<string, unknown>;
+        const response = e?.response as Record<string, unknown> | undefined;
+        const isNotFound = response?.status === 404 || 
+                           e?.status === 404 || 
+                           e?.name === 'NotFoundError';
 
         if (isNotFound) {
           if (this.config.network === 'testnet') {

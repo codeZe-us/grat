@@ -11,6 +11,21 @@ export interface KeyCreateRequest {
   network: 'mainnet' | 'testnet';
 }
 
+export interface ApiKeyRecord {
+  id: string;
+  developer_id: string;
+  key_hash: string;
+  key_salt: string;
+  key_prefix: string;
+  network: string;
+  is_active: boolean;
+  rate_limit_per_minute: number;
+  daily_spending_cap_stroops: string;
+  created_at: Date;
+  last_used_at: Date | null;
+  expires_at: Date | null;
+}
+
 export interface KeyResponse {
   rawKey?: string;
   prefix: string;
@@ -168,7 +183,7 @@ export class KeysService {
     }
   }
 
-  async validateKey(rawKey: string): Promise<any> {
+  async validateKey(rawKey: string): Promise<ApiKeyRecord | null> {
     try {
       const prefix = rawKey.substring(0, 12);
       const key = await this.db('api_keys').where({ key_prefix: prefix, is_active: true }).first();

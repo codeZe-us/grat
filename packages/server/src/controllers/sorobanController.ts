@@ -19,7 +19,7 @@ export const simulateHandler = async (req: Request, res: Response, next: NextFun
 
     const result = await sponsorshipService.simulate({ transaction, network });
     res.json({
-      ...result,
+      ...(result as Record<string, unknown>),
       requestId: req.id,
     });
   } catch (err) {

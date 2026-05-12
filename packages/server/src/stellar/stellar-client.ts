@@ -31,8 +31,8 @@ export interface SimulationResult {
   resourceFee: string;
   latestLedger: number;
   transactionData: string;
-  auth: any[];
-  events: any[];
+  auth: unknown[];
+  events: unknown[];
 }
 
 export interface StellarClient {

@@ -4,6 +4,11 @@ import { Logger } from 'pino';
 import { StellarClient } from '../stellar/stellar-client';
 import { getErrorMessage } from '../utils/error-guards';
 
+export interface DepositPollerConfig {
+  depositPollIntervalMs?: number;
+  depositAddress?: string;
+}
+
 export class DepositPoller {
   private interval: NodeJS.Timeout | null = null;
   private isPolling = false;
@@ -13,7 +18,7 @@ export class DepositPoller {
     private readonly stellarClient: StellarClient,
     private readonly db: Knex,
     private readonly redis: Redis,
-    private readonly config: any,
+    private readonly config: DepositPollerConfig,
     private readonly logger: Logger
   ) {}
 
@@ -69,7 +74,17 @@ export class DepositPoller {
     }
   }
 
-  private async processTransaction(tx: any) {
+  private async processTransaction(tx: {
+    memo?: string;
+    hash: string;
+    operations: Array<{
+      type: string;
+      asset_type?: string;
+      destination?: string;
+      amount?: string;
+      from?: string;
+    }>;
+  }) {
     const memo = tx.memo;
     if (!memo) return;
 
@@ -84,8 +99,10 @@ export class DepositPoller {
 
     for (const op of tx.operations) {
       if (op.type === 'payment' && op.asset_type === 'native' && op.destination === this.config.depositAddress) {
-        const amountStroops = BigInt(parseFloat(op.amount) * 10_000_000);
-        await this.creditBalance(apiKey.id, amountStroops, tx.hash, op.from, memo);
+        const amount = op.amount ?? '0';
+        const from = op.from ?? '';
+        const amountStroops = BigInt(parseFloat(amount) * 10_000_000);
+        await this.creditBalance(apiKey.id, amountStroops, tx.hash, from, memo);
       }
     }
   }

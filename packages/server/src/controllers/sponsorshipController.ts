@@ -19,7 +19,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
     }
 
 
-    const apiKeyId = (req as any).apiKey?.id;
+    const apiKeyId = req.apiKey?.id as string | undefined;
     if (idempotencyKey) {
       const cached = await sponsorshipService.checkIdempotency(idempotencyKey, apiKeyId);
       if (cached) {
@@ -32,7 +32,7 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
     }
 
     const result = await sponsorshipService.sponsor(
-      { transaction, network, idempotencyKey, apiKeyId } as any,
+      { transaction, network, idempotencyKey, apiKeyId },
       req.id as string
     );
 

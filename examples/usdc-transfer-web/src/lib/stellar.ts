@@ -11,6 +11,12 @@ import { RPC_URL, NETWORK_PASSPHRASE } from './constants';
 
 export const server = new rpc.Server(RPC_URL);
 
+interface AssetBalance {
+  asset_code?: string;
+  asset_issuer?: string;
+  balance?: string;
+}
+
 export async function fundWithFriendbot(publicKey: string) {
   const url = `https://friendbot.stellar.org?addr=${publicKey}`;
   let lastError;
@@ -38,7 +44,7 @@ export async function loadAccount(publicKey: string, retries = 5) {
   for (let i = 0; i < retries; i++) {
     try {
       return await server.getAccount(publicKey);
-    } catch (e: any) {
+    } catch (e) {
       if (i === retries - 1) throw e;
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
@@ -125,9 +131,9 @@ export async function getUSDCBalance(publicKey: string, issuerPublicKey: string)
   try {
     // Note: This relies on the RPC implementation providing classic balances in getAccount.
     // If the RPC doesn't provide them, this will return '0'.
-    const account = await server.getAccount(publicKey) as any;
+    const account = await server.getAccount(publicKey) as unknown as { balances?: AssetBalance[] };
     const usdc = account.balances?.find(
-      (b: any) => b.asset_code === 'USDC' && b.asset_issuer === issuerPublicKey
+      (b) => b.asset_code === 'USDC' && b.asset_issuer === issuerPublicKey
     );
     return usdc?.balance || '0';
   } catch (e) {
