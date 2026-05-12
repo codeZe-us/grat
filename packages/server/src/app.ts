@@ -20,7 +20,7 @@ const app: Express = express();
 app.use(helmet());
 app.use(cors({
   origin: config.isProduction 
-    ? [/\.grat\.network$/, /^http:\/\/localhost:\d+$/] 
+    ? [/\.grat\.network$/, /vercel\.app$/, /^http:\/\/localhost:\d+$/] 
     : true,
   methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Idempotency-Key', 'X-SDK-Version'],
