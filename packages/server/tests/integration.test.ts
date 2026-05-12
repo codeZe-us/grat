@@ -20,11 +20,24 @@ describe('Grat Relay Integration Tests', () => {
     
     userKeypair = Keypair.random();
     console.log('Funding test user:', userKeypair.publicKey());
-    const fbRes = await fetch(`https://friendbot.stellar.org/?addr=${userKeypair.publicKey()}`);
-    if (!fbRes.ok) {
-      throw new Error(`Friendbot funding failed for test user: ${fbRes.status}`);
+    
+    let fbRes;
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        fbRes = await fetch(`https://friendbot.stellar.org/?addr=${userKeypair.publicKey()}`);
+        if (fbRes.ok) break;
+      } catch (err) {
+        console.warn(`Friendbot funding attempt failed (${retries} retries left):`, err instanceof Error ? err.message : err);
+      }
+      retries--;
+      if (retries > 0) await new Promise(r => setTimeout(r, 2000));
     }
-  }, 90000);
+
+    if (!fbRes || !fbRes.ok) {
+      throw new Error(`Friendbot funding failed for test user after retries: ${fbRes?.status || 'Network Error'}`);
+    }
+  }, 120000);
 
   afterAll(async () => {
     await container.channelManager.stop();
