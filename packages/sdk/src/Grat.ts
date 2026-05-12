@@ -5,8 +5,8 @@ import {
   SimulationResult,
   EstimateResult,
   HealthStatus,
-} from './types';
-import { GratError, handleResponseError, NetworkError } from './errors';
+} from './types.js';
+import { GratError, handleResponseError, NetworkError } from './errors.js';
 
 const SDK_VERSION = '0.3.2';
 

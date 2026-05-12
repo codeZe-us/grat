@@ -1,37 +1,55 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
 
 interface Props {
-  progress: number;
-  status: string;
+  status?: string;
+  progress?: number;
 }
 
-export const LoadingScreen: React.FC<Props> = ({ progress, status }) => {
+export const LoadingScreen: React.FC<Props> = ({ status = 'Setting up USDC trustlines...', progress = 0 }) => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white text-zinc-900 p-6 text-center">
-      <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-8 relative">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-white border-4 border-white shadow-lg rounded-full flex items-center justify-center text-[10px] font-black text-primary">
-          {Math.round(progress)}%
+    <div className="flex flex-col items-center justify-center min-h-[400px] w-full max-w-md mx-auto bg-white text-zinc-900 p-8 text-center animate-in fade-in zoom-in duration-500">
+      {/* Icon and Progress Badge */}
+      <div className="relative mb-10">
+        <div className="w-24 h-24 bg-[#F3E8FF] rounded-[2rem] flex items-center justify-center relative overflow-visible">
+          {/* Custom Spinner */}
+          <svg className="w-12 h-12 animate-spin text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path 
+              d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22" 
+              stroke="currentColor" 
+              strokeWidth="2.5" 
+              strokeLinecap="round"
+            />
+          </svg>
+          
+          {/* Badge */}
+          <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-[0_4px_12px_rgba(0,0,0,0.08)] border border-zinc-50">
+            <span className="text-[13px] font-black text-primary">
+              {Math.round(progress)}%
+            </span>
+          </div>
         </div>
       </div>
-      
-      <div className="space-y-4 w-full max-w-[280px]">
-        <div className="space-y-2">
-          <h2 className="text-xl font-black tracking-tight text-zinc-900">Setting up Demo</h2>
-          <p className="text-zinc-500 text-sm font-medium animate-pulse">
-            {status}
-          </p>
-        </div>
 
-        <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
+      {/* Content */}
+      <div className="space-y-3 mb-10">
+        <h2 className="text-[28px] font-black tracking-tight text-[#111827]">
+          Setting up Demo
+        </h2>
+        <p className="text-[#94A3B8] text-lg font-medium leading-relaxed max-w-[300px] mx-auto">
+          {status}
+        </p>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="w-full max-w-[320px]">
+        <div className="h-2.5 w-full bg-[#F1F5F9] rounded-full overflow-hidden">
           <div 
-            className="h-full bg-primary transition-all duration-500 ease-out rounded-full shadow-[0_0_12px_rgba(var(--primary-rgb),0.4)]"
+            className="h-full bg-primary transition-all duration-700 ease-out rounded-full"
             style={{ width: `${progress}%` }}
           />
         </div>
-
       </div>
     </div>
   );
 };
+

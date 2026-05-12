@@ -54,14 +54,23 @@ export class ChannelManager {
     }
 
     await this.verifyChannels();
-    await this.sequenceManager.syncAll(this.publicKeys);
+    const availableKeys = Array.from(this.channels.values())
+      .filter(c => c.status === 'available')
+      .map(c => c.publicKey);
+    
+    if (availableKeys.length > 0) {
+      await this.sequenceManager.syncAll(availableKeys);
+    } else {
+      this.logger.warn('No channels available after verification. Relay will likely fail to sponsor transactions.');
+    }
+    
     this.startCleanupInterval();
     
     const health = await this.getPoolHealth();
     this.logger.info({ 
       msg: 'Channel Manager initialized', 
       total: health.total,
-      funded: health.funded,
+      available: availableKeys.length,
       totalXlm: health.totalXlm
     });
   }
