@@ -1,7 +1,7 @@
 import { app } from './app';
 import { config } from './config';
 import { logger } from './utils/logger';
-import { channelManager } from './modules/channels/ChannelManager';
+import { container } from './container';
 import { initializeDatabase, closeDatabase } from './database/db';
 import { keysWorker } from './modules/keys/keys.worker';
 
@@ -11,8 +11,11 @@ const start = async () => {
   try {
     await initializeDatabase();
     
-    await channelManager.initialize();
+    await container.channelManager.initialize();
+    await container.healthCheckService.runStartupChecks();
+    
     keysWorker.start();
+    container.depositPoller.start();
     
     const server = app.listen(port, () => {
       logger.info(`Server listening on port ${port} in ${config.network} mode`);
@@ -25,7 +28,8 @@ const start = async () => {
         logger.info('HTTP server closed');
         
         try {
-          channelManager.stop();
+          container.channelManager.stop();
+          container.depositPoller.stop();
           keysWorker.stop();
           await closeDatabase();
           logger.info('Graceful shutdown completed');

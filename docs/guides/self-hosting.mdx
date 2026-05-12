@@ -63,11 +63,19 @@ The fastest way to deploy Grat is using the provided Docker Compose configuratio
 | :--- | :--- | :--- |
 | `PORT` | The port the relay server listens on. | `3000` |
 | `NETWORK` | `testnet` or `mainnet`. | `testnet` |
+| `RPC_URL` | The URL of your Stellar RPC provider. | Required |
 | `DATABASE_URL` | PostgreSQL connection string. | `postgresql://...` |
 | `REDIS_URL` | Redis connection string. | `redis://...` |
 | `CHANNEL_COUNT` | Number of parallel fee channels to maintain. | `10` |
 | `CHANNEL_SEED_PHRASE` | Mnemonic for deriving channel accounts. | Required |
 | `ADMIN_TOKEN` | Token for administrative API access. | Required |
+| `DEPOSIT_ADDRESS` | Stellar address to receive credit deposits. | Optional |
+| `DEPOSIT_POLL_INTERVAL_MS` | Frequency to poll for new deposits. | `5000` |
+| `FEE_MULTIPLIER` | Multiplier for base fees on classic transactions. | `1.5` |
+
+<Note>
+Stellar requires an RPC provider for mainnet access. The SDF does not host a free mainnet RPC endpoint. We recommend using a professional provider such as **Quicknode**, **Blockdaemon**, or **Validation Cloud**. For testnet, you can use the SDF's free testnet RPC at `https://soroban-testnet.stellar.org`.
+</Note>
 
 ### Channel Account Management
 

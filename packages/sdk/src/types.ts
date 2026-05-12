@@ -12,6 +12,8 @@ export interface GratConfig {
   maxRetries?: number;
   /** Request timeout in milliseconds. Defaults to 30000ms. */
   timeout?: number;
+  /** Optional custom fetch implementation (useful for serverless or specialized environments). */
+  fetch?: typeof globalThis.fetch;
 }
 
 /**

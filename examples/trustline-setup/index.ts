@@ -1,10 +1,16 @@
-import { Keypair, Asset, Operation, TransactionBuilder, Networks, Account } from '@stellar/stellar-sdk';
+import { Keypair, Asset, Operation, TransactionBuilder, Networks, Account, rpc } from '@stellar/stellar-sdk';
 import { Grat, FrozenEntryError } from '@grat-official-sdk/sdk';
 
 async function run() {
-  console.log('🚀 Starting Trustline Setup Example (Zero-Fee Onboarding)');
+  console.log('Starting Trustline Setup Example (Zero-Fee Onboarding, RPC Mode)');
   
-  const grat = Grat.testnet();
+  const grat = new Grat({
+    relayUrl: 'http://localhost:3000',
+    network: 'testnet',
+    timeout: 60000,
+  });
+  const rpcServer = new rpc.Server('https://soroban-testnet.stellar.org');
+
   const issuerAddress = 'GAIQ6QF3JKJYXE756IQAITKOWQ5ZDK2YKX7ZYSQKOI5LMG3NHJ4DY5MN';
   const usdc = new Asset('USDC', issuerAddress);
 
@@ -12,26 +18,35 @@ async function run() {
   console.log(`\nNew User: ${newUser.publicKey()}`);
   
   console.log('Funding accounts via Friendbot...');
-  await Promise.all([
-    fetch(`https://friendbot.stellar.org/?addr=${newUser.publicKey()}`),
-    fetch(`https://friendbot.stellar.org/?addr=${issuerAddress}`)
-  ]);
-  console.log('Waiting for network sync (polling Horizon)...');
+  try {
+    await Promise.all([
+      fetch(`https://friendbot.stellar.org/?addr=${newUser.publicKey()}`),
+      fetch(`https://friendbot.stellar.org/?addr=${issuerAddress}`)
+    ]);
+  } catch (e) {
+    console.warn('Friendbot call failed, attempting to continue...');
+  }
+  
+  console.log('Waiting for network sync (polling RPC)...');
   
   async function getAccountInfo(publicKey: string): Promise<any> {
-    for (let i = 0; i < 10; i++) {
-      const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${publicKey}`);
-      if (res.ok) return res.json();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    for (let i = 0; i < 15; i++) {
+      try {
+        const acc = await rpcServer.getAccount(publicKey);
+        return acc;
+      } catch (err) {
+        // Ignore connection errors and retry
+      }
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
-    throw new Error(`Failed to fetch account info for ${publicKey} after 10 attempts`);
+    throw new Error(`Failed to fetch account info for ${publicKey} after 15 attempts`);
   }
 
   console.log('\nEstablishing USDC trustline...');
   const info = await getAccountInfo(newUser.publicKey());
   
   const tx = new TransactionBuilder(
-    new Account(newUser.publicKey(), info.sequence),
+    new Account(newUser.publicKey(), info.sequenceNumber()),
     { 
       fee: '100', 
       networkPassphrase: Networks.TESTNET 

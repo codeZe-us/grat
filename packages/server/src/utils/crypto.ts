@@ -20,3 +20,18 @@ export function hashKey(key: string | Buffer, salt: string): string {
     .update(key)
     .digest('hex');
 }
+
+export function compareSecure(actual: string, expected: string): boolean {
+  try {
+    const actualBuf = Buffer.from(actual);
+    const expectedBuf = Buffer.from(expected);
+
+    if (actualBuf.length !== expectedBuf.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(actualBuf, expectedBuf);
+  } catch (e) {
+    return false;
+  }
+}

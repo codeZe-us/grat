@@ -3,37 +3,31 @@ import request from 'supertest';
 import { Keypair, TransactionBuilder, Networks, Asset, Operation, Account } from '@stellar/stellar-sdk';
 import { app } from '../src/app';
 import { redis } from '../src/utils/redis';
-import { channelManager } from '../src/modules/channels/ChannelManager';
-
+import { container } from '../src/container';
 import { config } from '../src/config';
 
 describe('Grat Relay Integration Tests', () => {
   let userKeypair: Keypair;
 
   beforeAll(async () => {
-
     process.env.NETWORK = 'testnet';
-    process.env.REDIS_URL = 'redis://127.0.0.1:6379';
     
-
     if (!config.channelSeedPhrase) {
       (config as any).channelSeedPhrase = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
     }
 
-
-    await channelManager.initialize();
+    await container.channelManager.initialize();
     
-
     userKeypair = Keypair.random();
     console.log('Funding test user:', userKeypair.publicKey());
     const fbRes = await fetch(`https://friendbot.stellar.org/?addr=${userKeypair.publicKey()}`);
     if (!fbRes.ok) {
       throw new Error(`Friendbot funding failed for test user: ${fbRes.status}`);
     }
-  }, 90000); // Increased timeout for Friendbot/Horizon
+  }, 90000);
 
   afterAll(async () => {
-    await channelManager.stop();
+    await container.channelManager.stop();
     await redis.quit();
   }, 20000);
 
@@ -45,15 +39,14 @@ describe('Grat Relay Integration Tests', () => {
         status: 'ok',
         network: 'testnet'
       });
-    });
+    }, 15000);
   });
 
   describe('POST /v1/sponsor', () => {
     it('sponsors a classic payment transaction', async () => {
-
-      const accountInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${userKeypair.publicKey()}`)).json();
+      const accountInfo = await (container as any).stellarClient.getAccount(userKeypair.publicKey());
       const tx = new TransactionBuilder(
-        new Account(userKeypair.publicKey(), accountInfo.sequence),
+        new Account(userKeypair.publicKey(), accountInfo.sequenceNumber),
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
         .addOperation(
@@ -66,7 +59,6 @@ describe('Grat Relay Integration Tests', () => {
         .build();
 
       tx.sign(userKeypair);
-
 
       const res = await request(app)
         .post('/v1/sponsor')
@@ -81,9 +73,9 @@ describe('Grat Relay Integration Tests', () => {
     }, 60000);
 
     it('returns identical response for the same idempotency key', async () => {
-      const accountInfo = await (await fetch(`https://horizon-testnet.stellar.org/accounts/${userKeypair.publicKey()}`)).json();
+      const accountInfo = await (container as any).stellarClient.getAccount(userKeypair.publicKey());
       const tx = new TransactionBuilder(
-        new Account(userKeypair.publicKey(), accountInfo.sequence),
+        new Account(userKeypair.publicKey(), accountInfo.sequenceNumber),
         { fee: '100', networkPassphrase: Networks.TESTNET }
       )
         .addOperation(Operation.createAccount({ destination: Keypair.random().publicKey(), startingBalance: '1' }))
@@ -148,7 +140,7 @@ describe('Grat Relay Integration Tests', () => {
 
   describe('Rate Limiting', () => {
     it('returns 429 when minute limit is exceeded', async () => {
-      // Rate limiting test omitted to avoid hitting Horizon limits
+      // Rate limiting test omitted to avoid hitting network limits
     });
   });
 });

@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-05-11
+
+This major infrastructure update migrates the entire Grat stack from the deprecated Stellar Horizon API to the modern Stellar RPC API, ensuring full compatibility with Soroban-enabled nodes and future Protocol 26+ features.
+
+### Added
+
+- **Stellar RPC Integration**: Migrated the Relay Server and all example applications to use `rpc.Server` for network interactions, account lookups, and transaction submissions.
+- **Unified RpcClient**: Introduced a resilient `RpcClient` wrapper that handles SDK version differences and provides stable access to Soroban simulation data and transaction results.
+
+### Changed
+
+- **Infrastructure Standard**: Standardized on `RPC_URL` as the primary network endpoint; the project no longer requires or supports legacy `HORIZON_URL` configurations.
+- **Improved Type Safety**: Hardened the sponsorship logic and transaction simulation handlers with robust TypeScript types and defensive fallback checks for RPC response shapes.
+
+### Removed
+
+- **Horizon Dependency**: Completely purged all references to `Horizon.Server` and legacy Horizon-based error handling from the server, SDK, and documentation.
+
 ## [0.3.2] - 2026-05-10
 
 This patch release focuses on relay server stability during network congestion and enhances the developer experience in the USDC Transfer demo.

@@ -5,19 +5,17 @@ import {
   SimulationResult,
   EstimateResult,
   HealthStatus,
-} from './types';
-import { GratError, handleResponseError, NetworkError } from './errors';
+} from './types.js';
+import { GratError, handleResponseError, NetworkError } from './errors.js';
 
-// Package version for headers
 const SDK_VERSION = '0.3.2';
 
 export class Grat {
   private config: Required<GratConfig>;
   private static testnetLogged = false;
-
+  
   /**
    * Shorthand to create a testnet-configured client.
-   * @param relayUrl Optional relay URL (defaults to http://localhost:3000).
    */
   static testnet(relayUrl?: string): Grat {
     return new Grat({ relayUrl: relayUrl || 'http://127.0.0.1:3000', network: 'testnet' });
@@ -25,17 +23,17 @@ export class Grat {
 
   /**
    * Shorthand to create a mainnet-configured client.
-   * @param apiKey Required API key for mainnet.
-   * @param relayUrl Required relay URL for mainnet.
    */
   static mainnet(apiKey: string, relayUrl: string): Grat {
     return new Grat({ apiKey, relayUrl, network: 'mainnet' });
   }
 
+  /**
+   * Create a new Grat SDK client.
+   */
   constructor(config: GratConfig) {
     const network = config.network || 'testnet';
     const relayUrl = config.relayUrl || (network === 'testnet' ? 'http://127.0.0.1:3000' : '');
-
 
     if (network === 'mainnet') {
       if (!config.apiKey) {
@@ -60,6 +58,7 @@ export class Grat {
       apiKey: config.apiKey || '',
       maxRetries: config.maxRetries ?? 3,
       timeout: config.timeout ?? 30000,
+      fetch: config.fetch || globalThis.fetch.bind(globalThis),
     };
   }
 
@@ -110,9 +109,6 @@ export class Grat {
     });
   }
 
-  /**
-   * Internal request helper with retry logic.
-   */
   private async request<T>(
     path: string,
     options: RequestInit,
@@ -135,7 +131,7 @@ export class Grat {
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
 
     try {
-      const response = await fetch(url, {
+      const response = await this.config.fetch(url, {
         ...options,
         headers,
         signal: controller.signal,
@@ -143,13 +139,11 @@ export class Grat {
 
       clearTimeout(timeoutId);
 
-
       if (response.status === 429 && retryCount < this.config.maxRetries) {
         const retryAfter = parseInt(response.headers.get('Retry-After') || '1') * 1000;
         await this.delay(retryAfter);
         return this.request<T>(path, options, retryCount + 1);
       }
-
 
       if ((response.status === 503 || response.status >= 500) && retryCount < this.config.maxRetries) {
         const backoff = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;
@@ -172,7 +166,6 @@ export class Grat {
 
       if (error instanceof GratError) throw error;
       if (error instanceof NetworkError) throw error;
-
 
       if (retryCount < this.config.maxRetries) {
         const backoff = Math.pow(2, retryCount) * 1000 + Math.random() * 1000;

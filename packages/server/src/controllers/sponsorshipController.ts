@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { sponsorshipService } from '../modules/sponsorship/SponsorshipService';
+import { container } from '../container';
+
+const { sponsorshipService } = container;
 
 export const sponsorHandler = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -17,8 +19,9 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
     }
 
 
+    const apiKeyId = (req as any).apiKey?.id;
     if (idempotencyKey) {
-      const cached = await sponsorshipService.checkIdempotency(idempotencyKey);
+      const cached = await sponsorshipService.checkIdempotency(idempotencyKey, apiKeyId);
       if (cached) {
         return res.json({
           ...cached,
@@ -29,13 +32,13 @@ export const sponsorHandler = async (req: Request, res: Response, next: NextFunc
     }
 
     const result = await sponsorshipService.sponsor(
-      { transaction, network, idempotencyKey },
+      { transaction, network, idempotencyKey, apiKeyId } as any,
       req.id as string
     );
 
 
     if (idempotencyKey) {
-      await sponsorshipService.setIdempotency(idempotencyKey, result);
+      await sponsorshipService.setIdempotency(idempotencyKey, result, apiKeyId);
     }
 
     res.json({

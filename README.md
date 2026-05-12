@@ -67,10 +67,10 @@ Grat leverages Stellar's native **Fee-Bump Transactions (CAP-0015)**.
 1. The user signs a standard transaction (the "inner" transaction).
 2. The SDK sends this to the Grat Relay.
 3. The Relay selects an available **Channel Account** from a pre-funded pool.
-4. The Relay wraps the inner transaction in a Fee-Bump envelope, signs it with the channel account, and submits it to the network.
+4. The Relay wraps the inner transaction in a Fee-Bump envelope, signs it with the channel account, and submits it to the network via **Stellar RPC**.
 5. **Deep Error Diagnostics**: If a transaction fails, Grat drills down into the inner results to expose the exact operation error (e.g., `op_low_reserve`, `op_no_issuer`), saving developers hours of debugging.
 6. **Redis-backed sequence management** ensures high concurrency without sequence conflicts across multiple instances.
-7. **Protocol 26 (Yardstick) Ready**: Handles all new Soroban host functions, precise TTL extensions, and frozen ledger entry rejections (CAP-0077) with distinct error codes.
+7. **Protocol 26 (Yardstick) Ready**: Fully supports Stellar RPC from day one, handling all new Soroban host functions, precise TTL extensions, and frozen ledger entry rejections (CAP-0077) with distinct error codes.
 
 ---
 
@@ -111,6 +111,7 @@ Grat is designed to be horizontally scalable and production-ready.
 
 ### Environment Variables
 
+- `RPC_URL`: URL of your Stellar RPC provider.
 - `STELLAR_FUNDING_SECRET`: Master key to fund the channel pool.
 - `CHANNEL_COUNT`: Number of accounts in the pool (e.g., 50).
 - `REDIS_URL`: Required for distributed locking and atomic sequence tracking.

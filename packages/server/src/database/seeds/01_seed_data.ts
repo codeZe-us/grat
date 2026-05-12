@@ -22,7 +22,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   const rawKey = 'gr_live_testkey1234567890';
   const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.createHash('sha256').update(rawKey + salt).digest('hex');
+  const hash = crypto.createHmac('sha256', salt).update(rawKey).digest('hex');
   const prefix = rawKey.substring(0, 12);
 
   await knex('api_keys').insert([
