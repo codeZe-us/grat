@@ -1,12 +1,12 @@
 {
   "name": "example-usdc-transfer",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@grat-official-sdk/sdk": "workspace:*",
+    "@grat-official-sdk/sdk": "0.4.0",
     "@stellar/stellar-sdk": "^15.1.0"
   },
   "devDependencies": {

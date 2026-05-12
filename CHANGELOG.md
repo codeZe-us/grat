@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.0] - 2026-05-11
+## [0.4.0] - 2026-05-12
 
 This major infrastructure update migrates the entire Grat stack from the deprecated Stellar Horizon API to the modern Stellar RPC API, ensuring full compatibility with Soroban-enabled nodes and future Protocol 26+ features.
 

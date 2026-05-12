@@ -8,7 +8,7 @@ import {
 } from './types.js';
 import { GratError, handleResponseError, NetworkError } from './errors.js';
 
-const SDK_VERSION = '0.3.2';
+const SDK_VERSION = '0.4.0';
 
 export class Grat {
   private config: Required<GratConfig>;
