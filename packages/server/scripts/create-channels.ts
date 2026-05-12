@@ -57,7 +57,7 @@ async function run() {
     if (result.status !== 'ERROR') {
       console.log(`Successfully created ${count} channels! Hash: ${result.hash}`);
     } else {
-      console.error('Error creating channels:', result.errorResultXdr);
+      console.error('Error creating channels:', (result as any).errorResult || (result as any).errorResultXdr);
     }
   } catch (err: any) {
     console.error('Error creating channels:', err.message);

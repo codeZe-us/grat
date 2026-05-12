@@ -47,7 +47,7 @@ export class RpcClient implements StellarClient {
         return {
           hash,
           status: 'FAILED',
-          errorCode: (response as unknown as Record<string, unknown>).errorResultXdr as string | undefined,
+          errorCode: (response as any).errorResult || (response as any).errorResultXdr,
           errorMessage: 'Transaction rejected by RPC',
         };
       }

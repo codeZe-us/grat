@@ -6,6 +6,7 @@ export interface StellarSubmissionError {
       extras?: {
         result_codes?: Record<string, unknown>;
       };
+      errorResult?: string;
       errorResultXdr?: string;
       diagnosticEventsXdr?: string[];
     };
@@ -42,6 +43,7 @@ export function isStellarSubmissionError(err: unknown): err is StellarSubmission
   const extras = data.extras as Record<string, unknown> | undefined;
   return !!(
     (extras && extras.result_codes) ||
+    data.errorResult ||
     data.errorResultXdr ||
     data.diagnosticEventsXdr
   );

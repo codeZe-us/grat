@@ -12,15 +12,24 @@ Get started with Grat by setting up a local relay and sponsoring a testnet trans
 
 <Steps>
   <Step title="Start the Relay">
-    Clone the Grat repository and start the relay server using Docker Compose.
+    To sponsor transactions, you need a running Grat Relay.
 
+    #### Option A: One-Click Cloud Deploy (Recommended)
+    Deploy a private relay to **Render** in minutes. This provides an instant HTTPS endpoint for your web apps.
+
+    <a href="https://render.com/deploy?repo=https://github.com/gratnetwork/grat">
+      <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
+    </a>
+
+    #### Option B: Local Docker
+    If you prefer to run it locally:
     ```bash
     git clone https://github.com/gratnetwork/grat.git
     cd grat
     docker-compose up -d
     ```
 
-    This starts the relay, a PostgreSQL database, and a Redis instance. The relay will automatically fund its internal channel accounts using the Stellar Friendbot.
+    The relay will automatically fund its internal channel accounts using the Stellar Friendbot when running in testnet mode.
   </Step>
 
   <Step title="Install the SDK">
@@ -89,9 +98,5 @@ Get started with Grat by setting up a local relay and sponsoring a testnet trans
 <Tip>
 Ready for something more realistic? Check out our guide on [Sponsoring USDC Payments](/guides/sponsor-usdc-payments) to see how to handle trustlines and asset transfers.
 </Tip>
-
-<Info>
-Managed cloud hosting is currently under development. For now, self-hosting via Docker is the best way to get started with Grat.
-</Info>
 
 [View on GitHub](https://github.com/gratnetwork/grat)

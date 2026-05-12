@@ -29,15 +29,21 @@ Compatible with Protocol 26 (Yardstick), including all new Soroban host function
 
 ## Quick Start
 
-### 1. Start the Relay (Docker)
+### 1. Start the Relay
 
+#### Option A: One-Click Cloud Deploy (Recommended)
+Deploy your own private relay to the cloud in minutes:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/gratnetwork/grat)
+
+#### Option B: Local Docker
 Clone the repo and start the local stack in under 2 minutes:
 
 ```bash
 git clone https://github.com/gratnetwork/grat.git
 cd grat
 cp .env.example .env
-# Open .env and add your STELLAR_FUNDING_SECRET (get one at https://laboratory.stellar.org)
+# Open .env and add your STELLAR_FUNDING_SECRET
 docker-compose up -d
 ```
 
@@ -111,10 +117,12 @@ Grat is designed to be horizontally scalable and production-ready.
 
 ### Environment Variables
 
-- `RPC_URL`: URL of your Stellar RPC provider.
-- `STELLAR_FUNDING_SECRET`: Master key to fund the channel pool.
-- `CHANNEL_COUNT`: Number of accounts in the pool (e.g., 50).
-- `REDIS_URL`: Required for distributed locking and atomic sequence tracking.
+- `RPC_URL`: URL of your Stellar RPC provider (Default: `https://soroban-testnet.stellar.org`).
+- `STELLAR_FUNDING_SECRET`: Master key used to fund and create the channel pool.
+- `CHANNEL_SEED_PHRASE`: 12-word BIP39 mnemonic or secret used to derive channel keys.
+- `CHANNEL_COUNT`: Number of accounts in the pool (Default: `10`).
+- `REDIS_URL`: URL for Redis (Required for locking and sequence tracking).
+- `DATABASE_URL`: PostgreSQL connection string (Required for transaction logging).
 - `NETWORK`: `testnet` or `mainnet`.
 
 ---
