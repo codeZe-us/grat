@@ -3,25 +3,22 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy root workspace files
-COPY package*.json ./
-COPY pnpm-lock.yaml ./
-COPY pnpm-workspace.yaml ./
+# Install pnpm
+RUN npm install -g pnpm
 
-# Copy package files
-COPY packages/server/package*.json ./packages/server/
-COPY packages/sdk/package*.json ./packages/sdk/
+# Copy workspace configuration
+COPY package*.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 
-# Install pnpm and dependencies
-RUN npm install -g pnpm && pnpm install
+# Copy all packages (needed for internal dependencies)
+COPY packages ./packages
 
-# Copy source code
-COPY packages/server ./packages/server
-COPY packages/sdk ./packages/sdk
-COPY tsconfig.base.json ./
-
-# Build the packages
+# Install all dependencies and build
+RUN pnpm install
 RUN pnpm --filter @grat/server build
+
+# Use pnpm deploy to isolate the server package for production
+# This creates a standalone folder with only the server and its production deps
+RUN pnpm --filter @grat/server --prod deploy /app/out
 
 # Production stage
 FROM node:20-alpine
@@ -34,11 +31,9 @@ RUN apk add --no-cache curl
 # Create non-root user
 RUN addgroup -S nodegroup && adduser -S nodeuser -G nodegroup
 
-# Copy production dependencies from builder or install them
-# For simplicity in this monorepo, we'll just copy the built dist and node_modules
-COPY --from=builder /app/packages/server/dist ./dist
-COPY --from=builder /app/packages/server/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
+# Copy the deployed files from the builder stage
+# The 'out' folder contains the built server and its flat node_modules
+COPY --from=builder /app/out ./
 
 USER nodeuser
 
