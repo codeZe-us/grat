@@ -164,7 +164,7 @@ export class RpcClient implements StellarClient {
     return (parseFloat(nativeBalance.balance) * 10_000_000).toFixed(0);
   }
 
-  async estimateFee(tx: Transaction): Promise<FeeEstimate> {
+  async estimateFee(_tx: Transaction): Promise<FeeEstimate> {
     try {
       const baseFee = this.config.baseFee || '100';
       const multiplier = this.config.feeMultiplier || 1.5;

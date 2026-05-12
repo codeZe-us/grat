@@ -2,7 +2,6 @@ import {
   TransactionBuilder,
   Networks,
   Transaction,
-  rpc,
   FeeBumpTransaction,
 } from '@stellar/stellar-sdk';
 import { Redis } from 'ioredis';

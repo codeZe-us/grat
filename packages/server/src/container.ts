@@ -1,4 +1,3 @@
-import { Redis } from 'ioredis';
 import { config } from './config';
 import { logger } from './utils/logger';
 import { redis } from './utils/redis';
