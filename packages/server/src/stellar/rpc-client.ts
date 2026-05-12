@@ -100,7 +100,7 @@ export class RpcClient implements StellarClient {
     try {
       const account: any = await this.server.getAccount(publicKey);
       
-      let balances = account.balances || [];
+      const balances = account.balances || [];
       
       if (balances.length === 0) {
         try {

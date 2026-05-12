@@ -41,7 +41,7 @@ export class DepositPoller {
         return;
       }
 
-      let cursor = await this.redis.get('deposit:cursor');
+      const cursor = await this.redis.get('deposit:cursor');
       this.logger.debug({ cursor }, 'Polling for deposits...');
       
       this.pollCount++;
